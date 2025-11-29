@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Village – Snow Survival Edition</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    #info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 13px;
+      border-radius: 6px;
+      z-index: 10;
+    }
+
+    #stats {
+      position: fixed;
+      top: 70px;
+      left: 10px;
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 13px;
+      border-radius: 6px;
+      z-index: 10;
+    }
+
+    /* Шкала тепла — внизу по центру */
+    #heatBar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 6px 10px;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 18px;
+      border-radius: 6px;
+      z-index: 10;
+      letter-spacing: 2px;
+    }
+
+    #minimap {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      width: 180px;
+      height: 180px;
+      border-radius: 16px;
+      overflow: hidden;
+      z-index: 20;
+      border: 3px solid rgba(255,255,255,0.7);
+      background: #0f260f;
+    }
+    canvas#minimapCanvas {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
+    /* Сніг-покриття (2D-канвас над 3D-сценою) */
+    #snowCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    /* Чорний екран при замерзанні */
+    #freezeOverlay {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 40;
+      transition: opacity 1s;
+    }
+
+    /* ---- Тач-контролер ---- */
+    #touchControls {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      display: none;
+    }
+
+    #touchControls .pad {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.25);
+      background: radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    #movePad { left: 20px; bottom: 30px; }
+    #lookPad { right: 20px; bottom: 30px; }
+
+    #touchControls .stick {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(46,204,113,0.8);
+      box-shadow: 0 0 10px rgba(46,204,113,0.9);
+      left: 30px;
+      top: 30px;
+    }
+
+    #actionBtn {
+      position: absolute;
+      right: 32px;
+      bottom: 140px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: radial-gradient(circle, #ffb347 0, #e67e22 60%);
+      box-shadow: 0 0 12px rgba(230,126,34,0.9);
+      font-size: 30px;
+      color: #fff;
+      pointer-events: auto;
+      touch-action: none;
+    }
+
+    @media (pointer: coarse) {
+      #touchControls {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="info">
+  ПК: W/S – вперед/назад, A/D – вліво/вправо, стрілки – огляд, ЛКМ – удар/кнопка<br>
+  Телефон: лівий круг – рух, правий – камера, 🪓 – удар/кнопка
+</div>
+
+<div id="stats"></div>
+<div id="heatBar"></div>
+
+<audio id="bgm" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d542afd1d9.mp3" loop autoplay></audio>
+
+<div id="minimap">
+  <canvas id="minimapCanvas" width="180" height="180"></canvas>
+</div>
+
+<canvas id="snowCanvas"></canvas>
+
+<div id="touchControls">
+  <div id="movePad" class="pad">
+    <div id="moveStick" class="stick"></div>
+  </div>
+  <div id="lookPad" class="pad">
+    <div id="lookStick" class="stick"></div>
+  </div>
+  <button id="actionBtn">🪓</button>
+</div>
+
+<div id="freezeOverlay"></div>
+
+<script type="module">
+import * as THREE from "https://unpkg.com/three@0.165.0/build/three.module.js";
+
+/* -----------------------------------------------------------
+   СЦЕНА + КАМЕРА + ПІКСЕЛЬНИЙ РЕНДЕР
+------------------------------------------------------------ */
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdbe9ff);
+scene.fog = new THREE.Fog(0xdbe9ff, 25, 110);
+
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+camera.position.set(0, 2, 35); // спавн
+camera.rotation.order = "YXZ";
+scene.add(camera);
+
+const pixelW = 500;
+const pixelH = 440;
+
+const pixelTarget = new THREE.WebGLRenderTarget(pixelW, pixelH, {
+  minFilter: THREE.NearestFilter,
+  magFilter: THREE.NearestFilter
+});
+
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const pixelScene = new THREE.Scene();
+const pixelCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quad = new THREE.Mesh(
+  new THREE.PlaneGeometry(2, 2),
+  new THREE.MeshBasicMaterial({ map: pixelTarget.texture })
+);
+pixelScene.add(quad);
+
+/* -----------------------------------------------------------
+   МУЗИКА
+------------------------------------------------------------ */
+
+const music = document.getElementById("bgm");
+music.volume = 0.45;
+
+/* -----------------------------------------------------------
+   ОСВІТЛЕННЯ
+------------------------------------------------------------ */
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.8));
+
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(80, 120, 40);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024, 1024);
+scene.add(sun);
+
+/* -----------------------------------------------------------
+   ГРУНТ (білий сніг)
+------------------------------------------------------------ */
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(320, 320),
+  new THREE.MeshStandardMaterial({ color: 0xffffff })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+
+/* -----------------------------------------------------------
+   КОЛІЗІЇ + КНОПКИ
+------------------------------------------------------------ */
+
+const colliders = [];
+function addColliderBox(x, z, hw, hl) {
+  const c = { minX: x - hw, maxX: x + hw, minZ: z - hl, maxZ: z + hl };
+  colliders.push(c);
+  return c;
+}
+
+const buttons = [];
+
+function makeTextSprite(message, color = "#ffffff") {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 128;
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = color;
+  ctx.font = "bold 52px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
+  return new THREE.Sprite(material);
+}
+
+/**
+ * type: "house" | "bigHouse" | "path" | "farm"
+ * target: група/меш об’єкта
+ */
+function createRestoreButton(x, z, requiredWood, type, target) {
+  const group = new THREE.Group();
+  group.position.set(x, 0, z);
+  scene.add(group);
+
+  const geo = new THREE.CylinderGeometry(0.7, 0.7, 0.2, 24);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x2ecc71,
+    emissive: 0x1e8449,
+    emissiveIntensity: 0.8
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.y = 0.1;
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
+  group.add(mesh);
+
+  const light = new THREE.PointLight(0x66ff66, 1.5, 12, 2);
+  light.position.set(0, 1.1, 0);
+  group.add(light);
+
+  const label = makeTextSprite(String(requiredWood), "#ffffff");
+  label.scale.set(1.8, 0.9, 1);
+  label.position.set(0, 1.4, 0);
+  group.add(label);
+
+  buttons.push({
+    group,
+    mesh,
+    light,
+    phase: Math.random() * Math.PI * 2,
+    cost: requiredWood,
+    type,
+    target,
+    restored: false
+  });
+}
+
+/* -----------------------------------------------------------
+   БУДИНКИ
+------------------------------------------------------------ */
+
+function createHouse(x, z) {
+  const g = new THREE.Group();
+
+  const walls = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 3, 6),
+    new THREE.MeshStandardMaterial({
+      color: 0x8b5a2b,
+      transparent: true,
+      opacity: 0.4
+    })
+  );
+  walls.position.y = 1.5;
+  walls.castShadow = true;
+  walls.receiveShadow = true;
+  g.add(walls);
+
+  const roof = new THREE.Mesh(
+    new THREE.ConeGeometry(5, 2.5, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0x5b2a00,
+      transparent: true,
+      opacity: 0.3
+    })
+  );
+  roof.position.y = 4;
+  roof.rotation.y = Math.PI / 4;
+  roof.castShadow = true;
+  roof.receiveShadow = true;
+  g.add(roof);
+
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 2, 0.1),
+    new THREE.MeshStandardMaterial({
+      color: "#553311",
+      transparent: true,
+      opacity: 0.5
+    })
+  );
+  door.position.set(0, 1, 3.06);
+  g.add(door);
+
+  g.position.set(x, 0, z);
+  scene.add(g);
+
+  createRestoreButton(x, z + 4.2, 45, "house", g);
+}
+
+/* ДВОПОВЕРХОВИЙ ДІМ (коштує 65) */
+function createBigHouse(x, z) {
+  const g = new THREE.Group();
+
+  const floor1 = new THREE.Mesh(
+    new THREE.BoxGeometry(7, 3, 7),
+    new THREE.MeshStandardMaterial({
+      color: 0x9c6c3b,
+      transparent: true,
+      opacity: 0.4
+    })
+  );
+  floor1.position.y = 1.5;
+  floor1.castShadow = true;
+  floor1.receiveShadow = true;
+  g.add(floor1);
+
+  const floor2 = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 3, 6),
+    new THREE.MeshStandardMaterial({
+      color: 0x7b4e26,
+      transparent: true,
+      opacity: 0.4
+    })
+  );
+  floor2.position.y = 4.5;
+  floor2.castShadow = true;
+  floor2.receiveShadow = true;
+  g.add(floor2);
+
+  const roof = new THREE.Mesh(
+    new THREE.ConeGeometry(5.5, 3, 4),
+    new THREE.MeshStandardMaterial({
+      color: 0x5b2a00,
+      transparent: true,
+      opacity: 0.35
+    })
+  );
+  roof.position.y = 7;
+  roof.rotation.y = Math.PI / 4;
+  roof.castShadow = true;
+  roof.receiveShadow = true;
+  g.add(roof);
+
+  const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1.1, 2.2, 0.12),
+    new THREE.MeshStandardMaterial({
+      color: "#553311",
+      transparent: true,
+      opacity: 0.5
+    })
+  );
+  door.position.set(0, 1.1, 3.6);
+  g.add(door);
+
+  g.position.set(x, 0, z);
+  scene.add(g);
+
+  createRestoreButton(x, z + 4.8, 65, "bigHouse", g);
+}
+
+/* -----------------------------------------------------------
+   ДЕРЕВА — ЯЛИНКИ З ПАДІННЯМ
+------------------------------------------------------------ */
+
+let trees = [];
+
+function createTree(x, z) {
+  const group = new THREE.Group();
+  group.position.set(x, 0, z);
+  scene.add(group);
+
+  // стовбур
+  const trunk = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.25, 0.35, 2.2, 8),
+    new THREE.MeshStandardMaterial({ color: 0x5b3a1a })
+  );
+  trunk.position.set(0, 1.1, 0);
+  trunk.castShadow = true;
+  trunk.receiveShadow = true;
+  group.add(trunk);
+
+  // 3 конуси-ярусами, як ялинка засніжена
+  const levels = [
+    { r: 1.2, h: 1.4, y: 2.0 },
+    { r: 0.9, h: 1.2, y: 3.0 },
+    { r: 0.6, h: 1.0, y: 3.8 }
+  ];
+
+  const foliage = [];
+
+  for (const lvl of levels) {
+    const cone = new THREE.Mesh(
+      new THREE.ConeGeometry(lvl.r, lvl.h, 10),
+      new THREE.MeshStandardMaterial({ color: 0xf5f9ff })
+    );
+    cone.position.set(0, lvl.y, 0);
+    cone.castShadow = true;
+    cone.receiveShadow = true;
+    group.add(cone);
+    foliage.push(cone);
+  }
+
+  const collider = addColliderBox(x, z, 0.8, 0.8);
+
+  trees.push({
+    x,
+    z,
+    group,
+    trunk,
+    foliage,
+    collider,
+    hp: 4,
+    falling: false,
+    fallTime: 0,
+    fallDirection: Math.random() < 0.5 ? 1 : -1,
+    removed: false
+  });
+}
+
+/* -----------------------------------------------------------
+   ФУНКЦІЯ ДЛЯ КІЛЬЦЯ ЛІСУ
+------------------------------------------------------------ */
+
+function forestRing(cx, cz, inner, outer, count) {
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = inner + Math.random() * (outer - inner);
+    const x = cx + Math.cos(a) * r;
+    const z = cz + Math.sin(a) * r;
+    if (Math.sqrt(x * x + z * z) < 20) continue;
+    createTree(x, z);
+  }
+}
+
+/* -----------------------------------------------------------
+   ФЕРМИ
+------------------------------------------------------------ */
+
+function createFarm(x, z, w, l) {
+  const farmGroup = new THREE.Group();
+  farmGroup.position.set(x, 0, z);
+  scene.add(farmGroup);
+
+  const soil = new THREE.Mesh(
+    new THREE.BoxGeometry(w, 0.2, l),
+    new THREE.MeshStandardMaterial({
+      color: 0x5b3a1a,
+      transparent: true,
+      opacity: 0.45
+    })
+  );
+  soil.position.set(0, 0.1, 0);
+  soil.receiveShadow = true;
+  farmGroup.add(soil);
+
+  const cropGeo = new THREE.BoxGeometry(0.3, 0.8, 0.3);
+  const cropMat = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.8
+  });
+
+  const rows = 4;
+  const cols = Math.floor(w);
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = -w / 2 + 0.5 + j;
+      const cz = -l / 2 + 0.5 + i * (l / rows);
+      const c = new THREE.Mesh(cropGeo, cropMat);
+      c.position.set(cx, 0.5, cz);
+      c.castShadow = true;
+      farmGroup.add(c);
+    }
+  }
+
+  createRestoreButton(x, z + l / 2 + 1.2, 15, "farm", farmGroup);
+}
+
+/* -----------------------------------------------------------
+   ДОРОЖКИ
+------------------------------------------------------------ */
+
+function path(x, z, w, l) {
+  const p = new THREE.Mesh(
+    new THREE.BoxGeometry(w, 0.05, l),
+    new THREE.MeshStandardMaterial({
+      color: 0x917151,
+      transparent: true,
+      opacity: 0.45
+    })
+  );
+  p.position.set(x, 0.03, z);
+  p.receiveShadow = true;
+  scene.add(p);
+
+  createRestoreButton(x, z, 5, "path", p);
+}
+
+/* -----------------------------------------------------------
+   ГОРИ (з колізією, трохи більший хітбокс)
+------------------------------------------------------------ */
+
+function createMountain(x, z) {
+  const base = 8 + Math.random() * 6;
+  const height = 10 + Math.random() * 8;
+  const geo = new THREE.ConeGeometry(base, height, 6);
+  const mat = new THREE.MeshStandardMaterial({ color: 0x777777 });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, height / 2, z);
+  m.castShadow = true;
+  m.receiveShadow = true;
+  scene.add(m);
+
+  // трішки більший хітбокс, щоб точно не пройти крізь гору
+  addColliderBox(x, z, base * 0.8, base * 0.8);
+}
+
+function createMountainsBorder() {
+  // Щільніший кордон по краю карти
+  for (let x = -150; x <= 150; x += 15) {
+    createMountain(x, -150);
+    createMountain(x, 150);
+  }
+  for (let z = -150; z <= 150; z += 15) {
+    createMountain(-150, z);
+    createMountain(150, z);
+  }
+
+  // Додаткове кільце гір всередині
+  for (let i = 0; i < 35; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = 110 + Math.random() * 25;
+    const x = Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    createMountain(x, z);
+  }
+}
+
+/* -----------------------------------------------------------
+   СКЕЛІ / КАМЕНІ В ЛІСІ — РІДШЕ
+------------------------------------------------------------ */
+
+function createForestRocks(count) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const r = 30 + Math.random() * 70;
+    const x = Math.cos(angle) * r;
+    const z = Math.sin(angle) * r;
+
+    if (Math.sqrt(x * x + z * z) < 25) {
+      i--;
+      continue;
+    }
+
+    const size = 0.7 + Math.random() * 1.3;
+    const rockGeo = new THREE.DodecahedronGeometry(size, 0);
+    const rockMat = new THREE.MeshStandardMaterial({
+      color: 0x888888,
+      roughness: 0.9,
+      metalness: 0.1
+    });
+    const rock = new THREE.Mesh(rockGeo, rockMat);
+    rock.position.set(x, size * 0.6, z);
+    rock.castShadow = true;
+    rock.receiveShadow = true;
+    scene.add(rock);
+
+    addColliderBox(x, z, size * 0.8, size * 0.8);
+  }
+}
+
+/* -----------------------------------------------------------
+   ВОГНИЩЕ (біля спавна)
+------------------------------------------------------------ */
+
+function createCampfire(x, z) {
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3;
+    const px = x + Math.cos(angle) * 1.3;
+    const pz = z + Math.sin(angle) * 1.3;
+
+    const rock = new THREE.Mesh(
+      new THREE.SphereGeometry(0.4, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x777777 })
+    );
+    rock.position.set(px, 0.4, pz);
+    rock.castShadow = true;
+    scene.add(rock);
+  }
+
+  const flame = new THREE.Mesh(
+    new THREE.ConeGeometry(0.8, 1.4, 8),
+    new THREE.MeshStandardMaterial({
+      color: 0xff5522,
+      emissive: 0xff3300,
+      emissiveIntensity: 1.0
+    })
+  );
+  flame.position.set(x, 1, z);
+  flame.castShadow = true;
+  scene.add(flame);
+
+  const glow = new THREE.PointLight(0xff6633, 2.2, 30, 2);
+  glow.position.set(x, 1.2, z);
+  glow.castShadow = true;
+  scene.add(glow);
+
+  function flicker() {
+    const t = Date.now() * 0.015;
+    flame.scale.y = 1 + Math.sin(t) * 0.2;
+    glow.intensity = 2 + Math.sin(t * 1.3) * 0.5;
+    requestAnimationFrame(flicker);
+  }
+  flicker();
+}
+
+/* -----------------------------------------------------------
+   СЕЛО + ЛІС + ДВОПОВЕРХОВІ БУДИНКИ + ВОГНИЩЕ
+------------------------------------------------------------ */
+
+createHouse(0, 0);
+createHouse(10, -6);
+createHouse(-10, 6);
+createHouse(0, -14);
+createHouse(14, 10);
+createHouse(-14, -10);
+createHouse(20, 0);
+createHouse(-20, 0);
+createHouse(8, 18);
+createHouse(-8, -20);
+
+/* Нові двоповерхові будинки (65 дерева) */
+createBigHouse(16, -20);
+createBigHouse(-16, 20);
+
+path(0, -7, 4, 14);
+path(0, 7, 4, 14);
+path(7, 0, 14, 4);
+path(-7, 0, 14, 4);
+
+createFarm(0, -22, 10, 6);
+createFarm(18, 6, 10, 6);
+createFarm(-18, -6, 10, 6);
+
+/* Ліс ялинок */
+forestRing(0, 0, 24, 42, 100);
+forestRing(0, 0, 42, 70, 140);
+forestRing(0, 0, 70, 100, 180);
+
+/* Скелі в лісі */
+createForestRocks(30);
+
+/* Гори */
+createMountainsBorder();
+
+/* Вогнище біля спавна */
+const campfirePos = { x: 0, z: 30 };
+createCampfire(campfirePos.x, campfirePos.z);
+
+/* -----------------------------------------------------------
+   ЛІЧИЛЬНИК + ТЕПЛО
+------------------------------------------------------------ */
+
+let treesCutTotal = 0;
+let wood = 0;
+
+const statsDiv = document.getElementById("stats");
+const heatBar = document.getElementById("heatBar");
+const freezeOverlay = document.getElementById("freezeOverlay");
+
+const heatMax = 9;
+let heatValue = heatMax;
+let isFrozen = false;
+
+function updateStats() {
+  statsDiv.textContent =
+    "Дерев зрубано: " + treesCutTotal + " | Дерево: " + wood;
+}
+
+function updateHeatBar() {
+  const full = Math.round(heatValue);
+  let s = "";
+  for (let i = 0; i < heatMax; i++) {
+    s += i < full ? "🔥" : "·";
+  }
+  heatBar.textContent = s;
+}
+
+updateStats();
+updateHeatBar();
+
+/* -----------------------------------------------------------
+   3D СОКИРА
+------------------------------------------------------------ */
+
+const weaponHolder = new THREE.Group();
+camera.add(weaponHolder);
+
+const weaponBasePos = new THREE.Vector3(0.7, -0.7, -1.2);
+const weaponBaseRot = new THREE.Euler(-0.25, -0.3, 0);
+weaponHolder.position.copy(weaponBasePos);
+weaponHolder.rotation.copy(weaponBaseRot);
+
+function createAxeModel(parent) {
+  const handleGeo = new THREE.CylinderGeometry(0.06, 0.08, 1.4, 16);
+  const handleMat = new THREE.MeshStandardMaterial({
+    color: 0x8b5a2b,
+    roughness: 0.8,
+    metalness: 0.1
+  });
+  const handle = new THREE.Mesh(handleGeo, handleMat);
+  handle.position.set(0, -0.2, 0);
+  handle.castShadow = true;
+  parent.add(handle);
+
+  const headMat = new THREE.MeshStandardMaterial({
+    color: 0xb0b0b0,
+    metalness: 0.8,
+    roughness: 0.3
+  });
+
+  const headGeo = new THREE.BoxGeometry(0.6, 0.35, 0.15);
+  const head = new THREE.Mesh(headGeo, headMat);
+  head.position.set(0.18, 0.4, 0);
+  head.castShadow = true;
+  parent.add(head);
+
+  const bladeGeo = new THREE.BoxGeometry(0.4, 0.3, 0.05);
+  const blade = new THREE.Mesh(bladeGeo, headMat);
+  blade.position.set(0.35, 0.4, 0);
+  blade.castShadow = true;
+  parent.add(blade);
+}
+createAxeModel(weaponHolder);
+
+let isAttacking = false;
+let attackTime = 0;
+const attackDuration = 0.25;
+
+function startAttack() {
+  if (!isAttacking && !isFrozen) {
+    isAttacking = true;
+    attackTime = 0;
+  }
+}
+
+/* -----------------------------------------------------------
+   КНОПКИ + ДЕРЕВА (рубанина)
+------------------------------------------------------------ */
+
+function tryUseNearestButton() {
+  if (buttons.length === 0) return false;
+
+  let best = null;
+  let bestDist = 2.0;
+  const px = camera.position.x;
+  const pz = camera.position.z;
+
+  for (const b of buttons) {
+    if (b.restored) continue;
+    const bx = b.group.position.x;
+    const bz = b.group.position.z;
+    const dx = bx - px;
+    const dz = bz - pz;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = b;
+    }
+  }
+
+  if (!best) return false;
+
+  if (wood < best.cost) {
+    best.mesh.material.emissiveIntensity = 1.8;
+    setTimeout(() => {
+      best.mesh.material.emissiveIntensity = 0.8;
+    }, 150);
+    return true;
+  }
+
+  wood -= best.cost;
+  best.restored = true;
+
+  if (best.type === "house") {
+    best.target.traverse(obj => {
+      if (obj.isMesh && obj.material) {
+        obj.material.transparent = false;
+        obj.material.opacity = 1;
+      }
+    });
+    const hx = best.target.position.x;
+    const hz = best.target.position.z;
+    addColliderBox(hx, hz, 3.2, 3.2);
+  } else if (best.type === "bigHouse") {
+    best.target.traverse(obj => {
+      if (obj.isMesh && obj.material) {
+        obj.material.transparent = false;
+        obj.material.opacity = 1;
+      }
+    });
+    const hx = best.target.position.x;
+    const hz = best.target.position.z;
+    addColliderBox(hx, hz, 4, 4);
+  } else if (best.type === "path") {
+    if (best.target.material) {
+      best.target.material.transparent = false;
+      best.target.material.opacity = 1;
+    }
+  } else if (best.type === "farm") {
+    best.target.traverse(obj => {
+      if (obj.isMesh && obj.material) {
+        obj.material.transparent = false;
+        obj.material.opacity = 1;
+      }
+    });
+  }
+
+  scene.remove(best.group);
+  const idx = buttons.indexOf(best);
+  if (idx !== -1) buttons.splice(idx, 1);
+
+  updateStats();
+  return true;
+}
+
+function chopNearestTree() {
+  let bestIndex = -1;
+  let bestDist = 3.0;
+  const px = camera.position.x;
+  const pz = camera.position.z;
+
+  for (let i = 0; i < trees.length; i++) {
+    const t = trees[i];
+    if (t.falling || t.removed) continue;
+    const dx = t.x - px;
+    const dz = t.z - pz;
+    const dist = Math.sqrt(dx * dx + dz * dz);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIndex = i;
+    }
+  }
+
+  if (bestIndex !== -1) {
+    const t = trees[bestIndex];
+    t.hp -= 1;
+
+    // коли дерево "зрубали"
+    if (t.hp <= 0 && !t.falling) {
+      t.falling = true;
+      t.fallTime = 0;
+
+      // прибираємо хвою (лише стовбур лишається)
+      for (const cone of t.foliage) {
+        t.group.remove(cone);
+      }
+      t.foliage.length = 0;
+
+      // забираємо колізію, щоб потім можна було ходити
+      const colIdx = colliders.indexOf(t.collider);
+      if (colIdx !== -1) colliders.splice(colIdx, 1);
+
+      treesCutTotal++;
+      wood++;
+      updateStats();
+    }
+  }
+}
+
+/* -----------------------------------------------------------
+   МІНІМАПА + СНІГ
+------------------------------------------------------------ */
+
+const miniCtx = document.getElementById("minimapCanvas").getContext("2d");
+
+let yaw = 0;
+let pitch = 0;
+
+function updateMinimap() {
+  miniCtx.fillStyle = "#132e13";
+  miniCtx.fillRect(0, 0, 180, 180);
+
+  const cx = 90;
+  const cz = 90;
+  const scale = 1.0;
+
+  miniCtx.fillStyle = "#3cff3c";
+  for (const c of colliders) {
+    const x = cx + c.minX * scale;
+    const z = cz + c.minZ * scale;
+    miniCtx.fillRect(x, z, 2, 2);
+  }
+
+  miniCtx.save();
+  miniCtx.translate(cx + camera.position.x * scale, cz + camera.position.z * scale);
+  miniCtx.rotate(-yaw);
+  miniCtx.fillStyle = "#ffffff";
+  miniCtx.beginPath();
+  miniCtx.moveTo(0, -6);
+  miniCtx.lineTo(4, 4);
+  miniCtx.lineTo(-4, 4);
+  miniCtx.closePath();
+  miniCtx.fill();
+  miniCtx.restore();
+}
+
+/* Сніг (менше сніжинок) */
+
+const snowCanvas = document.getElementById("snowCanvas");
+const snowCtx = snowCanvas.getContext("2d");
+let snowflakes = [];
+
+function resizeSnow() {
+  snowCanvas.width = window.innerWidth;
+  snowCanvas.height = window.innerHeight;
+}
+
+function initSnow(count = 120) {
+  resizeSnow();
+  snowflakes = [];
+  for (let i = 0; i < count; i++) {
+    snowflakes.push({
+      x: Math.random() * snowCanvas.width,
+      y: Math.random() * snowCanvas.height,
+      r: 1 + Math.random() * 1.8,
+      speed: 20 + Math.random() * 35,
+      drift: -10 + Math.random() * 20
+    });
+  }
+}
+
+function updateSnow(dt) {
+  snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
+  snowCtx.fillStyle = "rgba(255,255,255,0.9)";
+  for (const f of snowflakes) {
+    f.y += f.speed * dt;
+    f.x += f.drift * dt;
+    if (f.y > snowCanvas.height + f.r) {
+      f.y = -f.r;
+      f.x = Math.random() * snowCanvas.width;
+    }
+    if (f.x < -10) f.x = snowCanvas.width + 10;
+    if (f.x > snowCanvas.width + 10) f.x = -10;
+
+    snowCtx.beginPath();
+    snowCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    snowCtx.fill();
+  }
+}
+
+/* -----------------------------------------------------------
+   КЕРУВАННЯ + ТАЧ
+------------------------------------------------------------ */
+
+const keys = {};
+document.addEventListener("keydown", (e) => (keys[e.code] = true));
+document.addEventListener("keyup",   (e) => (keys[e.code] = false));
+
+function doAction() {
+  if (isFrozen) return;
+  startAttack();
+  const usedButton = tryUseNearestButton();
+  if (!usedButton) chopNearestTree();
+}
+
+window.addEventListener("mousedown", (e) => {
+  if (e.button !== 0) return;
+  doAction();
+});
+
+const movePad = document.getElementById("movePad");
+const moveStick = document.getElementById("moveStick");
+const lookPad = document.getElementById("lookPad");
+const lookStick = document.getElementById("lookStick");
+const actionBtn = document.getElementById("actionBtn");
+
+let touchMoveX = 0;
+let touchMoveY = 0;
+let touchLookX = 0;
+let touchLookY = 0;
+
+if (movePad && moveStick) {
+  const stickRadius = 30;
+  let moveTouchId = null;
+
+  function resetMoveStick() {
+    const rect = movePad.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    moveStick.style.left = (cx - stickRadius) + "px";
+    moveStick.style.top  = (cy - stickRadius) + "px";
+    touchMoveX = 0;
+    touchMoveY = 0;
+  }
+
+  function updateMoveStickFromTouch(t) {
+    const rect = movePad.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    let dx = t.clientX - (rect.left + cx);
+    let dy = t.clientY - (rect.top + cy);
+    const maxR = rect.width / 2 - stickRadius;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > maxR) {
+      dx *= maxR / dist;
+      dy *= maxR / dist;
+    }
+    moveStick.style.left = (cx - stickRadius + dx) + "px";
+    moveStick.style.top  = (cy - stickRadius + dy) + "px";
+    touchMoveX = dx / maxR;
+    touchMoveY = dy / maxR;
+  }
+
+  movePad.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    moveTouchId = t.identifier;
+    updateMoveStickFromTouch(t);
+  }, { passive: false });
+
+  movePad.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    if (moveTouchId === null) return;
+    for (const t of e.touches) {
+      if (t.identifier === moveTouchId) {
+        updateMoveStickFromTouch(t);
+        break;
+      }
+    }
+  }, { passive: false });
+
+  function endMoveTouch(e) {
+    if (moveTouchId === null) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier === moveTouchId) {
+        moveTouchId = null;
+        resetMoveStick();
+        break;
+      }
+    }
+  }
+
+  movePad.addEventListener("touchend", endMoveTouch, { passive: false });
+  movePad.addEventListener("touchcancel", endMoveTouch, { passive: false });
+
+  resetMoveStick();
+}
+
+if (lookPad && lookStick) {
+  const stickRadius = 30;
+  let lookTouchId = null;
+
+  function resetLookStick() {
+    const rect = lookPad.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    lookStick.style.left = (cx - stickRadius) + "px";
+    lookStick.style.top  = (cy - stickRadius) + "px";
+    touchLookX = 0;
+    touchLookY = 0;
+  }
+
+  function updateLookStickFromTouch(t) {
+    const rect = lookPad.getBoundingClientRect();
+    const cx = rect.width / 2;
+    const cy = rect.height / 2;
+    let dx = t.clientX - (rect.left + cx);
+    let dy = t.clientY - (rect.top + cy);
+    const maxR = rect.width / 2 - stickRadius;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > maxR) {
+      dx *= maxR / dist;
+      dy *= maxR / dist;
+    }
+    lookStick.style.left = (cx - stickRadius + dx) + "px";
+    lookStick.style.top  = (cy - stickRadius + dy) + "px";
+    touchLookX = dx / maxR;
+    touchLookY = dy / maxR;
+  }
+
+  lookPad.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    const t = e.changedTouches[0];
+    lookTouchId = t.identifier;
+    updateLookStickFromTouch(t);
+  }, { passive: false });
+
+  lookPad.addEventListener("touchmove", (e) => {
+    e.preventDefault();
+    if (lookTouchId === null) return;
+    for (const t of e.touches) {
+      if (t.identifier === lookTouchId) {
+        updateLookStickFromTouch(t);
+        break;
+      }
+    }
+  }, { passive: false });
+
+  function endLookTouch(e) {
+    if (lookTouchId === null) return;
+    for (const t of e.changedTouches) {
+      if (t.identifier === lookTouchId) {
+        lookTouchId = null;
+        resetLookStick();
+        break;
+      }
+    }
+  }
+
+  lookPad.addEventListener("touchend", endLookTouch, { passive: false });
+  lookPad.addEventListener("touchcancel", endLookTouch, { passive: false });
+
+  resetLookStick();
+}
+
+if (actionBtn) {
+  const handleTap = (e) => {
+    e.preventDefault();
+    doAction();
+  };
+  actionBtn.addEventListener("click", handleTap);
+  actionBtn.addEventListener("touchstart", handleTap, { passive: false });
+}
+
+/* -----------------------------------------------------------
+   РУХ + ТЕПЛО + АНІМАЦІЯ
+------------------------------------------------------------ */
+
+const speed = 8;
+const rotateSpeed = 1.5;
+const clock = new THREE.Clock();
+let elapsed = 0;
+
+function isColliding(p) {
+  return colliders.some(
+    (c) => p.x > c.minX && p.x < c.maxX && p.z > c.minZ && p.z < c.maxZ
+  );
+}
+
+function animate() {
+  const dt = clock.getDelta();
+  elapsed += dt;
+
+  if (isFrozen) {
+    updateSnow(dt);
+    renderer.setRenderTarget(pixelTarget);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(pixelScene, pixelCamera);
+    updateMinimap();
+    requestAnimationFrame(animate);
+    return;
+  }
+
+  if (keys["ArrowLeft"])  yaw += rotateSpeed * dt;
+  if (keys["ArrowRight"]) yaw -= rotateSpeed * dt;
+  if (keys["ArrowUp"])    pitch += rotateSpeed * dt;
+  if (keys["ArrowDown"])  pitch -= rotateSpeed * dt;
+
+  const lookScale = 2.2;
+  yaw   -= touchLookX * rotateSpeed * lookScale * dt;
+  pitch -= touchLookY * rotateSpeed * lookScale * dt;
+
+  pitch = Math.max(-1.2, Math.min(1.2, pitch));
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+
+  const forward = new THREE.Vector3(
+    -Math.sin(yaw),
+    0,
+    -Math.cos(yaw)
+  );
+  const right = new THREE.Vector3(
+    Math.cos(yaw),
+    0,
+    -Math.sin(yaw)
+  );
+
+  let move = new THREE.Vector3();
+
+  if (keys["KeyW"]) move.add(forward);
+  if (keys["KeyS"]) move.sub(forward);
+  if (keys["KeyA"]) move.sub(right);
+  if (keys["KeyD"]) move.add(right);
+
+  if (Math.abs(touchMoveX) > 0.05 || Math.abs(touchMoveY) > 0.05) {
+    move.add(forward.clone().multiplyScalar(-touchMoveY));
+    move.add(right.clone().multiplyScalar(touchMoveX));
+  }
+
+  if (move.length() > 0) {
+    move.normalize().multiplyScalar(speed * dt);
+    const newPos = camera.position.clone().add(move);
+    if (!isColliding(newPos)) {
+      camera.position.copy(newPos);
+    }
+  }
+
+  camera.position.y = 2;
+
+  /* Анімація атаки сокирою */
+  if (isAttacking) {
+    attackTime += dt;
+    const t = Math.min(attackTime / attackDuration, 1);
+    const swing = Math.sin(t * Math.PI);
+
+    weaponHolder.position.set(
+      weaponBasePos.x,
+      weaponBasePos.y - swing * 0.2,
+      weaponBasePos.z + swing * 0.05
+    );
+    weaponHolder.rotation.x = weaponBaseRot.x - swing * 0.7;
+    weaponHolder.rotation.y = weaponBaseRot.y;
+    weaponHolder.rotation.z = weaponBaseRot.z + swing * 0.25;
+
+    if (t >= 1) {
+      isAttacking = false;
+      weaponHolder.position.copy(weaponBasePos);
+      weaponHolder.rotation.copy(weaponBaseRot);
+    }
+  } else {
+    weaponHolder.position.copy(weaponBasePos);
+    weaponHolder.rotation.copy(weaponBaseRot);
+  }
+
+  /* Анімація падіння дерев + видалення */
+  for (const t of trees) {
+    if (t.falling && !t.removed) {
+      t.fallTime += dt;
+      const duration = 0.6;
+      const k = Math.min(t.fallTime / duration, 1);
+      const angle = k * (Math.PI / 2) * t.fallDirection;
+      t.group.rotation.z = angle;
+
+      if (k >= 1) {
+        // після завершення анімації – прибираємо дерево зі сцени
+        t.removed = true;
+        scene.remove(t.group);
+      }
+    }
+  }
+  // повністю прибираємо з масиву ті дерева, що зникли
+  trees = trees.filter(t => !t.removed);
+
+  for (const b of buttons) {
+    const t = elapsed * 4 + b.phase;
+    const s = 0.9 + Math.sin(t) * 0.15;
+    b.mesh.scale.y = s;
+    b.light.intensity = 1.3 + Math.sin(t * 1.7) * 0.5;
+  }
+
+  // Тепло: 1 вогник ≈ 40 секунд, якщо далеко від вогнища
+  const dx = camera.position.x - campfirePos.x;
+  const dz = camera.position.z - campfirePos.z;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+
+  const warmRadius = 12;
+  const coolRate = 0.025;
+  const warmRate = 2.0;
+
+  if (dist < warmRadius) {
+    const factor = 1 - dist / warmRadius;
+    heatValue += warmRate * factor * dt;
+  } else {
+    heatValue -= coolRate * dt;
+  }
+  if (heatValue < 0) heatValue = 0;
+  if (heatValue > heatMax) heatValue = heatMax;
+
+  updateHeatBar();
+
+  if (!isFrozen && heatValue <= 0.01) {
+    isFrozen = true;
+    freezeOverlay.style.opacity = "1";
+    freezeOverlay.style.pointerEvents = "auto";
+  }
+
+  updateSnow(dt);
+
+  renderer.setRenderTarget(pixelTarget);
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  renderer.render(pixelScene, pixelCamera);
+
+  updateMinimap();
+  requestAnimationFrame(animate);
+}
+
+/* -----------------------------------------------------------
+   СТАРТ
+------------------------------------------------------------ */
+
+initSnow(120);
+animate();
+
+window.addEventListener("resize", () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  resizeSnow();
+  initSnow(snowflakes.length || 120);
+});
+</script>
+</body>
+</html>
