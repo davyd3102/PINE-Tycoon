@@ -42,20 +42,42 @@
     </footer>
 
     <script>
-      const signupForm = document.getElementById('signupForm');
-      const signupNameInput = document.getElementById('signupName');
+      function getUsers() {
+        const raw = localStorage.getItem("pineUsers");
+        if (!raw) return [];
+        try {
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch (e) {
+          return [];
+        }
+      }
 
-      signupForm.addEventListener('submit', function (e) {
+      function saveUsers(users) {
+        localStorage.setItem("pineUsers", JSON.stringify(users));
+      }
+
+      const signupForm = document.getElementById("signupForm");
+      const signupNameInput = document.getElementById("signupName");
+
+      signupForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const name = signupNameInput.value.trim();
         if (!name) return;
 
-        // Зберігаємо ім’я та помічаємо, що є акаунт
-        localStorage.setItem('pineUserName', name);
-        localStorage.setItem('pineHasAccount', 'true');
+        const users = getUsers();
 
-        // Перекидаємо на головну
-        window.location.href = 'index.html';
+        if (users.includes(name)) {
+          alert("Таке ім’я вже зайняте. Обери інше ім’я.");
+          return;
+        }
+
+        users.push(name);
+        saveUsers(users);
+
+        localStorage.setItem("pineUserName", name);
+
+        window.location.href = "index.html";
       });
     </script>
   </body>
