@@ -1,31 +1,62 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
-  <meta charset="UTF-8">
-  <title>Sign in — PINE Tycoon</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <main style="max-width: 400px; margin: 80px auto;">
-    <h1>Sign in</h1>
-    <form>
-      <label>
-        Email<br>
-        <input type="email" required>
-      </label>
-      <br><br>
-      <label>
-        Пароль<br>
-        <input type="password" required>
-      </label>
-      <br><br>
-      <button type="submit">Увійти</button>
-    </form>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sign in — PINE Tycoon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <p>
-      Немає акаунта?
-      <a href="signup.html">Створити акаунт</a>
-    </p>
-  </main>
-</body>
+    <link rel="stylesheet" href="style.css">
+  </head>
+
+  <body>
+    <header>
+      <div class="auth-buttons">
+        <a href="login.html" class="signin">Sign in</a>
+        <a href="signup.html" class="signup">Sign up</a>
+      </div>
+    </header>
+
+    <main class="auth-page-main">
+      <div class="auth-card">
+        <h1>Sign in</h1>
+        <p>Уведи своє ім’я, щоб увійти в PINE Tycoon.</p>
+
+        <form id="loginForm">
+          <label>
+            Ім’я
+            <input type="text" id="loginName" placeholder="Наприклад, Davyd" required>
+          </label>
+
+          <button type="submit">Увійти</button>
+        </form>
+
+        <p class="auth-note">
+          Немає акаунта?
+          <a href="signup.html">Створити акаунт</a>
+        </p>
+      </div>
+    </main>
+
+    <footer>
+      © 2025 PINE Tycoon — бета-версія гри
+    </footer>
+
+    <script>
+      const loginForm = document.getElementById('loginForm');
+      const loginNameInput = document.getElementById('loginName');
+
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = loginNameInput.value.trim();
+        if (!name) return;
+
+        // Зберігаємо ім’я як акаунт і вхід
+        localStorage.setItem('pineUserName', name);
+        localStorage.setItem('pineHasAccount', 'true');
+
+        // Перекидаємо на головну
+        window.location.href = 'index.html';
+      });
+    </script>
+  </body>
 </html>
