@@ -434,9 +434,11 @@
 
     <!-- Скрипт: акаунти + аватар + Welcome + пошук + тема -->
     <script>
-      const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-      const DAVYD3102_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
-      const EXTRA_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png";
+     const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+const DAVYD3102_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
+const EXTRA_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png";
+const GRIVIELD_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png";
+
 
       function getUsers() {
         const raw = localStorage.getItem("pineUsers");
@@ -451,14 +453,15 @@
 
       // Вибір аватара за ніком
       function getAvatarForName(name) {
-        const map = {
-          "davyd3102": DAVYD3102_AVATAR,
-          "3102": EXTRA_AVATAR,
-          "Cool dave": EXTRA_AVATAR,
-          "davyd": EXTRA_AVATAR
-        };
-        return map[name] || DEFAULT_AVATAR;
-      }
+  const map = {
+    "davyd3102": DAVYD3102_AVATAR,
+    "3102": EXTRA_AVATAR,
+    "Cool dave": EXTRA_AVATAR,
+    "davyd": EXTRA_AVATAR,
+    "Grivield": GRIVIELD_AVATAR
+  };
+  return map[name] || DEFAULT_AVATAR;
+}
 
       const nameDisplay = document.getElementById("userNameDisplay");
       const welcomeText = document.getElementById("welcomeText");
