@@ -19,12 +19,17 @@
     <main class="auth-page-main">
       <div class="auth-card">
         <h1>Sign in</h1>
-        <p>Уведи своє ім’я, щоб увійти в PINE Tycoon.</p>
+        <p>Уведи свої дані, щоб увійти в PINE Tycoon.</p>
 
         <form id="loginForm">
           <label>
             Ім’я
-            <input type="text" id="loginName" placeholder="Наприклад, Davyd" required>
+            <input type="text" id="loginName" required>
+          </label>
+
+          <label>
+            Пароль
+            <input type="password" id="loginPassword" required>
           </label>
 
           <button type="submit">Увійти</button>
@@ -44,26 +49,36 @@
     <script>
       function getUsers() {
         const raw = localStorage.getItem("pineUsers");
-        if (!raw) return [];
+        if (!raw) return {};
         try {
-          const arr = JSON.parse(raw);
-          return Array.isArray(arr) ? arr : [];
+          const obj = JSON.parse(raw);
+          return obj && typeof obj === "object" ? obj : {};
         } catch (e) {
-          return [];
+          return {};
         }
       }
 
       const loginForm = document.getElementById("loginForm");
       const loginNameInput = document.getElementById("loginName");
+      const loginPassInput = document.getElementById("loginPassword");
 
       loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const name = loginNameInput.value.trim();
+        const pass = loginPassInput.value;
+
         if (!name) return;
 
         const users = getUsers();
-        if (!users.includes(name)) {
+        const user = users[name];
+
+        if (!user) {
           alert("Такого акаунта немає. Спочатку створіть його через Sign up.");
+          return;
+        }
+
+        if (user.password !== pass) {
+          alert("Невірний пароль.");
           return;
         }
 
