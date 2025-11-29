@@ -299,6 +299,7 @@
           <li>Для гостя показується статус <strong>Welcome Guest</strong>.</li>
           <li>Нікнейми зберігаються в браузері, тому користувачі не можуть створювати однакові імена на цьому пристрої.</li>
           <li>Спеціальний аватар для власника акаунта <strong>davyd3102</strong>.</li>
+          <li>Додано особливий аватар для гравців <strong>3102</strong>, <strong>Cool dave</strong> та <strong>davyd</strong>.</li>
           <li>Є пошук гравців: можна знайти нік і побачити, чи він зараз онлайн у цьому браузері.</li>
         </ul>
         <p>
@@ -314,7 +315,8 @@
     <!-- Скрипт: акаунти + аватар + Welcome + пошук -->
     <script>
       const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-      const DAVYD_AVATAR   = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
+      const DAVYD3102_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
+      const EXTRA_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png";
 
       function getUsers() {
         const raw = localStorage.getItem("pineUsers");
@@ -325,6 +327,17 @@
         } catch (e) {
           return {};
         }
+      }
+
+      // Вибір аватара за ніком
+      function getAvatarForName(name) {
+        const map = {
+          "davyd3102": DAVYD3102_AVATAR,
+          "3102": EXTRA_AVATAR,
+          "Cool dave": EXTRA_AVATAR,
+          "davyd": EXTRA_AVATAR
+        };
+        return map[name] || DEFAULT_AVATAR;
       }
 
       const nameDisplay = document.getElementById("userNameDisplay");
@@ -347,11 +360,7 @@
         welcomeText.textContent = "Welcome " + nameToShow;
       }
 
-      if (nameToShow === "davyd3102") {
-        avatarImg.src = DAVYD_AVATAR;
-      } else {
-        avatarImg.src = DEFAULT_AVATAR;
-      }
+      avatarImg.src = getAvatarForName(nameToShow);
 
       // ---- Пошук користувачів ----
       const searchForm   = document.getElementById("userSearchForm");
@@ -374,7 +383,7 @@
           }
 
           const isOnline = (currentName === query);
-          const avatarUrl = (query === "davyd3102") ? DAVYD_AVATAR : DEFAULT_AVATAR;
+          const avatarUrl = getAvatarForName(query);
 
           searchResult.innerHTML = `
             <div class="profile-card">
