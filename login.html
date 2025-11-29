@@ -42,20 +42,33 @@
     </footer>
 
     <script>
-      const loginForm = document.getElementById('loginForm');
-      const loginNameInput = document.getElementById('loginName');
+      function getUsers() {
+        const raw = localStorage.getItem("pineUsers");
+        if (!raw) return [];
+        try {
+          const arr = JSON.parse(raw);
+          return Array.isArray(arr) ? arr : [];
+        } catch (e) {
+          return [];
+        }
+      }
 
-      loginForm.addEventListener('submit', function (e) {
+      const loginForm = document.getElementById("loginForm");
+      const loginNameInput = document.getElementById("loginName");
+
+      loginForm.addEventListener("submit", function (e) {
         e.preventDefault();
         const name = loginNameInput.value.trim();
         if (!name) return;
 
-        // Зберігаємо ім’я як акаунт і вхід
-        localStorage.setItem('pineUserName', name);
-        localStorage.setItem('pineHasAccount', 'true');
+        const users = getUsers();
+        if (!users.includes(name)) {
+          alert("Такого акаунта немає. Спочатку створіть його через Sign up.");
+          return;
+        }
 
-        // Перекидаємо на головну
-        window.location.href = 'index.html';
+        localStorage.setItem("pineUserName", name);
+        window.location.href = "index.html";
       });
     </script>
   </body>
