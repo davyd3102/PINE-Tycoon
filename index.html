@@ -1,88 +1,55 @@
 <!DOCTYPE html>
 <html lang="uk">
-     
   <head>
     <meta charset="UTF-8" />
     <title>PINE Tycoon</title>
-    <link rel="stylesheet" href="style.css">
 
     <!-- Щоб сайт добре виглядав на телефоні -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-      /* Плавна прокрутка до #blog */
-      html {
-        scroll-behavior: smooth;
-      }
-
-      /* Щоб footer завжди був внизу */
-      html, body {
-        height: 100%;
-        margin: 0;
-      }
-
-      body {
-        display: flex;
-        flex-direction: column;
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-      }
-
-      header {
-        padding: 10px 20px;
-      }
-
-      nav a {
-        margin-right: 15px;
-        text-decoration: none;
-        color: #000;
-      }
-
-      main {
-        flex: 1;              /* розтягується і штовхає footer вниз */
-        padding: 20px;
-      }
-
-      /* Лого/картинка по центру */
-      .main-logo {
-        display: block;
-        margin: 0 auto 20px;  /* по центру + відступ знизу */
-        max-width: 55%;
-      }
-
-      /* Заголовок блогу */
-      h1 {
-        margin-top: 40px;
-      }
-
-      /* Прямокутний footer знизу */
-      footer {
-        background-color: #383837;
-        color: white;
-        padding: 15px 20px;
-        text-align: center;
-      }
-    </style>
+    <!-- Підключаємо стилі -->
+    <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
-   <header>
-  <nav>
-    <a href="game.html" class="about">Грати!</a>
-    <a href="#blog" class="blog">Блог</a>
-  </nav>
+    <header>
+      <!-- Головне меню зліва -->
+      <nav class="main-nav">
+        <a href="game.html" class="nav-link">Грати!</a>
+        <a href="#blog" class="nav-link">Блог</a>
+      </nav>
 
-  <!-- Кнопки входу / реєстрації в правому верхньому куті -->
-  <div class="auth-buttons">
-    <a href="login.html" class="signin">Sign in</a>
-    <a href="signup.html" class="signup">Sign up</a>
-  </div>
-</header>
-
-    
+      <!-- Кнопки входу / реєстрації справа вгорі -->
+      <div class="auth-buttons">
+        <a href="login.html" class="signin">Sign in</a>
+        <a href="signup.html" class="signup">Sign up</a>
+      </div>
+    </header>
 
     <main>
-      <!-- Картинка по центру -->
+      <!-- Блок акаунта зліва всередині main -->
+      <div class="user-panel">
+        <img 
+          src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png" 
+          alt="Аватар" 
+          class="user-avatar"
+        >
+        <div>
+          <div class="user-name-label">Акаунт:</div>
+          <div class="user-name-value" id="userNameDisplay">Гість</div>
+        </div>
+      </div>
+
+      <!-- Форма для введення/зміни імені -->
+      <form class="user-form" id="userForm">
+        <label>
+          Введіть своє ім’я:
+          <input type="text" id="userNameInput" placeholder="Наприклад, Davyd">
+        </label>
+        <button type="submit">Зберегти</button>
+      </form>
+
+      <!-- Картинка гри по центру -->
       <img 
         src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png" 
         alt="PINE Tycoon" 
@@ -109,5 +76,28 @@
     <footer>
       © 2025 PINE Tycoon — бета-версія гри
     </footer>
+
+    <!-- Скрипт для зміни/збереження імені акаунта -->
+    <script>
+      const form = document.getElementById('userForm');
+      const input = document.getElementById('userNameInput');
+      const display = document.getElementById('userNameDisplay');
+
+      // Якщо ім’я вже збережене в браузері – показуємо його
+      const savedName = localStorage.getItem('pineUserName');
+      if (savedName) {
+        display.textContent = savedName;
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const name = input.value.trim();
+        if (!name) return;
+
+        display.textContent = name;
+        localStorage.setItem('pineUserName', name);
+        input.value = '';
+      });
+    </script>
   </body>
 </html>
