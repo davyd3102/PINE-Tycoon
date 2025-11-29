@@ -8,7 +8,7 @@
     <!-- Основні стилі сайту -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Додаткові стилі: сніг + пошук користувачів -->
+    <!-- Додаткові стилі: сніг + пошук користувачів + анімації -->
     <style>
       /* Сніговий ефект */
       .snowflake {
@@ -36,6 +36,7 @@
       .user-search {
         margin: 20px 0;
         max-width: 400px;
+        animation: fade-in-up 0.8s ease-out;
       }
 
       .user-search h2 {
@@ -64,10 +65,13 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
       }
 
       .user-search button:hover {
         opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
       }
 
       .user-search-result {
@@ -76,6 +80,8 @@
         border-radius: 8px;
         padding: 10px;
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        min-height: 24px;
+        animation: fade-in 0.3s ease-out;
       }
 
       .user-search-result .profile-card {
@@ -89,6 +95,7 @@
         height: 48px;
         border-radius: 50%;
         object-fit: cover;
+        animation: float-avatar 3s ease-in-out infinite;
       }
 
       .user-search-result .name {
@@ -110,6 +117,70 @@
 
       .user-search-result .not-found {
         color: #555;
+      }
+
+      /* Анімації для привітання, акаунта і картинки гри */
+      .welcome-text {
+        animation: fade-in-down 0.6s ease-out;
+      }
+
+      .user-panel {
+        animation: slide-in-left 0.6s ease-out;
+      }
+
+      .main-logo {
+        animation: fade-in-up 0.8s ease-out;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .main-logo:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      }
+
+      /* Ключові кадри */
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+      }
+
+      @keyframes fade-in-up {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fade-in-down {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slide-in-left {
+        from {
+          opacity: 0;
+          transform: translateX(-15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes float-avatar {
+        0%   { transform: translateY(0); }
+        50%  { transform: translateY(-3px); }
+        100% { transform: translateY(0); }
       }
     </style>
   </head>
