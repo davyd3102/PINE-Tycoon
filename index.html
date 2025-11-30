@@ -5,7 +5,7 @@
     <title>PINE Tycoon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Твій основний CSS (старі стилі, шрифти тощо) -->
+    <!-- Твій основний CSS (якщо є щось додаткове) -->
     <link rel="stylesheet" href="style.css">
 
     <style>
@@ -17,6 +17,7 @@
         --footer-bg: #383837;
         --button-bg: #ffffff;
         --button-text: rgb(56, 56, 55);
+        --border-soft: #e1e1e1;
       }
 
       body.dark-theme {
@@ -26,6 +27,7 @@
         --footer-bg: #201c1c;
         --button-bg: transparent;
         --button-text: #ffffff;
+        --border-soft: rgba(255,255,255,0.18);
       }
 
       /* Макет сторінки */
@@ -64,36 +66,18 @@
 
       /* --- Анімації входу на сайт --- */
       @keyframes fade-down {
-        0% {
-          opacity: 0;
-          transform: translateY(-16px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        0% { opacity: 0; transform: translateY(-16px); }
+        100% { opacity: 1; transform: translateY(0); }
       }
 
       @keyframes fade-up {
-        0% {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        0% { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
       }
 
       @keyframes fade-scale {
-        0% {
-          opacity: 0;
-          transform: scale(0.95);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1);
-        }
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
       }
 
       .fade-down {
@@ -115,7 +99,7 @@
       .delay-2 { animation-delay: 0.3s; }
       .delay-3 { animation-delay: 0.45s; }
 
-      /* --- УНІВЕРСАЛЬНА КНОПКА (і для навігації, і для логіну) --- */
+      /* --- УНІВЕРСАЛЬНА КНОПКА --- */
       .btn {
         display: inline-block;
         padding: 6px 14px;
@@ -191,6 +175,98 @@
         margin-bottom: 20px;
       }
 
+      /* --- ПОШУК КОРИСТУВАЧІВ --- */
+      #userSearchSection {
+        margin-bottom: 24px;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      }
+
+      #userSearchSection h2 {
+        margin-top: 0;
+        font-size: 20px;
+      }
+
+      .user-search-box {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .user-search-box input {
+        flex: 1;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border-soft);
+        font-size: 14px;
+        background: #fff;
+        color: #000;
+      }
+
+      body.dark-theme .user-search-box input {
+        background: #3c3636;
+        color: #fff;
+        border-color: #777;
+      }
+
+      .user-search-results {
+        min-height: 20px;
+      }
+
+      .user-result {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+
+      .user-result:last-child {
+        border-bottom: none;
+      }
+
+      .user-result-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+      }
+
+      .user-result-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .user-result-name {
+        font-weight: 600;
+        font-size: 14px;
+      }
+
+      .user-result-status {
+        font-size: 12px;
+      }
+
+      .user-result-status.online {
+        color: #1bb31b;
+      }
+
+      .user-result-status.offline {
+        color: #b39b1b;
+      }
+
+      .user-result-last {
+        font-size: 11px;
+        color: #777;
+      }
+
+      body.dark-theme .user-result-last {
+        color: #ddd;
+      }
+
       /* Коментарі */
       #commentsSection {
         margin-top: 20px;
@@ -215,11 +291,7 @@
 
       .comment {
         padding: 6px 0;
-        border-bottom: 1px solid #e1e1e1;
-      }
-
-      body.dark-theme .comment {
-        border-bottom-color: rgba(255,255,255,0.15);
+        border-bottom: 1px solid var(--border-soft);
       }
 
       .comment:last-child {
@@ -344,15 +416,15 @@
   </head>
 
   <body>
-    <!-- header тепер анімовано з'являється зверху -->
+    <!-- header з анімацією зверху -->
     <header class="fade-down">
-      <!-- Ліва навігація (Грати / Блог) як гарні кнопки -->
+      <!-- Ліва навігація (Грати / Блог) -->
       <nav class="main-nav">
         <a href="game.html" class="btn">Грати!</a>
         <a href="#blog" class="btn">Блог</a>
       </nav>
 
-      <!-- Праворуч — кнопки входу/реєстрації/виходу -->
+      <!-- Праворуч — Sign in / Sign up / Log out -->
       <div class="auth-buttons">
         <a href="login.html" id="loginLink" class="btn">Sign in</a>
         <a href="signup.html" id="signupLink" class="btn">Sign up</a>
@@ -361,7 +433,7 @@
     </header>
 
     <main>
-      <!-- Привітання + акаунт (мʼяка поява) -->
+      <!-- Привітання + акаунт -->
       <p class="welcome-text fade-up delay-1" id="welcomeText">Welcome Guest</p>
 
       <div class="user-panel fade-scale delay-1">
@@ -376,7 +448,19 @@
         </div>
       </div>
 
-      <!-- Картинка гри (плавно підʼїжджає знизу) -->
+      <!-- ПОШУК КОРИСТУВАЧІВ -->
+      <section id="userSearchSection" class="fade-up delay-2">
+        <h2>Пошук гравців</h2>
+        <div class="user-search-box">
+          <input type="text" id="userSearchInput" placeholder="Введіть нікнейм..." />
+          <button id="userSearchBtn" class="btn">Знайти</button>
+        </div>
+        <div id="userSearchResults" class="user-search-results">
+          <p class="comment-empty">Введіть нік, щоб знайти гравця.</p>
+        </div>
+      </section>
+
+      <!-- Картинка гри -->
       <img
         src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
         alt="PINE Tycoon"
@@ -397,7 +481,7 @@
         Поки що тут пусто... але ми вже працюємо над новими оновленнями ❄
       </p>
 
-      <!-- СЕКЦІЯ КОМЕНТАРІВ (зʼявляється трішки пізніше) -->
+      <!-- СЕКЦІЯ КОМЕНТАРІВ -->
       <section id="commentsSection" class="fade-up delay-3">
         <h2>Коментарі</h2>
         <div id="commentsList">
@@ -423,7 +507,7 @@
     <!-- Кнопка налаштувань / перемикач теми -->
     <button id="themeToggle" class="theme-toggle" title="Перемкнути тему">⚙</button>
 
-    <!-- Firebase: Auth + Firestore (коментарі) + логіка теми -->
+    <!-- Firebase: Auth + Firestore (коментарі + пошук) + логіка теми -->
     <script type="module">
       import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
       import {
@@ -438,7 +522,9 @@
         serverTimestamp,
         query,
         orderBy,
-        onSnapshot
+        onSnapshot,
+        setDoc,
+        doc
       } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js';
 
       const firebaseConfig = {
@@ -468,7 +554,11 @@
       const commentText  = document.getElementById('commentText');
       const commentInfo  = document.getElementById('commentInfo');
 
-      const themeToggleBtn = document.getElementById('themeToggle');
+      const themeToggleBtn   = document.getElementById('themeToggle');
+
+      const userSearchInput  = document.getElementById('userSearchInput');
+      const userSearchBtn    = document.getElementById('userSearchBtn');
+      const userSearchResults= document.getElementById('userSearchResults');
 
       const DEFAULT_AVATAR   = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
       const DAVYD3102_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
@@ -476,9 +566,13 @@
       const GRIVIELD_AVATAR  = "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png";
 
       const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
+      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 хвилини
 
       let currentUserName = null;
+      let currentUserUid  = null;
+      let presenceInterval = null;
 
+      // --- ВИБІР АВАТАРА ЗА НІКОМ ---
       function getAvatarForName(name) {
         const map = {
           "davyd3102": DAVYD3102_AVATAR,
@@ -488,6 +582,17 @@
           "Grivield": GRIVIELD_AVATAR
         };
         return map[name] || DEFAULT_AVATAR;
+      }
+
+      // Екранування HTML (для коментарів і ніків)
+      function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, (c) => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        }[c] || c));
       }
 
       function updateCommentUI() {
@@ -506,11 +611,49 @@
         }
       }
 
+      // --- ОНОВЛЕННЯ "ОСТАННЯ АКТИВНІСТЬ" ---
+      async function touchUserPresence(uid, name) {
+        try {
+          const avatar = getAvatarForName(name);
+          await setDoc(
+            doc(db, 'users', uid),
+            {
+              name: name,
+              avatar: avatar,
+              lastActive: serverTimestamp()
+            },
+            { merge: true }
+          );
+        } catch (err) {
+          console.error("Помилка оновлення присутності:", err);
+        }
+      }
+
+      function startPresenceUpdater(uid, name) {
+        if (presenceInterval) {
+          clearInterval(presenceInterval);
+        }
+        // Оновлюємо одразу
+        touchUserPresence(uid, name);
+        // І далі кожні 60 секунд
+        presenceInterval = setInterval(() => {
+          touchUserPresence(uid, name);
+        }, 60000);
+      }
+
+      function stopPresenceUpdater() {
+        if (presenceInterval) {
+          clearInterval(presenceInterval);
+          presenceInterval = null;
+        }
+      }
+
       // --- Auth: слідкуємо за станом користувача ---
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if (user && user.displayName) {
           const name = user.displayName;
           currentUserName = name;
+          currentUserUid  = user.uid;
 
           welcomeText.textContent      = "Welcome " + name;
           userNameDisplay.textContent  = name;
@@ -519,8 +662,11 @@
           loginLink.style.display  = "inline-block"; 
           signupLink.style.display = "none";
           logoutBtn.style.display  = "inline-block";
+
+          startPresenceUpdater(user.uid, name);
         } else {
           currentUserName = null;
+          currentUserUid  = null;
 
           welcomeText.textContent      = "Welcome Guest";
           userNameDisplay.textContent  = "Гість";
@@ -529,6 +675,8 @@
           loginLink.style.display  = "inline-block";
           signupLink.style.display = "inline-block";
           logoutBtn.style.display  = "none";
+
+          stopPresenceUpdater();
         }
 
         updateCommentUI();
@@ -548,17 +696,6 @@
       const commentsCol  = collection(db, 'comments');
       const commentsQ    = query(commentsCol, orderBy('createdAt', 'desc'));
 
-      function escapeHtml(str) {
-        return str.replace(/[&<>"']/g, (c) => ({
-          '&': '&amp;',
-          '<': '&lt;',
-          '>': '&gt;',
-          '"': '&quot;',
-          "'": '&#39;'
-        }[c] || c));
-      }
-
-      // Слухаємо всі коментарі в реальному часі
       onSnapshot(
         commentsQ,
         (snapshot) => {
@@ -569,8 +706,8 @@
             return;
           }
 
-          snapshot.forEach((doc) => {
-            const data   = doc.data();
+          snapshot.forEach((docSnap) => {
+            const data   = docSnap.data();
             const text   = data.text || '';
             const author = data.author || '??';
             const time   = data.createdAt?.toDate ? data.createdAt.toDate() : null;
@@ -619,6 +756,89 @@
           } catch (err) {
             console.error(err);
             alert("Не вдалося надіслати коментар: " + err.message);
+          }
+        });
+      }
+
+      // --- Firestore: користувачі (для пошуку) ---
+      const usersCol = collection(db, 'users');
+      let usersCache = [];
+
+      onSnapshot(
+        usersCol,
+        (snapshot) => {
+          usersCache = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+          // Якщо вже було щось у пошуку – можна перерендерити
+          const term = userSearchInput.value.trim();
+          if (term) {
+            renderUserResults(term);
+          }
+        },
+        (error) => {
+          console.error("Помилка завантаження користувачів:", error);
+        }
+      );
+
+      function renderUserResults(term) {
+        userSearchResults.innerHTML = '';
+
+        const trimmed = term.trim();
+        if (!trimmed) {
+          userSearchResults.innerHTML = '<p class="comment-empty">Введіть нік, щоб знайти гравця.</p>';
+          return;
+        }
+
+        const lower = trimmed.toLowerCase();
+        const filtered = usersCache.filter(u =>
+          u.name && u.name.toLowerCase().includes(lower)
+        );
+
+        if (!filtered.length) {
+          userSearchResults.innerHTML = '<p class="comment-empty">Нічого не знайдено.</p>';
+          return;
+        }
+
+        const now = new Date();
+
+        filtered.forEach(u => {
+          const name   = u.name || 'Без імені';
+          const avatar = u.avatar || getAvatarForName(name);
+          const last   = u.lastActive?.toDate ? u.lastActive.toDate() : null;
+
+          let status = 'Офлайн';
+          if (last && (now - last) < ONLINE_TIMEOUT_MS) {
+            status = 'Онлайн';
+          }
+
+          const item = document.createElement('div');
+          item.className = 'user-result';
+          item.innerHTML = `
+            <img src="${avatar}" alt="Аватар" class="user-result-avatar" />
+            <div class="user-result-info">
+              <div class="user-result-name">${escapeHtml(name)}</div>
+              <div class="user-result-status ${status === 'Онлайн' ? 'online' : 'offline'}">
+                ${status}
+              </div>
+              ${
+                last
+                  ? `<div class="user-result-last">Остання активність: ${last.toLocaleString('uk-UA')}</div>`
+                  : ''
+              }
+            </div>
+          `;
+          userSearchResults.appendChild(item);
+        });
+      }
+
+      if (userSearchBtn && userSearchInput) {
+        userSearchBtn.addEventListener('click', () => {
+          renderUserResults(userSearchInput.value);
+        });
+
+        userSearchInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            renderUserResults(userSearchInput.value);
           }
         });
       }
