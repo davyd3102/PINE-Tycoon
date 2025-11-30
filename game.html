@@ -70,6 +70,53 @@
       image-rendering: pixelated;
     }
 
+    /* Панель мультиплеєра */
+    #mpPanel {
+      position: fixed;
+      right: 20px;
+      top: 220px;
+      width: 210px;
+      max-height: 260px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      padding: 8px;
+      font-size: 12px;
+      border-radius: 8px;
+      z-index: 19;
+    }
+
+    #mpStatus {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    #mpList .playerRow {
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      padding-bottom: 4px;
+    }
+
+    #mpList .playerRow:last-child {
+      border-bottom: none;
+    }
+
+    #mpList button {
+      width: 100%;
+      margin-top: 3px;
+      border: none;
+      padding: 3px 5px;
+      border-radius: 6px;
+      background: #3498db;
+      color: #fff;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    #mpList button:hover {
+      background: #2980b9;
+    }
+
     /* Сніг-покриття (2D-канвас над 3D-сценою) */
     #snowCanvas {
       position: fixed;
@@ -166,6 +213,11 @@
   <canvas id="minimapCanvas" width="180" height="180"></canvas>
 </div>
 
+<div id="mpPanel">
+  <div id="mpStatus">Мультиплеєр: завантаження...</div>
+  <div id="mpList"></div>
+</div>
+
 <canvas id="snowCanvas"></canvas>
 
 <div id="touchControls">
@@ -214,18 +266,19 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* --- Змінні мультиплеєра --- */
+/* --- Мультиплеєрні змінні --- */
 let currentUserUid = null;
 let currentUserName = null;
 
-// Колекція, де зберігаються позиції всіх гравців
 const gamePlayersCol = collection(db, "gamePlayers");
-
-// Інші гравці (аватари)
 const remotePlayers = new Map();
-const MAX_INACTIVE_MS = 30000; // 30 c — після цього гравець вважається офлайн
+const remoteStates = new Map();
+const MAX_INACTIVE_MS = 30000; // 30 секунд
 let lastSyncTime = 0;
-const SYNC_INTERVAL = 200; // оновлювати позицію раз на 200 мс
+const SYNC_INTERVAL = 200; // раз на 200мс
+
+const mpStatusEl = document.getElementById("mpStatus");
+const mpListEl = document.getElementById("mpList");
 
 /* -----------------------------------------------------------
    СЦЕНА + КАМЕРА + ПІКСЕЛЬНИЙ РЕНДЕР
@@ -363,7 +416,6 @@ function getOrCreateRemotePlayer(uid, name) {
     p = { group, label, name };
     remotePlayers.set(uid, p);
   } else if (p.name !== name) {
-    // якщо ім’я змінилось – оновимо напис
     p.group.remove(p.label);
     const newLabel = makeTextSprite(name, "#ffffff");
     newLabel.scale.set(1.4, 0.5, 1);
@@ -376,10 +428,6 @@ function getOrCreateRemotePlayer(uid, name) {
 }
 
 /* --------- Кнопка відновлення будинків/ферм --------- */
-/**
- * type: "house" | "bigHouse" | "path" | "farm"
- * target: група/меш об’єкта
- */
 function createRestoreButton(x, z, requiredWood, type, target) {
   const group = new THREE.Group();
   group.position.set(x, 0, z);
@@ -541,7 +589,6 @@ function createTree(x, z) {
   group.position.set(x, 0, z);
   scene.add(group);
 
-  // стовбур
   const trunk = new THREE.Mesh(
     new THREE.CylinderGeometry(0.25, 0.35, 2.2, 8),
     new THREE.MeshStandardMaterial({ color: 0x5b3a1a })
@@ -551,7 +598,6 @@ function createTree(x, z) {
   trunk.receiveShadow = true;
   group.add(trunk);
 
-  // 3 конуси-ярусами, як ялинка засніжена
   const levels = [
     { r: 1.2, h: 1.4, y: 2.0 },
     { r: 0.9, h: 1.2, y: 3.0 },
@@ -945,7 +991,7 @@ function tryUseNearestButton() {
   wood -= best.cost;
   best.restored = true;
 
-  if (best.type === "house") {
+  if (best.type === "house" || best.type === "bigHouse") {
     best.target.traverse(obj => {
       if (obj.isMesh && obj.material) {
         obj.material.transparent = false;
@@ -954,17 +1000,12 @@ function tryUseNearestButton() {
     });
     const hx = best.target.position.x;
     const hz = best.target.position.z;
-    addColliderBox(hx, hz, 3.2, 3.2);
-  } else if (best.type === "bigHouse") {
-    best.target.traverse(obj => {
-      if (obj.isMesh && obj.material) {
-        obj.material.transparent = false;
-        obj.material.opacity = 1;
-      }
-    });
-    const hx = best.target.position.x;
-    const hz = best.target.position.z;
-    addColliderBox(hx, hz, 4, 4);
+    addColliderBox(
+      hx,
+      hz,
+      best.type === "bigHouse" ? 4 : 3.2,
+      best.type === "bigHouse" ? 4 : 3.2
+    );
   } else if (best.type === "path") {
     if (best.target.material) {
       best.target.material.transparent = false;
@@ -1284,6 +1325,53 @@ if (actionBtn) {
 }
 
 /* -----------------------------------------------------------
+   МУЛЬТИПЛЕЄР: UI
+------------------------------------------------------------ */
+
+function joinToPlayer(uid) {
+  const data = remoteStates.get(uid);
+  if (!data) return;
+
+  camera.position.set(data.x + 2, 2, data.z + 2);
+  yaw = data.yaw ?? yaw;
+}
+
+function updateMpUI() {
+  if (!mpStatusEl || !mpListEl) return;
+
+  if (!currentUserUid) {
+    mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
+  } else {
+    mpStatusEl.textContent = "Мультиплеєр: ви " + currentUserName;
+  }
+
+  mpListEl.innerHTML = "";
+
+  if (remoteStates.size === 0) {
+    const span = document.createElement("div");
+    span.textContent = "Немає інших гравців у грі";
+    mpListEl.appendChild(span);
+    return;
+  }
+
+  remoteStates.forEach((data, uid) => {
+    const row = document.createElement("div");
+    row.className = "playerRow";
+
+    const name = document.createElement("div");
+    name.textContent = data.name + " у грі";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Приєднатися";
+    btn.onclick = () => joinToPlayer(uid);
+
+    row.appendChild(name);
+    row.appendChild(btn);
+    mpListEl.appendChild(row);
+  });
+}
+
+/* -----------------------------------------------------------
    МУЛЬТИПЛЕЄР: оновлення своєї позиції
 ------------------------------------------------------------ */
 
@@ -1320,41 +1408,63 @@ function maybeSyncGamePlayer() {
    МУЛЬТИПЛЕЄР: слухаємо інших гравців
 ------------------------------------------------------------ */
 
-onSnapshot(gamePlayersCol, (snapshot) => {
-  const now = Date.now();
+onSnapshot(
+  gamePlayersCol,
+  (snapshot) => {
+    remoteStates.clear();
 
-  snapshot.forEach((docSnap) => {
-    const uid = docSnap.id;
-    if (uid === currentUserUid) return;
+    const nowMs = Date.now();
+    remotePlayers.forEach((p) => {
+      p._seen = false;
+    });
 
-    const data = docSnap.data() || {};
-    const updatedAt = data.updatedAt?.toDate
-      ? data.updatedAt.toDate().getTime()
-      : 0;
+    snapshot.forEach((docSnap) => {
+      const uid = docSnap.id;
+      if (uid === currentUserUid) return;
 
-    // якщо давно не оновлювався — прибираємо
-    if (!updatedAt || now - updatedAt > MAX_INACTIVE_MS) {
-      const p = remotePlayers.get(uid);
-      if (p) {
+      const data = docSnap.data() || {};
+      const updatedAt = data.updatedAt?.toDate
+        ? data.updatedAt.toDate().getTime()
+        : 0;
+
+      if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS) {
+        const p = remotePlayers.get(uid);
+        if (p) {
+          scene.remove(p.group);
+          remotePlayers.delete(uid);
+        }
+        return;
+      }
+
+      const name = data.name || "Гравець";
+      const x = data.x ?? 0;
+      const y = data.y ?? 2;
+      const z = data.z ?? 0;
+      const ry = data.yaw ?? 0;
+
+      const p = getOrCreateRemotePlayer(uid, name);
+      p.group.position.set(x, 0, z);
+      p.group.rotation.y = ry;
+      p._seen = true;
+
+      remoteStates.set(uid, { name, x, y, z, yaw: ry });
+    });
+
+    remotePlayers.forEach((p, uid) => {
+      if (!p._seen) {
         scene.remove(p.group);
         remotePlayers.delete(uid);
+      } else {
+        delete p._seen;
       }
-      return;
-    }
+    });
 
-    const name = data.name || "Гравець";
-    const x = data.x ?? 0;
-    const y = data.y ?? 2;
-    const z = data.z ?? 0;
-    const ry = data.yaw ?? 0;
-
-    const p = getOrCreateRemotePlayer(uid, name);
-    p.group.position.set(x, 0, z);
-    p.group.rotation.y = ry;
-  });
-}, (err) => {
-  console.error("Помилка читання gamePlayers:", err);
-});
+    updateMpUI();
+  },
+  (err) => {
+    console.error("Помилка читання gamePlayers:", err);
+  }
+);
 
 /* -----------------------------------------------------------
    AUTH: дізнаємось, хто ми
@@ -1368,6 +1478,7 @@ onAuthStateChanged(auth, (user) => {
     currentUserUid = null;
     currentUserName = null;
   }
+  updateMpUI();
 });
 
 /* -----------------------------------------------------------
@@ -1520,7 +1631,7 @@ function animate() {
 
   updateSnow(dt);
 
-  // 🔄 тут ми відправляємо свою позицію в Firebase
+  // 🔄 синхронізація своєї позиції у Firebase
   maybeSyncGamePlayer();
 
   renderer.setRenderTarget(pixelTarget);
