@@ -153,7 +153,8 @@
 
 <div id="info">
   ПК: W/S – вперед/назад, A/D – вліво/вправо, стрілки – огляд, ЛКМ – удар/кнопка<br>
-  Телефон: лівий круг – рух, правий – камера, 🪓 – удар/кнопка
+  Телефон: лівий круг – рух, правий – камера, 🪓 – удар/кнопка<br>
+  Друзі: увійдіть у акаунти на сайті й відкрийте цю сторінку, щоб бачити один одного.
 </div>
 
 <div id="stats"></div>
@@ -180,7 +181,51 @@
 <div id="freezeOverlay"></div>
 
 <script type="module">
+/* --------- Імпорт THREE --------- */
 import * as THREE from "https://unpkg.com/three@0.165.0/build/three.module.js";
+
+/* --------- Імпорт Firebase для мультиплеєра --------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+/* --- Firebase config (той самий, що на сайті) --- */
+const firebaseConfig = {
+  apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
+  authDomain: "pine-tycoon.firebaseapp.com",
+  projectId: "pine-tycoon",
+  storageBucket: "pine-tycoon.firebasestorage.app",
+  messagingSenderId: "949986190236",
+  appId: "1:949986190236:web:4f5d50078326f5c1981e59",
+  measurementId: "G-2DY6KSY4G7"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* --- Змінні мультиплеєра --- */
+let currentUserUid = null;
+let currentUserName = null;
+
+// Колекція, де зберігаються позиції всіх гравців
+const gamePlayersCol = collection(db, "gamePlayers");
+
+// Інші гравці (аватари)
+const remotePlayers = new Map();
+const MAX_INACTIVE_MS = 30000; // 30 c — після цього гравець вважається офлайн
+let lastSyncTime = 0;
+const SYNC_INTERVAL = 200; // оновлювати позицію раз на 200 мс
 
 /* -----------------------------------------------------------
    СЦЕНА + КАМЕРА + ПІКСЕЛЬНИЙ РЕНДЕР
@@ -282,6 +327,55 @@ function makeTextSprite(message, color = "#ffffff") {
   return new THREE.Sprite(material);
 }
 
+/* ---------- АВАТАРИ ІНШИХ ГРАВЦІВ ---------- */
+
+function getOrCreateRemotePlayer(uid, name) {
+  let p = remotePlayers.get(uid);
+  if (!p) {
+    const group = new THREE.Group();
+
+    // Тіло
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.4, 1.4, 10),
+      new THREE.MeshStandardMaterial({ color: 0x3498db })
+    );
+    body.position.y = 0.7;
+    body.castShadow = true;
+    body.receiveShadow = true;
+    group.add(body);
+
+    // Голова
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 12, 12),
+      new THREE.MeshStandardMaterial({ color: 0xffe0bd })
+    );
+    head.position.y = 1.6;
+    head.castShadow = true;
+    group.add(head);
+
+    // Ім’я
+    const label = makeTextSprite(name, "#ffffff");
+    label.scale.set(1.4, 0.5, 1);
+    label.position.set(0, 2.2, 0);
+    group.add(label);
+
+    scene.add(group);
+    p = { group, label, name };
+    remotePlayers.set(uid, p);
+  } else if (p.name !== name) {
+    // якщо ім’я змінилось – оновимо напис
+    p.group.remove(p.label);
+    const newLabel = makeTextSprite(name, "#ffffff");
+    newLabel.scale.set(1.4, 0.5, 1);
+    newLabel.position.set(0, 2.2, 0);
+    p.group.add(newLabel);
+    p.label = newLabel;
+    p.name = name;
+  }
+  return p;
+}
+
+/* --------- Кнопка відновлення будинків/ферм --------- */
 /**
  * type: "house" | "bigHouse" | "path" | "farm"
  * target: група/меш об’єкта
@@ -575,7 +669,7 @@ function path(x, z, w, l) {
 }
 
 /* -----------------------------------------------------------
-   ГОРИ (з колізією, трохи більший хітбокс)
+   ГОРИ (з колізією)
 ------------------------------------------------------------ */
 
 function createMountain(x, z) {
@@ -589,12 +683,10 @@ function createMountain(x, z) {
   m.receiveShadow = true;
   scene.add(m);
 
-  // трішки більший хітбокс, щоб точно не пройти крізь гору
   addColliderBox(x, z, base * 0.8, base * 0.8);
 }
 
 function createMountainsBorder() {
-  // Щільніший кордон по краю карти
   for (let x = -150; x <= 150; x += 15) {
     createMountain(x, -150);
     createMountain(x, 150);
@@ -604,7 +696,6 @@ function createMountainsBorder() {
     createMountain(150, z);
   }
 
-  // Додаткове кільце гір всередині
   for (let i = 0; i < 35; i++) {
     const a = Math.random() * Math.PI * 2;
     const r = 110 + Math.random() * 25;
@@ -615,7 +706,7 @@ function createMountainsBorder() {
 }
 
 /* -----------------------------------------------------------
-   СКЕЛІ / КАМЕНІ В ЛІСІ — РІДШЕ
+   СКЕЛІ / КАМЕНІ В ЛІСІ
 ------------------------------------------------------------ */
 
 function createForestRocks(count) {
@@ -707,7 +798,6 @@ createHouse(-20, 0);
 createHouse(8, 18);
 createHouse(-8, -20);
 
-/* Нові двоповерхові будинки (65 дерева) */
 createBigHouse(16, -20);
 createBigHouse(-16, 20);
 
@@ -720,18 +810,13 @@ createFarm(0, -22, 10, 6);
 createFarm(18, 6, 10, 6);
 createFarm(-18, -6, 10, 6);
 
-/* Ліс ялинок */
 forestRing(0, 0, 24, 42, 100);
 forestRing(0, 0, 42, 70, 140);
 forestRing(0, 0, 70, 100, 180);
 
-/* Скелі в лісі */
 createForestRocks(30);
-
-/* Гори */
 createMountainsBorder();
 
-/* Вогнище біля спавна */
 const campfirePos = { x: 0, z: 30 };
 createCampfire(campfirePos.x, campfirePos.z);
 
@@ -924,18 +1009,15 @@ function chopNearestTree() {
     const t = trees[bestIndex];
     t.hp -= 1;
 
-    // коли дерево "зрубали"
     if (t.hp <= 0 && !t.falling) {
       t.falling = true;
       t.fallTime = 0;
 
-      // прибираємо хвою (лише стовбур лишається)
       for (const cone of t.foliage) {
         t.group.remove(cone);
       }
       t.foliage.length = 0;
 
-      // забираємо колізію, щоб потім можна було ходити
       const colIdx = colliders.indexOf(t.collider);
       if (colIdx !== -1) colliders.splice(colIdx, 1);
 
@@ -983,7 +1065,7 @@ function updateMinimap() {
   miniCtx.restore();
 }
 
-/* Сніг (менше сніжинок) */
+/* Сніг */
 
 const snowCanvas = document.getElementById("snowCanvas");
 const snowCtx = snowCanvas.getContext("2d");
@@ -1202,6 +1284,93 @@ if (actionBtn) {
 }
 
 /* -----------------------------------------------------------
+   МУЛЬТИПЛЕЄР: оновлення своєї позиції
+------------------------------------------------------------ */
+
+async function syncGamePlayer() {
+  if (!currentUserUid || !currentUserName) return;
+  try {
+    const ref = doc(gamePlayersCol, currentUserUid);
+    await setDoc(
+      ref,
+      {
+        name: currentUserName,
+        x: camera.position.x,
+        y: camera.position.y,
+        z: camera.position.z,
+        yaw,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  } catch (err) {
+    console.error("Помилка синхронізації гравця:", err);
+  }
+}
+
+function maybeSyncGamePlayer() {
+  if (!currentUserUid || !currentUserName) return;
+  const now = performance.now();
+  if (now - lastSyncTime < SYNC_INTERVAL) return;
+  lastSyncTime = now;
+  syncGamePlayer();
+}
+
+/* -----------------------------------------------------------
+   МУЛЬТИПЛЕЄР: слухаємо інших гравців
+------------------------------------------------------------ */
+
+onSnapshot(gamePlayersCol, (snapshot) => {
+  const now = Date.now();
+
+  snapshot.forEach((docSnap) => {
+    const uid = docSnap.id;
+    if (uid === currentUserUid) return;
+
+    const data = docSnap.data() || {};
+    const updatedAt = data.updatedAt?.toDate
+      ? data.updatedAt.toDate().getTime()
+      : 0;
+
+    // якщо давно не оновлювався — прибираємо
+    if (!updatedAt || now - updatedAt > MAX_INACTIVE_MS) {
+      const p = remotePlayers.get(uid);
+      if (p) {
+        scene.remove(p.group);
+        remotePlayers.delete(uid);
+      }
+      return;
+    }
+
+    const name = data.name || "Гравець";
+    const x = data.x ?? 0;
+    const y = data.y ?? 2;
+    const z = data.z ?? 0;
+    const ry = data.yaw ?? 0;
+
+    const p = getOrCreateRemotePlayer(uid, name);
+    p.group.position.set(x, 0, z);
+    p.group.rotation.y = ry;
+  });
+}, (err) => {
+  console.error("Помилка читання gamePlayers:", err);
+});
+
+/* -----------------------------------------------------------
+   AUTH: дізнаємось, хто ми
+------------------------------------------------------------ */
+
+onAuthStateChanged(auth, (user) => {
+  if (user && user.displayName) {
+    currentUserUid = user.uid;
+    currentUserName = user.displayName;
+  } else {
+    currentUserUid = null;
+    currentUserName = null;
+  }
+});
+
+/* -----------------------------------------------------------
    РУХ + ТЕПЛО + АНІМАЦІЯ
 ------------------------------------------------------------ */
 
@@ -1277,7 +1446,6 @@ function animate() {
 
   camera.position.y = 2;
 
-  /* Анімація атаки сокирою */
   if (isAttacking) {
     attackTime += dt;
     const t = Math.min(attackTime / attackDuration, 1);
@@ -1302,7 +1470,6 @@ function animate() {
     weaponHolder.rotation.copy(weaponBaseRot);
   }
 
-  /* Анімація падіння дерев + видалення */
   for (const t of trees) {
     if (t.falling && !t.removed) {
       t.fallTime += dt;
@@ -1312,13 +1479,11 @@ function animate() {
       t.group.rotation.z = angle;
 
       if (k >= 1) {
-        // після завершення анімації – прибираємо дерево зі сцени
         t.removed = true;
         scene.remove(t.group);
       }
     }
   }
-  // повністю прибираємо з масиву ті дерева, що зникли
   trees = trees.filter(t => !t.removed);
 
   for (const b of buttons) {
@@ -1328,7 +1493,6 @@ function animate() {
     b.light.intensity = 1.3 + Math.sin(t * 1.7) * 0.5;
   }
 
-  // Тепло: 1 вогник ≈ 40 секунд, якщо далеко від вогнища
   const dx = camera.position.x - campfirePos.x;
   const dz = camera.position.z - campfirePos.z;
   const dist = Math.sqrt(dx * dx + dz * dz);
@@ -1355,6 +1519,9 @@ function animate() {
   }
 
   updateSnow(dt);
+
+  // 🔄 тут ми відправляємо свою позицію в Firebase
+  maybeSyncGamePlayer();
 
   renderer.setRenderTarget(pixelTarget);
   renderer.render(scene, camera);
