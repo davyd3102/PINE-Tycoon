@@ -365,6 +365,61 @@
       background: #c62828;
     }
 
+    /* Блог */
+
+    .blog-section h2 {
+      margin-top: 0;
+    }
+
+    #blogCompose textarea {
+      width: 100%;
+      min-height: 80px;
+      resize: vertical;
+      box-sizing: border-box;
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    #blogCompose button {
+      margin-top: 6px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      background: #383837;
+      color: #fff;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #blogCompose button:hover {
+      background: #222;
+    }
+
+    #blogStatus {
+      margin-top: 4px;
+      font-size: 12px;
+      color: #555;
+    }
+
+    .blog-post {
+      border-bottom: 1px solid #eee;
+      padding: 8px 0;
+    }
+
+    .blog-post-meta {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+    }
+
+    .blog-post-content {
+      white-space: pre-wrap;
+      font-size: 14px;
+    }
+
     footer {
       text-align: center;
       padding: 12px 10px;
@@ -410,7 +465,7 @@
           </p>
           <p class="status-box">
             Поточна версія: <b>1.0 – мультиплеєрна альфа</b><br />
-            Додано: систему акаунтів, синхронізацію гравців, базовий мультиплеєр і друзів.
+            Додано: систему акаунтів, мультиплеєр, друзів і блог.
           </p>
         </div>
       </div>
@@ -420,7 +475,7 @@
     <section class="card" id="authCard">
       <h2>Акаунт</h2>
       <p class="small-text">
-        Створи акаунт, щоб грати під своїм ім’ям у мультиплеєрі, додавати друзів і використовувати можливості сайту.
+        Створи акаунт, щоб грати під своїм ім’ям у мультиплеєрі, додавати друзів і користуватись блогом.
       </p>
 
       <div class="auth-forms">
@@ -536,14 +591,24 @@
     <!-- Блог -->
     <section class="card blog-section" id="blog">
       <h2>Блог</h2>
-      <p><i>Останнє оновлення:</i></p>
-      <ul>
-        <li>Додано систему акаунтів на Firebase.</li>
-        <li>Підключено мультиплеєр між гравцями (перша альфа).</li>
-        <li>Додано систему друзів (пошук, запити, список друзів).</li>
-        <li>Підготовлено адмін-панель для <b>davyd3102</b> ✨</li>
-      </ul>
-      <p>Незабаром тут з’являться нотатки про розробку, зміни балансу та нові будівлі.</p>
+      <p class="small-text">
+        Тут будуть короткі записи про оновлення, фічі й плани по PINE Tycoon.
+      </p>
+
+      <!-- Цей блок бачить і може використовувати тільки davyd3102 -->
+      <div id="blogCompose" class="hidden">
+        <label>
+          Новий запис від <b>davyd3102</b>:
+          <textarea id="blogContent" placeholder="Напиши текст оновлення / новини..."></textarea>
+        </label>
+        <button id="blogPostBtn">Опублікувати запис</button>
+        <div id="blogStatus"></div>
+      </div>
+
+      <h3>Останні записи</h3>
+      <div id="blogPosts" class="small-text">
+        (Поки що тут пусто...)
+      </div>
     </section>
   </main>
 
@@ -551,7 +616,7 @@
     © 2025 PINE Tycoon — бета-версія гри з мультиплеєром
   </footer>
 
-  <!-- Firebase + логіка акаунтів, друзів і адмін-панелі -->
+  <!-- Firebase + логіка акаунтів, друзів, блогу і адмін-панелі -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
@@ -631,6 +696,13 @@
     const friendRequestsList   = document.getElementById("friendRequestsList");
     const friendsList          = document.getElementById("friendsList");
     const refreshFriendsBtn    = document.getElementById("refreshFriendsBtn");
+
+    // Blog
+    const blogCompose    = document.getElementById("blogCompose");
+    const blogContent    = document.getElementById("blogContent");
+    const blogPostBtn    = document.getElementById("blogPostBtn");
+    const blogStatus     = document.getElementById("blogStatus");
+    const blogPosts      = document.getElementById("blogPosts");
 
     // 🔹 Показати/сховати блок авторизації по кнопці в хедері
     if (showAuthBtn) {
@@ -885,7 +957,6 @@
             span.textContent = name;
             main.appendChild(span);
 
-            // Тут можна додати майбутнє: «Приєднатися до друга в грі», і т.д.
             row.appendChild(main);
             friendsList.appendChild(row);
           });
@@ -931,10 +1002,7 @@
 
           if (uid === user.uid) return; // себе не показуємо
 
-          if (
-            name.includes(term) ||
-            email.includes(term)
-          ) {
+          if (name.includes(term) || email.includes(term)) {
             found++;
             const row = document.createElement("div");
             row.className = "user-row";
@@ -1008,7 +1076,7 @@
 
           const span = document.createElement("span");
           span.textContent =
-            (data.name || "(без імені)") + " — " + (data.email || "(немає email)");
+            (data.name || "(без імені)") + " — " + (data.email || "(немає email)";
           main.appendChild(span);
 
           const uidSmall = document.createElement("div");
@@ -1099,7 +1167,106 @@
       });
     }
 
-    // 🔹 onAuthStateChanged — оновлюємо UI + адмін-панель + друзів
+    // 🔹 БЛОГ: завантажити всі записи
+    async function loadBlogPosts() {
+      if (!blogPosts) return;
+      blogPosts.textContent = "Завантажую записи...";
+      try {
+        const postsRef = collection(db, "blogPosts");
+        const snap = await getDocs(postsRef);
+
+        if (snap.empty) {
+          blogPosts.textContent = "(Поки що тут пусто...)";
+          return;
+        }
+
+        const posts = [];
+        snap.forEach((docSnap) => {
+          const data = docSnap.data() || {};
+          posts.push({
+            id: docSnap.id,
+            ...data
+          });
+        });
+
+        // Сортуємо за датою (новіші зверху)
+        posts.sort((a, b) => {
+          const ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+          const tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+          return tb - ta;
+        });
+
+        blogPosts.innerHTML = "";
+        posts.forEach((p) => {
+          const postEl = document.createElement("div");
+          postEl.className = "blog-post";
+
+          const metaEl = document.createElement("div");
+          metaEl.className = "blog-post-meta";
+          const author = p.authorName || "davyd3102";
+          let dateStr = "";
+          if (p.createdAt && p.createdAt.toDate) {
+            const d = p.createdAt.toDate();
+            dateStr = d.toLocaleString("uk-UA");
+          }
+          metaEl.textContent = author + (dateStr ? " • " + dateStr : "");
+
+          const contentEl = document.createElement("div");
+          contentEl.className = "blog-post-content";
+          contentEl.textContent = p.content || "";
+
+          postEl.appendChild(metaEl);
+          postEl.appendChild(contentEl);
+          blogPosts.appendChild(postEl);
+        });
+      } catch (err) {
+        console.error(err);
+        blogPosts.textContent = "Помилка при завантаженні записів.";
+      }
+    }
+
+    // 🔹 БЛОГ: публікація нового запису (тільки для davyd3102)
+    if (blogPostBtn) {
+      blogPostBtn.addEventListener("click", async () => {
+        blogStatus.textContent = "";
+        const user = auth.currentUser;
+        if (!user) {
+          blogStatus.textContent = "Спочатку увійди як davyd3102.";
+          return;
+        }
+        const name = user.displayName || "";
+        if (name !== "davyd3102") {
+          blogStatus.textContent = "Писати записи в блог може лише davyd3102.";
+          return;
+        }
+
+        const text = blogContent.value.trim();
+        if (!text) {
+          blogStatus.textContent = "Напиши текст запису.";
+          return;
+        }
+
+        try {
+          const postsRef = collection(db, "blogPosts");
+          const newDocRef = doc(postsRef); // авто-id
+          await setDoc(newDocRef, {
+            authorUid: user.uid,
+            authorName: name,
+            content: text,
+            createdAt: serverTimestamp()
+          });
+
+          blogStatus.textContent = "Запис опубліковано!";
+          blogContent.value = "";
+          loadBlogPosts();
+        } catch (err) {
+          console.error(err);
+          blogStatus.textContent = "Помилка при публікації запису.";
+        }
+      });
+    }
+
+    // 🔹 onAuthStateChanged — оновлюємо UI + адмін-панель + друзів + блог
     onAuthStateChanged(auth, (user) => {
       if (user) {
         const name = user.displayName || "Гравець";
@@ -1120,25 +1287,35 @@
         // Admin only: davyd3102
         if (name === "davyd3102") {
           adminPanel.classList.remove("hidden");
+          blogCompose.classList.remove("hidden"); // показати форму блогу
           loadUsersForAdmin();
         } else {
           adminPanel.classList.add("hidden");
+          blogCompose.classList.add("hidden");
         }
 
-        // Завантажити друзів і запроси
+        // Завантажити друзів і запити
         loadFriendsAndRequests();
       } else {
         authButtons.classList.remove("hidden");
         userInfo.classList.add("hidden");
         loggedCard.classList.add("hidden");
 
-        // Очистити панелі
+        // очистити панелі
         friendRequestsList.textContent = "(Поки що немає запитів)";
         friendsList.textContent = "(Список друзів порожній)";
         searchUserResults.textContent = "(Результати пошуку з’являться тут)";
         if (usersList) usersList.innerHTML = "";
+
+        blogCompose.classList.add("hidden");
       }
+
+      // Блог завжди видно всім (і гостям), просто перезавантажуємо список
+      loadBlogPosts();
     });
+
+    // При першому завантаженні сторінки показати записи блогу навіть для гостей
+    loadBlogPosts();
   </script>
 </body>
 </html>
