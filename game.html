@@ -1,16 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="uk">
 <head>
-  <meta charset="UTF-8">
-  <title>Village – Snow Survival Edition</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+  <title>Village – 2D Snow Survival (Pixel)</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
-      overflow: hidden;
       height: 100%;
+      overflow: hidden;
       background: #000;
       font-family: Arial, sans-serif;
+    }
+
+    /* Головний 2D canvas */
+    #game {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    /* FX canvas (сніг/оверлеї) */
+    #fxCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 8;
     }
 
     #info {
@@ -18,230 +39,256 @@
       top: 10px;
       left: 10px;
       padding: 8px 12px;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.55);
       color: #fff;
       font-size: 13px;
-      border-radius: 6px;
-      z-index: 10;
+      border-radius: 8px;
+      z-index: 20;
+      max-width: min(560px, calc(100vw - 20px));
     }
 
     #stats {
       position: fixed;
-      top: 70px;
+      top: 78px;
       left: 10px;
       padding: 6px 10px;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.55);
       color: #fff;
       font-size: 13px;
-      border-radius: 6px;
-      z-index: 10;
+      border-radius: 8px;
+      z-index: 20;
     }
 
-    /* Шкала тепла — внизу по центру */
+    /* Шкала тепла */
     #heatBar {
       position: fixed;
-      bottom: 20px;
+      bottom: 18px;
       left: 50%;
       transform: translateX(-50%);
       padding: 6px 10px;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.55);
       color: #fff;
       font-size: 18px;
-      border-radius: 6px;
-      z-index: 10;
+      border-radius: 10px;
+      z-index: 20;
       letter-spacing: 2px;
+      user-select: none;
     }
 
+    /* Мінімпа */
     #minimap {
       position: fixed;
-      right: 20px;
-      top: 20px;
+      right: 16px;
+      top: 16px;
       width: 180px;
       height: 180px;
       border-radius: 16px;
       overflow: hidden;
-      z-index: 20;
-      border: 3px solid rgba(255,255,255,0.7);
+      z-index: 22;
+      border: 3px solid rgba(255,255,255,0.75);
       background: #0f260f;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     }
-    canvas#minimapCanvas {
+    #minimapCanvas {
       width: 100%;
       height: 100%;
       image-rendering: pixelated;
     }
 
-    /* Панель мультиплеєра */
+    /* Мультиплеєр панель */
     #mpPanel {
       position: fixed;
-      right: 20px;
-      top: 220px;
+      right: 16px;
+      top: 212px;
       width: 210px;
       max-height: 260px;
       overflow-y: auto;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0,0,0,0.60);
       color: #fff;
       padding: 8px;
       font-size: 12px;
-      border-radius: 8px;
-      z-index: 19;
+      border-radius: 12px;
+      z-index: 22;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     }
-
     #mpStatus {
-      font-weight: 600;
-      margin-bottom: 6px;
+      font-weight: 700;
+      margin-bottom: 8px;
     }
-
     #mpList .playerRow {
       margin-bottom: 6px;
       border-bottom: 1px solid rgba(255,255,255,0.15);
-      padding-bottom: 4px;
+      padding-bottom: 6px;
     }
-
-    #mpList .playerRow:last-child {
-      border-bottom: none;
-    }
-
+    #mpList .playerRow:last-child { border-bottom: none; }
     #mpList button {
       width: 100%;
-      margin-top: 3px;
+      margin-top: 4px;
       border: none;
-      padding: 3px 5px;
-      border-radius: 6px;
+      padding: 5px 7px;
+      border-radius: 10px;
       background: #3498db;
       color: #fff;
       cursor: pointer;
-      font-size: 11px;
+      font-size: 12px;
     }
+    #mpList button:hover { background: #2980b9; }
 
-    #mpList button:hover {
-      background: #2980b9;
-    }
-
-    /* Сніг-покриття (2D-канвас над 3D-сценою) */
-    #snowCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 8;
-    }
-
-    /* Чорний екран при замерзанні */
+    /* Замерзання */
     #freezeOverlay {
       position: fixed;
       inset: 0;
       background: #000;
       opacity: 0;
       pointer-events: none;
-      z-index: 40;
+      z-index: 50;
       transition: opacity 1s;
     }
+    #freezeText {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 51;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1s;
+      color: #fff;
+      text-align: center;
+      padding: 24px;
+      font-weight: 700;
+    }
+    #freezeText .card {
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 14px 16px;
+      max-width: 520px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
 
-    /* ---- Тач-контролер ---- */
+    /* Тач-контролер */
     #touchControls {
       position: fixed;
       inset: 0;
       pointer-events: none;
-      z-index: 15;
+      z-index: 30;
       display: none;
     }
-
     #touchControls .pad {
       position: absolute;
-      width: 120px;
-      height: 120px;
+      width: 124px;
+      height: 124px;
       border-radius: 50%;
       border: 2px solid rgba(255,255,255,0.25);
       background: radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
       pointer-events: auto;
       touch-action: none;
+      backdrop-filter: blur(2px);
     }
-
-    #movePad { left: 20px; bottom: 30px; }
-    #lookPad { right: 20px; bottom: 30px; }
+    #movePad { left: 18px; bottom: 28px; }
+    #lookPad { right: 18px; bottom: 28px; }
 
     #touchControls .stick {
       position: absolute;
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: rgba(46,204,113,0.8);
-      box-shadow: 0 0 10px rgba(46,204,113,0.9);
-      left: 30px;
-      top: 30px;
+      left: 32px;
+      top: 32px;
+      background: rgba(46,204,113,0.82);
+      box-shadow: 0 0 14px rgba(46,204,113,0.95);
     }
 
     #actionBtn {
       position: absolute;
-      right: 32px;
-      bottom: 140px;
-      width: 70px;
-      height: 70px;
+      right: 30px;
+      bottom: 148px;
+      width: 74px;
+      height: 74px;
       border-radius: 50%;
       border: none;
       background: radial-gradient(circle, #ffb347 0, #e67e22 60%);
-      box-shadow: 0 0 12px rgba(230,126,34,0.9);
+      box-shadow: 0 0 16px rgba(230,126,34,0.95);
       font-size: 30px;
       color: #fff;
       pointer-events: auto;
       touch-action: none;
+      user-select: none;
+    }
+
+    /* Tap-to-start для музики (на iOS/Android часто потрібно) */
+    #tapStart {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 60;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+    }
+    #tapStart .btn {
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.16);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
     }
 
     @media (pointer: coarse) {
-      #touchControls {
-        display: block;
-      }
+      #touchControls { display: block; }
     }
   </style>
 </head>
 <body>
 
-<div id="info">
-  ПК: W/S – вперед/назад, A/D – вліво/вправо, стрілки – огляд, ЛКМ – удар/кнопка<br>
-  Телефон: лівий круг – рух, правий – камера, 🪓 – удар/кнопка<br>
-  Друзі: увійдіть у акаунти на сайті й відкрийте цю сторінку, щоб бачити один одного.
-</div>
-
-<div id="stats"></div>
-<div id="heatBar"></div>
-
-<audio id="bgm" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d542afd1d9.mp3" loop autoplay></audio>
-
-<div id="minimap">
-  <canvas id="minimapCanvas" width="180" height="180"></canvas>
-</div>
-
-<div id="mpPanel">
-  <div id="mpStatus">Мультиплеєр: завантаження...</div>
-  <div id="mpList"></div>
-</div>
-
-<canvas id="snowCanvas"></canvas>
-
-<div id="touchControls">
-  <div id="movePad" class="pad">
-    <div id="moveStick" class="stick"></div>
+  <div id="info">
+    ПК: WASD/стрілки – рух, мишка – напрям, ЛКМ – 🪓 дія/рубка/кнопка<br>
+    Телефон: лівий круг – рух, правий – напрям, 🪓 – дія/рубка/кнопка<br>
+    Друзі: увійдіть у акаунти на сайті й відкрийте цю сторінку, щоб бачити один одного.
   </div>
-  <div id="lookPad" class="pad">
-    <div id="lookStick" class="stick"></div>
-  </div>
-  <button id="actionBtn">🪓</button>
-</div>
 
-<div id="freezeOverlay"></div>
+  <div id="stats"></div>
+  <div id="heatBar"></div>
+
+  <audio id="bgm" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d542afd1d9.mp3" loop></audio>
+
+  <div id="minimap"><canvas id="minimapCanvas" width="180" height="180"></canvas></div>
+
+  <div id="mpPanel">
+    <div id="mpStatus">Мультиплеєр: завантаження...</div>
+    <div id="mpList"></div>
+  </div>
+
+  <canvas id="game"></canvas>
+  <canvas id="fxCanvas"></canvas>
+
+  <div id="touchControls">
+    <div id="movePad" class="pad"><div id="moveStick" class="stick"></div></div>
+    <div id="lookPad" class="pad"><div id="lookStick" class="stick"></div></div>
+    <button id="actionBtn">🪓</button>
+  </div>
+
+  <div id="freezeOverlay"></div>
+  <div id="freezeText">
+    <div class="card">
+      ❄️ Ви замерзли…<br><br>
+      Підійдіть ближче до вогнища, поки шкала тепла не впала до нуля.<br>
+      (Щоб почати заново – онови сторінку)
+    </div>
+  </div>
+
+  <div id="tapStart"><div class="btn">Натисни, щоб почати ▶</div></div>
 
 <script type="module">
-/* --------- Імпорт THREE --------- */
-import * as THREE from "https://unpkg.com/three@0.165.0/build/three.module.js";
-
-/* --------- Імпорт Firebase для мультиплеєра --------- */
+/* =========================
+   Firebase (як у тебе)
+========================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -251,7 +298,6 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-/* --- Firebase config (той самий, що на сайті) --- */
 const firebaseConfig = {
   apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
   authDomain: "pine-tycoon.firebaseapp.com",
@@ -266,1150 +312,1062 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* --- Мультиплеєрні змінні --- */
-let currentUserUid = null;
-let currentUserName = null;
-
-const gamePlayersCol = collection(db, "gamePlayers");
-const remotePlayers = new Map();
-const remoteStates = new Map();
-const MAX_INACTIVE_MS = 30000; // 30 секунд
-let lastSyncTime = 0;
-const SYNC_INTERVAL = 200; // раз на 200мс
+/* =========================
+   DOM
+========================= */
+const statsEl = document.getElementById("stats");
+const heatEl  = document.getElementById("heatBar");
+const freezeOverlay = document.getElementById("freezeOverlay");
+const freezeText = document.getElementById("freezeText");
 
 const mpStatusEl = document.getElementById("mpStatus");
 const mpListEl = document.getElementById("mpList");
 
-/* -----------------------------------------------------------
-   СЦЕНА + КАМЕРА + ПІКСЕЛЬНИЙ РЕНДЕР
------------------------------------------------------------- */
+const gameCanvas = document.getElementById("game");
+const gctx = gameCanvas.getContext("2d", { alpha: false });
 
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xdbe9ff);
-scene.fog = new THREE.Fog(0xdbe9ff, 25, 110);
+const fxCanvas = document.getElementById("fxCanvas");
+const fx = fxCanvas.getContext("2d");
 
-const camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  1000
-);
-camera.position.set(0, 2, 35); // спавн
-camera.rotation.order = "YXZ";
-scene.add(camera);
+const mini = document.getElementById("minimapCanvas");
+const mctx = mini.getContext("2d");
 
-const pixelW = 500;
-const pixelH = 440;
-
-const pixelTarget = new THREE.WebGLRenderTarget(pixelW, pixelH, {
-  minFilter: THREE.NearestFilter,
-  magFilter: THREE.NearestFilter
-});
-
-const renderer = new THREE.WebGLRenderer({ antialias: false });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-document.body.appendChild(renderer.domElement);
-
-const pixelScene = new THREE.Scene();
-const pixelCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-const quad = new THREE.Mesh(
-  new THREE.PlaneGeometry(2, 2),
-  new THREE.MeshBasicMaterial({ map: pixelTarget.texture })
-);
-pixelScene.add(quad);
-
-/* -----------------------------------------------------------
-   МУЗИКА
------------------------------------------------------------- */
-
+/* =========================
+   Tap to start audio
+========================= */
+const tapStart = document.getElementById("tapStart");
 const music = document.getElementById("bgm");
-music.volume = 0.45;
+music.volume = 0.42;
 
-/* -----------------------------------------------------------
-   ОСВІТЛЕННЯ
------------------------------------------------------------- */
+function unlockAudio() {
+  tapStart.style.display = "none";
+  music.play().catch(()=>{});
+  window.removeEventListener("pointerdown", unlockAudio);
+  window.removeEventListener("touchstart", unlockAudio);
+}
+window.addEventListener("pointerdown", unlockAudio, { once: true });
+window.addEventListener("touchstart", unlockAudio, { once: true });
+tapStart.addEventListener("click", unlockAudio);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 0.8));
+/* =========================
+   Helpers
+========================= */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a,b,t) => a + (b-a)*t;
+const dist2 = (ax,ay,bx,by) => {
+  const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy;
+};
+const rand = (a,b)=> a + Math.random()*(b-a);
 
-const sun = new THREE.DirectionalLight(0xffffff, 0.9);
-sun.position.set(80, 120, 40);
-sun.castShadow = true;
-sun.shadow.mapSize.set(1024, 1024);
-scene.add(sun);
-
-/* -----------------------------------------------------------
-   ГРУНТ (білий сніг)
------------------------------------------------------------- */
-
-const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(320, 320),
-  new THREE.MeshStandardMaterial({ color: 0xffffff })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
-
-/* -----------------------------------------------------------
-   КОЛІЗІЇ + КНОПКИ
------------------------------------------------------------- */
-
-const colliders = [];
-function addColliderBox(x, z, hw, hl) {
-  const c = { minX: x - hw, maxX: x + hw, minZ: z - hl, maxZ: z + hl };
-  colliders.push(c);
-  return c;
+function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
+function easeOutBack(t){
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2);
 }
 
-const buttons = [];
+/* =========================
+   Pixel камера (внутр. рендер)
+========================= */
+const INTERNAL_W = 480;     // внутрішня "піксельна" роздільна
+const INTERNAL_H = 270;
 
-function makeTextSprite(message, color = "#ffffff") {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 128;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = color;
-  ctx.font = "bold 52px Arial";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(message, canvas.width / 2, canvas.height / 2);
+const buffer = document.createElement("canvas");
+buffer.width = INTERNAL_W;
+buffer.height = INTERNAL_H;
+const bctx = buffer.getContext("2d");
 
-  const texture = new THREE.CanvasTexture(canvas);
-  const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
-  return new THREE.Sprite(material);
+bctx.imageSmoothingEnabled = false;
+gctx.imageSmoothingEnabled = false;
+
+/* Розміри світу (в "юнiтах") */
+const WORLD_HALF = 160;     // як твоя 320x320 площина в 3D
+const PPU = 16;             // pixels per unit у внутрішньому буфері
+
+/* =========================
+   Світ: колайдери/сутності
+========================= */
+const colliders = []; // rect: {x,y,hw,hh, tag}
+function addColliderRect(x,y,hw,hh, tag="") {
+  const r = { x, y, hw, hh, tag };
+  colliders.push(r);
+  return r;
+}
+function circleRectCollide(px,py,pr, r){
+  const cx = clamp(px, r.x - r.hw, r.x + r.hw);
+  const cy = clamp(py, r.y - r.hh, r.y + r.hh);
+  const dx = px - cx, dy = py - cy;
+  return dx*dx + dy*dy <= pr*pr;
+}
+function isBlocked(px,py, pr){
+  return colliders.some(r => circleRectCollide(px,py,pr, r));
 }
 
-/* ---------- АВАТАРИ ІНШИХ ГРАВЦІВ ---------- */
-
-function getOrCreateRemotePlayer(uid, name) {
-  let p = remotePlayers.get(uid);
-
-  if (!p) {
-    const group = new THREE.Group();
-
-    // 🔵 Напівпрозора сфера — "гравець"
-    const bubble = new THREE.Mesh(
-      new THREE.SphereGeometry(0.7, 20, 20),
-      new THREE.MeshStandardMaterial({
-        color: 0x3498db,
-        transparent: true,
-        opacity: 0.4,        // трохи невидимий
-        emissive: 0x3498db,  // легке свічення
-        emissiveIntensity: 0.2
-      })
-    );
-    bubble.position.y = 1.6;
-    bubble.castShadow = true;
-    bubble.receiveShadow = true;
-    group.add(bubble);
-
-    // 🪓 Сокира в "руці" друга
-    const axeHolder = new THREE.Group();
-    axeHolder.position.set(0.5, 1.2, 0.2); // трохи праворуч і вниз від сфери
-    axeHolder.rotation.z = -Math.PI / 4;   // невеликий нахил
-    axeHolder.scale.set(0.6, 0.6, 0.6);    // менша, ніж твоя 1st-person сокира
-
-    // Використовуємо ту ж модель сокири, що і в тебе
-    createAxeModel(axeHolder);
-    group.add(axeHolder);
-
-    // 🏷 Ім’я над сферою
-    const label = makeTextSprite(name, "#ffffff");
-    label.scale.set(1.4, 0.5, 1);
-    label.position.set(0, 2.4, 0);
-    group.add(label);
-
-    scene.add(group);
-
-    p = { group, label, name, bubble, axeHolder };
-    remotePlayers.set(uid, p);
-  } else if (p.name !== name) {
-    // якщо гравець змінив нік — оновити табличку
-    p.group.remove(p.label);
-    const newLabel = makeTextSprite(name, "#ffffff");
-    newLabel.scale.set(1.4, 0.5, 1);
-    newLabel.position.set(0, 2.4, 0);
-    p.group.add(newLabel);
-    p.label = newLabel;
-    p.name = name;
-  }
-
-  return p;
-}
-
-
-
-/* --------- Кнопка відновлення будинків/ферм --------- */
-function createRestoreButton(x, z, requiredWood, type, target) {
-  const group = new THREE.Group();
-  group.position.set(x, 0, z);
-  scene.add(group);
-
-  const geo = new THREE.CylinderGeometry(0.7, 0.7, 0.2, 24);
-  const mat = new THREE.MeshStandardMaterial({
-    color: 0x2ecc71,
-    emissive: 0x1e8449,
-    emissiveIntensity: 0.8
-  });
-  const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = 0.1;
-  mesh.castShadow = true;
-  mesh.receiveShadow = true;
-  group.add(mesh);
-
-  const light = new THREE.PointLight(0x66ff66, 1.5, 12, 2);
-  light.position.set(0, 1.1, 0);
-  group.add(light);
-
-  const label = makeTextSprite(String(requiredWood), "#ffffff");
-  label.scale.set(1.8, 0.9, 1);
-  label.position.set(0, 1.4, 0);
-  group.add(label);
-
-  buttons.push({
-    group,
-    mesh,
-    light,
-    phase: Math.random() * Math.PI * 2,
-    cost: requiredWood,
-    type,
-    target,
-    restored: false
-  });
-}
-
-/* -----------------------------------------------------------
-   БУДИНКИ
------------------------------------------------------------- */
-
-function createHouse(x, z) {
-  const g = new THREE.Group();
-
-  const walls = new THREE.Mesh(
-    new THREE.BoxGeometry(6, 3, 6),
-    new THREE.MeshStandardMaterial({
-      color: 0x8b5a2b,
-      transparent: true,
-      opacity: 0.4
-    })
-  );
-  walls.position.y = 1.5;
-  walls.castShadow = true;
-  walls.receiveShadow = true;
-  g.add(walls);
-
-  const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(5, 2.5, 4),
-    new THREE.MeshStandardMaterial({
-      color: 0x5b2a00,
-      transparent: true,
-      opacity: 0.3
-    })
-  );
-  roof.position.y = 4;
-  roof.rotation.y = Math.PI / 4;
-  roof.castShadow = true;
-  roof.receiveShadow = true;
-  g.add(roof);
-
-  const door = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 0.1),
-    new THREE.MeshStandardMaterial({
-      color: "#553311",
-      transparent: true,
-      opacity: 0.5
-    })
-  );
-  door.position.set(0, 1, 3.06);
-  g.add(door);
-
-  g.position.set(x, 0, z);
-  scene.add(g);
-
-  createRestoreButton(x, z + 4.2, 45, "house", g);
-}
-
-/* ДВОПОВЕРХОВИЙ ДІМ (коштує 65) */
-function createBigHouse(x, z) {
-  const g = new THREE.Group();
-
-  const floor1 = new THREE.Mesh(
-    new THREE.BoxGeometry(7, 3, 7),
-    new THREE.MeshStandardMaterial({
-      color: 0x9c6c3b,
-      transparent: true,
-      opacity: 0.4
-    })
-  );
-  floor1.position.y = 1.5;
-  floor1.castShadow = true;
-  floor1.receiveShadow = true;
-  g.add(floor1);
-
-  const floor2 = new THREE.Mesh(
-    new THREE.BoxGeometry(6, 3, 6),
-    new THREE.MeshStandardMaterial({
-      color: 0x7b4e26,
-      transparent: true,
-      opacity: 0.4
-    })
-  );
-  floor2.position.y = 4.5;
-  floor2.castShadow = true;
-  floor2.receiveShadow = true;
-  g.add(floor2);
-
-  const roof = new THREE.Mesh(
-    new THREE.ConeGeometry(5.5, 3, 4),
-    new THREE.MeshStandardMaterial({
-      color: 0x5b2a00,
-      transparent: true,
-      opacity: 0.35
-    })
-  );
-  roof.position.y = 7;
-  roof.rotation.y = Math.PI / 4;
-  roof.castShadow = true;
-  roof.receiveShadow = true;
-  g.add(roof);
-
-  const door = new THREE.Mesh(
-    new THREE.BoxGeometry(1.1, 2.2, 0.12),
-    new THREE.MeshStandardMaterial({
-      color: "#553311",
-      transparent: true,
-      opacity: 0.5
-    })
-  );
-  door.position.set(0, 1.1, 3.6);
-  g.add(door);
-
-  g.position.set(x, 0, z);
-  scene.add(g);
-
-  createRestoreButton(x, z + 4.8, 65, "bigHouse", g);
-}
-
-/* -----------------------------------------------------------
-   ДЕРЕВА — ЯЛИНКИ З ПАДІННЯМ
------------------------------------------------------------- */
-
+/* Сутності */
+const houses = [];
+const farms = [];
+const paths = [];
+const rocks = [];
+const mountains = [];
 let trees = [];
+let buttons = [];
 
-function createTree(x, z) {
-  const group = new THREE.Group();
-  group.position.set(x, 0, z);
-  scene.add(group);
+const campfire = { x: 0, y: 30 };
 
-  const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.25, 0.35, 2.2, 8),
-    new THREE.MeshStandardMaterial({ color: 0x5b3a1a })
-  );
-  trunk.position.set(0, 1.1, 0);
-  trunk.castShadow = true;
-  trunk.receiveShadow = true;
-  group.add(trunk);
+/* =========================
+   Стиль/кольори
+========================= */
+const COL = {
+  snow: "#f5f9ff",
+  snow2:"#e9f1ff",
+  shadow:"rgba(0,0,0,0.35)",
+  path: "#b38a5d",
+  path2:"#a67c52",
+  wood1:"#9a6a3d",
+  wood2:"#7c4f2b",
+  roof1:"#c84d3a",
+  roof2:"#a73a2a",
+  soil:"#5b3a1a",
+  crop:"#e9f6ff",
+  rock:"#7f8894",
+  rock2:"#5f6772",
+  mtn:"#6a707a",
+  mtn2:"#52585f",
+  btn:"#32d26c",
+  btnGlow:"rgba(50,210,108,0.55)",
+  blue:"#2d6cdf",
+  blue2:"#68a0ff",
+  white:"#ffffff",
+  black:"#000000",
+  flame:"#ff6b2a",
+  flame2:"#ffcc33"
+};
 
-  const levels = [
-    { r: 1.2, h: 1.4, y: 2.0 },
-    { r: 0.9, h: 1.2, y: 3.0 },
-    { r: 0.6, h: 1.0, y: 3.8 }
-  ];
-
-  const foliage = [];
-
-  for (const lvl of levels) {
-    const cone = new THREE.Mesh(
-      new THREE.ConeGeometry(lvl.r, lvl.h, 10),
-      new THREE.MeshStandardMaterial({ color: 0xf5f9ff })
-    );
-    cone.position.set(0, lvl.y, 0);
-    cone.castShadow = true;
-    cone.receiveShadow = true;
-    group.add(cone);
-    foliage.push(cone);
+/* Сніговий патерн для землі */
+const groundPattern = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 64;
+  const x = c.getContext("2d");
+  x.fillStyle = COL.snow;
+  x.fillRect(0,0,64,64);
+  for(let i=0;i<120;i++){
+    const px = (Math.random()*64)|0;
+    const py = (Math.random()*64)|0;
+    x.fillStyle = Math.random()<0.6 ? COL.snow2 : "#ffffff";
+    x.fillRect(px,py,1,1);
   }
+  return bctx.createPattern(c, "repeat");
+})();
 
-  const collider = addColliderBox(x, z, 0.8, 0.8);
-
-  trees.push({
-    x,
-    z,
-    group,
-    trunk,
-    foliage,
-    collider,
-    hp: 4,
-    falling: false,
-    fallTime: 0,
-    fallDirection: Math.random() < 0.5 ? 1 : -1,
-    removed: false
+/* =========================
+   Генерація світу (як у 3D)
+========================= */
+function createRestoreButton(x,y,cost,type,target){
+  buttons.push({
+    x, y, cost, type, target,
+    restored: false,
+    phase: Math.random()*Math.PI*2,
+    flash: 0
   });
 }
 
-/* -----------------------------------------------------------
-   ФУНКЦІЯ ДЛЯ КІЛЬЦЯ ЛІСУ
------------------------------------------------------------- */
-
-function forestRing(cx, cz, inner, outer, count) {
-  for (let i = 0; i < count; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = inner + Math.random() * (outer - inner);
-    const x = cx + Math.cos(a) * r;
-    const z = cz + Math.sin(a) * r;
-    if (Math.sqrt(x * x + z * z) < 20) continue;
-    createTree(x, z);
-  }
+function createHouse(x,y){
+  const h = {
+    type:"house",
+    x,y,
+    w: 6, h: 6,
+    restored:false,
+    restoreT:0
+  };
+  houses.push(h);
+  createRestoreButton(x, y + 4.2, 45, "house", h);
 }
 
-/* -----------------------------------------------------------
-   ФЕРМИ
------------------------------------------------------------- */
-
-function createFarm(x, z, w, l) {
-  const farmGroup = new THREE.Group();
-  farmGroup.position.set(x, 0, z);
-  scene.add(farmGroup);
-
-  const soil = new THREE.Mesh(
-    new THREE.BoxGeometry(w, 0.2, l),
-    new THREE.MeshStandardMaterial({
-      color: 0x5b3a1a,
-      transparent: true,
-      opacity: 0.45
-    })
-  );
-  soil.position.set(0, 0.1, 0);
-  soil.receiveShadow = true;
-  farmGroup.add(soil);
-
-  const cropGeo = new THREE.BoxGeometry(0.3, 0.8, 0.3);
-  const cropMat = new THREE.MeshStandardMaterial({
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.8
-  });
-
-  const rows = 4;
-  const cols = Math.floor(w);
-  for (let i = 0; i < rows; i++) {
-    for (let j = 0; j < cols; j++) {
-      const cx = -w / 2 + 0.5 + j;
-      const cz = -l / 2 + 0.5 + i * (l / rows);
-      const c = new THREE.Mesh(cropGeo, cropMat);
-      c.position.set(cx, 0.5, cz);
-      c.castShadow = true;
-      farmGroup.add(c);
-    }
-  }
-
-  createRestoreButton(x, z + l / 2 + 1.2, 15, "farm", farmGroup);
+function createBigHouse(x,y){
+  const h = {
+    type:"bigHouse",
+    x,y,
+    w: 7, h: 7,
+    restored:false,
+    restoreT:0
+  };
+  houses.push(h);
+  createRestoreButton(x, y + 4.8, 65, "bigHouse", h);
 }
 
-/* -----------------------------------------------------------
-   ДОРОЖКИ
------------------------------------------------------------- */
-
-function path(x, z, w, l) {
-  const p = new THREE.Mesh(
-    new THREE.BoxGeometry(w, 0.05, l),
-    new THREE.MeshStandardMaterial({
-      color: 0x917151,
-      transparent: true,
-      opacity: 0.45
-    })
-  );
-  p.position.set(x, 0.03, z);
-  p.receiveShadow = true;
-  scene.add(p);
-
-  createRestoreButton(x, z, 5, "path", p);
+function createFarm(x,y,w,l){
+  const f = { x,y,w,l, restored:false, restoreT:0 };
+  farms.push(f);
+  createRestoreButton(x, y + l/2 + 1.2, 15, "farm", f);
 }
 
-/* -----------------------------------------------------------
-   ГОРИ (з колізією)
------------------------------------------------------------- */
-
-function createMountain(x, z) {
-  const base = 8 + Math.random() * 6;
-  const height = 10 + Math.random() * 8;
-  const geo = new THREE.ConeGeometry(base, height, 6);
-  const mat = new THREE.MeshStandardMaterial({ color: 0x777777 });
-  const m = new THREE.Mesh(geo, mat);
-  m.position.set(x, height / 2, z);
-  m.castShadow = true;
-  m.receiveShadow = true;
-  scene.add(m);
-
-  addColliderBox(x, z, base * 0.8, base * 0.8);
+function createPath(x,y,w,l){
+  const p = { x,y,w,l, restored:false, restoreT:0 };
+  paths.push(p);
+  createRestoreButton(x, y, 5, "path", p);
 }
 
-function createMountainsBorder() {
-  for (let x = -150; x <= 150; x += 15) {
+function createRock(x,y,size){
+  const r = { x,y,size };
+  rocks.push(r);
+  addColliderRect(x,y, size*0.9, size*0.9, "rock");
+}
+
+function createMountain(x,y){
+  const base = 8 + Math.random()*6;
+  const height = 10 + Math.random()*8;
+  const m = { x,y, base, height };
+  mountains.push(m);
+  addColliderRect(x,y, base*0.85, base*0.85, "mountain");
+}
+
+function createMountainsBorder(){
+  for(let x=-150; x<=150; x+=15){
     createMountain(x, -150);
     createMountain(x, 150);
   }
-  for (let z = -150; z <= 150; z += 15) {
-    createMountain(-150, z);
-    createMountain(150, z);
+  for(let y=-150; y<=150; y+=15){
+    createMountain(-150, y);
+    createMountain(150, y);
   }
-
-  for (let i = 0; i < 35; i++) {
-    const a = Math.random() * Math.PI * 2;
-    const r = 110 + Math.random() * 25;
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
-    createMountain(x, z);
+  for (let i=0;i<35;i++){
+    const a = Math.random()*Math.PI*2;
+    const r = 110 + Math.random()*25;
+    createMountain(Math.cos(a)*r, Math.sin(a)*r);
   }
 }
 
-/* -----------------------------------------------------------
-   СКЕЛІ / КАМЕНІ В ЛІСІ
------------------------------------------------------------- */
+function createTree(x,y){
+  const t = {
+    x,y,
+    hp: 4,
+    falling:false,
+    fallT:0,
+    fallDir: Math.random()<0.5 ? -1 : 1,
+    removed:false,
+    collider: null
+  };
+  t.collider = addColliderRect(x,y, 0.85, 0.85, "tree");
+  trees.push(t);
+}
 
-function createForestRocks(count) {
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const r = 30 + Math.random() * 70;
-    const x = Math.cos(angle) * r;
-    const z = Math.sin(angle) * r;
-
-    if (Math.sqrt(x * x + z * z) < 25) {
-      i--;
-      continue;
-    }
-
-    const size = 0.7 + Math.random() * 1.3;
-    const rockGeo = new THREE.DodecahedronGeometry(size, 0);
-    const rockMat = new THREE.MeshStandardMaterial({
-      color: 0x888888,
-      roughness: 0.9,
-      metalness: 0.1
-    });
-    const rock = new THREE.Mesh(rockGeo, rockMat);
-    rock.position.set(x, size * 0.6, z);
-    rock.castShadow = true;
-    rock.receiveShadow = true;
-    scene.add(rock);
-
-    addColliderBox(x, z, size * 0.8, size * 0.8);
+function forestRing(cx,cy, inner, outer, count){
+  for(let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const r = inner + Math.random()*(outer-inner);
+    const x = cx + Math.cos(a)*r;
+    const y = cy + Math.sin(a)*r;
+    if (Math.sqrt(x*x+y*y) < 20) continue;
+    createTree(x,y);
   }
 }
 
-/* -----------------------------------------------------------
-   ВОГНИЩЕ (біля спавна)
------------------------------------------------------------- */
-
-function createCampfire(x, z) {
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * Math.PI) / 3;
-    const px = x + Math.cos(angle) * 1.3;
-    const pz = z + Math.sin(angle) * 1.3;
-
-    const rock = new THREE.Mesh(
-      new THREE.SphereGeometry(0.4, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0x777777 })
-    );
-    rock.position.set(px, 0.4, pz);
-    rock.castShadow = true;
-    scene.add(rock);
+function createForestRocks(count){
+  for(let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const r = 30 + Math.random()*70;
+    const x = Math.cos(a)*r;
+    const y = Math.sin(a)*r;
+    if (Math.sqrt(x*x+y*y) < 25) { i--; continue; }
+    const size = 0.8 + Math.random()*1.4;
+    createRock(x,y,size);
   }
-
-  const flame = new THREE.Mesh(
-    new THREE.ConeGeometry(0.8, 1.4, 8),
-    new THREE.MeshStandardMaterial({
-      color: 0xff5522,
-      emissive: 0xff3300,
-      emissiveIntensity: 1.0
-    })
-  );
-  flame.position.set(x, 1, z);
-  flame.castShadow = true;
-  scene.add(flame);
-
-  const glow = new THREE.PointLight(0xff6633, 2.2, 30, 2);
-  glow.position.set(x, 1.2, z);
-  glow.castShadow = true;
-  scene.add(glow);
-
-  function flicker() {
-    const t = Date.now() * 0.015;
-    flame.scale.y = 1 + Math.sin(t) * 0.2;
-    glow.intensity = 2 + Math.sin(t * 1.3) * 0.5;
-    requestAnimationFrame(flicker);
-  }
-  flicker();
 }
 
-/* -----------------------------------------------------------
-   СЕЛО + ЛІС + ДВОПОВЕРХОВІ БУДИНКИ + ВОГНИЩЕ
------------------------------------------------------------- */
+/* Село */
+createHouse(0,0);
+createHouse(10,-6);
+createHouse(-10,6);
+createHouse(0,-14);
+createHouse(14,10);
+createHouse(-14,-10);
+createHouse(20,0);
+createHouse(-20,0);
+createHouse(8,18);
+createHouse(-8,-20);
 
-createHouse(0, 0);
-createHouse(10, -6);
-createHouse(-10, 6);
-createHouse(0, -14);
-createHouse(14, 10);
-createHouse(-14, -10);
-createHouse(20, 0);
-createHouse(-20, 0);
-createHouse(8, 18);
-createHouse(-8, -20);
+createBigHouse(16,-20);
+createBigHouse(-16,20);
 
-createBigHouse(16, -20);
-createBigHouse(-16, 20);
+createPath(0,-7,4,14);
+createPath(0, 7,4,14);
+createPath(7, 0,14,4);
+createPath(-7,0,14,4);
 
-path(0, -7, 4, 14);
-path(0, 7, 4, 14);
-path(7, 0, 14, 4);
-path(-7, 0, 14, 4);
+createFarm(0,-22,10,6);
+createFarm(18, 6,10,6);
+createFarm(-18,-6,10,6);
 
-createFarm(0, -22, 10, 6);
-createFarm(18, 6, 10, 6);
-createFarm(-18, -6, 10, 6);
-
-forestRing(0, 0, 24, 42, 100);
-forestRing(0, 0, 42, 70, 140);
-forestRing(0, 0, 70, 100, 180);
+forestRing(0,0,24,42,100);
+forestRing(0,0,42,70,140);
+forestRing(0,0,70,100,180);
 
 createForestRocks(30);
 createMountainsBorder();
 
-const campfirePos = { x: 0, z: 30 };
-createCampfire(campfirePos.x, campfirePos.z);
-
-/* -----------------------------------------------------------
-   ЛІЧИЛЬНИК + ТЕПЛО
------------------------------------------------------------- */
-
+/* =========================
+   Гравець/статистика/тепло
+========================= */
 let treesCutTotal = 0;
 let wood = 0;
-
-const statsDiv = document.getElementById("stats");
-const heatBar = document.getElementById("heatBar");
-const freezeOverlay = document.getElementById("freezeOverlay");
 
 const heatMax = 9;
 let heatValue = heatMax;
 let isFrozen = false;
 
-function updateStats() {
-  statsDiv.textContent =
-    "Дерев зрубано: " + treesCutTotal + " | Дерево: " + wood;
+function updateStats(){
+  statsEl.textContent = `Дерев зрубано: ${treesCutTotal} | Дерево: ${wood}`;
 }
-
-function updateHeatBar() {
+function updateHeat(){
   const full = Math.round(heatValue);
   let s = "";
-  for (let i = 0; i < heatMax; i++) {
-    s += i < full ? "🔥" : "·";
-  }
-  heatBar.textContent = s;
+  for(let i=0;i<heatMax;i++) s += i < full ? "🔥" : "·";
+  heatEl.textContent = s;
 }
+updateStats(); updateHeat();
 
-updateStats();
-updateHeatBar();
+const player = {
+  x: 0,
+  y: 35,
+  r: 0.60,
+  dir: -Math.PI/2,      // напрям (в радіанах)
+  attack: 0,            // 0..1
+  attackCooldown: 0
+};
 
-/* -----------------------------------------------------------
-   3D СОКИРА
------------------------------------------------------------- */
+const camera = { x: player.x, y: player.y };
 
-const weaponHolder = new THREE.Group();
-camera.add(weaponHolder);
-
-const weaponBasePos = new THREE.Vector3(0.7, -0.7, -1.2);
-const weaponBaseRot = new THREE.Euler(-0.25, -0.3, 0);
-weaponHolder.position.copy(weaponBasePos);
-weaponHolder.rotation.copy(weaponBaseRot);
-
-function createAxeModel(parent) {
-  const handleGeo = new THREE.CylinderGeometry(0.06, 0.08, 1.4, 16);
-  const handleMat = new THREE.MeshStandardMaterial({
-    color: 0x8b5a2b,
-    roughness: 0.8,
-    metalness: 0.1
-  });
-  const handle = new THREE.Mesh(handleGeo, handleMat);
-  handle.position.set(0, -0.2, 0);
-  handle.castShadow = true;
-  parent.add(handle);
-
-  const headMat = new THREE.MeshStandardMaterial({
-    color: 0xb0b0b0,
-    metalness: 0.8,
-    roughness: 0.3
-  });
-
-  const headGeo = new THREE.BoxGeometry(0.6, 0.35, 0.15);
-  const head = new THREE.Mesh(headGeo, headMat);
-  head.position.set(0.18, 0.4, 0);
-  head.castShadow = true;
-  parent.add(head);
-
-  const bladeGeo = new THREE.BoxGeometry(0.4, 0.3, 0.05);
-  const blade = new THREE.Mesh(bladeGeo, headMat);
-  blade.position.set(0.35, 0.4, 0);
-  blade.castShadow = true;
-  parent.add(blade);
-}
-createAxeModel(weaponHolder);
-
-let isAttacking = false;
-let attackTime = 0;
-const attackDuration = 0.25;
-
-function startAttack() {
-  if (!isAttacking && !isFrozen) {
-    isAttacking = true;
-    attackTime = 0;
-  }
-}
-
-/* -----------------------------------------------------------
-   КНОПКИ + ДЕРЕВА (рубанина)
------------------------------------------------------------- */
-
-function tryUseNearestButton() {
-  if (buttons.length === 0) return false;
-
-  let best = null;
-  let bestDist = 2.0;
-  const px = camera.position.x;
-  const pz = camera.position.z;
-
-  for (const b of buttons) {
-    if (b.restored) continue;
-    const bx = b.group.position.x;
-    const bz = b.group.position.z;
-    const dx = bx - px;
-    const dz = bz - pz;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    if (dist < bestDist) {
-      bestDist = dist;
-      best = b;
-    }
-  }
-
-  if (!best) return false;
-
-  if (wood < best.cost) {
-    best.mesh.material.emissiveIntensity = 1.8;
-    setTimeout(() => {
-      best.mesh.material.emissiveIntensity = 0.8;
-    }, 150);
-    return true;
-  }
-
-  wood -= best.cost;
-  best.restored = true;
-
-  if (best.type === "house" || best.type === "bigHouse") {
-    best.target.traverse(obj => {
-      if (obj.isMesh && obj.material) {
-        obj.material.transparent = false;
-        obj.material.opacity = 1;
-      }
-    });
-    const hx = best.target.position.x;
-    const hz = best.target.position.z;
-    addColliderBox(
-      hx,
-      hz,
-      best.type === "bigHouse" ? 4 : 3.2,
-      best.type === "bigHouse" ? 4 : 3.2
-    );
-  } else if (best.type === "path") {
-    if (best.target.material) {
-      best.target.material.transparent = false;
-      best.target.material.opacity = 1;
-    }
-  } else if (best.type === "farm") {
-    best.target.traverse(obj => {
-      if (obj.isMesh && obj.material) {
-        obj.material.transparent = false;
-        obj.material.opacity = 1;
-      }
-    });
-  }
-
-  scene.remove(best.group);
-  const idx = buttons.indexOf(best);
-  if (idx !== -1) buttons.splice(idx, 1);
-
-  updateStats();
-  return true;
-}
-
-function chopNearestTree() {
-  let bestIndex = -1;
-  let bestDist = 3.0;
-  const px = camera.position.x;
-  const pz = camera.position.z;
-
-  for (let i = 0; i < trees.length; i++) {
-    const t = trees[i];
-    if (t.falling || t.removed) continue;
-    const dx = t.x - px;
-    const dz = t.z - pz;
-    const dist = Math.sqrt(dx * dx + dz * dz);
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestIndex = i;
-    }
-  }
-
-  if (bestIndex !== -1) {
-    const t = trees[bestIndex];
-    t.hp -= 1;
-
-    if (t.hp <= 0 && !t.falling) {
-      t.falling = true;
-      t.fallTime = 0;
-
-      for (const cone of t.foliage) {
-        t.group.remove(cone);
-      }
-      t.foliage.length = 0;
-
-      const colIdx = colliders.indexOf(t.collider);
-      if (colIdx !== -1) colliders.splice(colIdx, 1);
-
-      treesCutTotal++;
-      wood++;
-      updateStats();
-    }
-  }
-}
-
-/* -----------------------------------------------------------
-   МІНІМАПА + СНІГ
------------------------------------------------------------- */
-
-const miniCtx = document.getElementById("minimapCanvas").getContext("2d");
-
-let yaw = 0;
-let pitch = 0;
-
-function updateMinimap() {
-  miniCtx.fillStyle = "#132e13";
-  miniCtx.fillRect(0, 0, 180, 180);
-
-  const cx = 90;
-  const cz = 90;
-  const scale = 1.0;
-
-  miniCtx.fillStyle = "#3cff3c";
-  for (const c of colliders) {
-    const x = cx + c.minX * scale;
-    const z = cz + c.minZ * scale;
-    miniCtx.fillRect(x, z, 2, 2);
-  }
-
-  miniCtx.save();
-  miniCtx.translate(cx + camera.position.x * scale, cz + camera.position.z * scale);
-  miniCtx.rotate(-yaw);
-  miniCtx.fillStyle = "#ffffff";
-  miniCtx.beginPath();
-  miniCtx.moveTo(0, -6);
-  miniCtx.lineTo(4, 4);
-  miniCtx.lineTo(-4, 4);
-  miniCtx.closePath();
-  miniCtx.fill();
-  miniCtx.restore();
-}
-
-/* Сніг */
-
-const snowCanvas = document.getElementById("snowCanvas");
-const snowCtx = snowCanvas.getContext("2d");
-let snowflakes = [];
-
-function resizeSnow() {
-  snowCanvas.width = window.innerWidth;
-  snowCanvas.height = window.innerHeight;
-}
-
-function initSnow(count = 120) {
-  resizeSnow();
-  snowflakes = [];
-  for (let i = 0; i < count; i++) {
-    snowflakes.push({
-      x: Math.random() * snowCanvas.width,
-      y: Math.random() * snowCanvas.height,
-      r: 1 + Math.random() * 1.8,
-      speed: 20 + Math.random() * 35,
-      drift: -10 + Math.random() * 20
+/* =========================
+   Частинки (ефекти)
+========================= */
+const particles = [];
+function spawnParticles(type, x,y, count=10){
+  for(let i=0;i<count;i++){
+    const a = Math.random()*Math.PI*2;
+    const sp = rand(1.5, 5.5);
+    particles.push({
+      type,
+      x, y,
+      vx: Math.cos(a)*sp,
+      vy: Math.sin(a)*sp,
+      life: rand(0.35, 0.75),
+      t: 0
     });
   }
 }
 
-function updateSnow(dt) {
-  snowCtx.clearRect(0, 0, snowCanvas.width, snowCanvas.height);
-  snowCtx.fillStyle = "rgba(255,255,255,0.9)";
-  for (const f of snowflakes) {
-    f.y += f.speed * dt;
-    f.x += f.drift * dt;
-    if (f.y > snowCanvas.height + f.r) {
-      f.y = -f.r;
-      f.x = Math.random() * snowCanvas.width;
-    }
-    if (f.x < -10) f.x = snowCanvas.width + 10;
-    if (f.x > snowCanvas.width + 10) f.x = -10;
-
-    snowCtx.beginPath();
-    snowCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
-    snowCtx.fill();
-  }
-}
-
-/* -----------------------------------------------------------
-   КЕРУВАННЯ + ТАЧ
------------------------------------------------------------- */
-
+/* =========================
+   Керування: клавіші + мишка
+========================= */
 const keys = {};
-document.addEventListener("keydown", (e) => (keys[e.code] = true));
-document.addEventListener("keyup",   (e) => (keys[e.code] = false));
+document.addEventListener("keydown",(e)=> keys[e.code]=true);
+document.addEventListener("keyup",(e)=> keys[e.code]=false);
 
-function doAction() {
+let mouseAim = null;
+window.addEventListener("mousemove",(e)=>{
+  mouseAim = { x: e.clientX, y: e.clientY };
+});
+window.addEventListener("mouseleave",()=>{ mouseAim=null; });
+
+function doAction(){
   if (isFrozen) return;
-  startAttack();
-  const usedButton = tryUseNearestButton();
-  if (!usedButton) chopNearestTree();
+  if (player.attackCooldown > 0) return;
+
+  player.attack = 0.0001;
+  player.attackCooldown = 0.22;
+
+  // 1) кнопка відбудови
+  if (tryUseNearestButton()) return;
+
+  // 2) рубка дерева
+  chopNearestTree();
 }
 
-window.addEventListener("mousedown", (e) => {
-  if (e.button !== 0) return;
+window.addEventListener("mousedown",(e)=>{
+  if (e.button!==0) return;
   doAction();
 });
 
+/* =========================
+   Touch джойстики (рух/напрям)
+========================= */
 const movePad = document.getElementById("movePad");
 const moveStick = document.getElementById("moveStick");
 const lookPad = document.getElementById("lookPad");
 const lookStick = document.getElementById("lookStick");
 const actionBtn = document.getElementById("actionBtn");
 
-let touchMoveX = 0;
-let touchMoveY = 0;
-let touchLookX = 0;
-let touchLookY = 0;
+let touchMoveX=0, touchMoveY=0;
+let touchLookX=0, touchLookY=0;
 
-if (movePad && moveStick) {
+function setupStick(pad, stick, onMove){
   const stickRadius = 30;
-  let moveTouchId = null;
+  let touchId = null;
 
-  function resetMoveStick() {
-    const rect = movePad.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    moveStick.style.left = (cx - stickRadius) + "px";
-    moveStick.style.top  = (cy - stickRadius) + "px";
-    touchMoveX = 0;
-    touchMoveY = 0;
+  function reset(){
+    const rect = pad.getBoundingClientRect();
+    const cx = rect.width/2, cy = rect.height/2;
+    stick.style.left = (cx - stickRadius) + "px";
+    stick.style.top  = (cy - stickRadius) + "px";
+    onMove(0,0);
   }
-
-  function updateMoveStickFromTouch(t) {
-    const rect = movePad.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
+  function updateFromTouch(t){
+    const rect = pad.getBoundingClientRect();
+    const cx = rect.width/2, cy = rect.height/2;
     let dx = t.clientX - (rect.left + cx);
-    let dy = t.clientY - (rect.top + cy);
-    const maxR = rect.width / 2 - stickRadius;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > maxR) {
-      dx *= maxR / dist;
-      dy *= maxR / dist;
-    }
-    moveStick.style.left = (cx - stickRadius + dx) + "px";
-    moveStick.style.top  = (cy - stickRadius + dy) + "px";
-    touchMoveX = dx / maxR;
-    touchMoveY = dy / maxR;
+    let dy = t.clientY - (rect.top  + cy);
+    const maxR = rect.width/2 - stickRadius;
+    const d = Math.hypot(dx,dy);
+    if (d > maxR) { dx*=maxR/d; dy*=maxR/d; }
+    stick.style.left = (cx - stickRadius + dx) + "px";
+    stick.style.top  = (cy - stickRadius + dy) + "px";
+    onMove(dx/maxR, dy/maxR);
   }
 
-  movePad.addEventListener("touchstart", (e) => {
+  pad.addEventListener("touchstart",(e)=>{
     e.preventDefault();
     const t = e.changedTouches[0];
-    moveTouchId = t.identifier;
-    updateMoveStickFromTouch(t);
-  }, { passive: false });
+    touchId = t.identifier;
+    updateFromTouch(t);
+  },{ passive:false });
 
-  movePad.addEventListener("touchmove", (e) => {
+  pad.addEventListener("touchmove",(e)=>{
     e.preventDefault();
-    if (moveTouchId === null) return;
-    for (const t of e.touches) {
-      if (t.identifier === moveTouchId) {
-        updateMoveStickFromTouch(t);
-        break;
-      }
+    if (touchId===null) return;
+    for(const t of e.touches){
+      if (t.identifier===touchId){ updateFromTouch(t); break; }
     }
-  }, { passive: false });
+  },{ passive:false });
 
-  function endMoveTouch(e) {
-    if (moveTouchId === null) return;
-    for (const t of e.changedTouches) {
-      if (t.identifier === moveTouchId) {
-        moveTouchId = null;
-        resetMoveStick();
-        break;
+  function end(e){
+    if (touchId===null) return;
+    for(const t of e.changedTouches){
+      if (t.identifier===touchId){
+        touchId=null; reset(); break;
       }
     }
   }
+  pad.addEventListener("touchend", end, { passive:false });
+  pad.addEventListener("touchcancel", end, { passive:false });
 
-  movePad.addEventListener("touchend", endMoveTouch, { passive: false });
-  movePad.addEventListener("touchcancel", endMoveTouch, { passive: false });
-
-  resetMoveStick();
+  reset();
 }
 
-if (lookPad && lookStick) {
-  const stickRadius = 30;
-  let lookTouchId = null;
-
-  function resetLookStick() {
-    const rect = lookPad.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    lookStick.style.left = (cx - stickRadius) + "px";
-    lookStick.style.top  = (cy - stickRadius) + "px";
-    touchLookX = 0;
-    touchLookY = 0;
-  }
-
-  function updateLookStickFromTouch(t) {
-    const rect = lookPad.getBoundingClientRect();
-    const cx = rect.width / 2;
-    const cy = rect.height / 2;
-    let dx = t.clientX - (rect.left + cx);
-    let dy = t.clientY - (rect.top + cy);
-    const maxR = rect.width / 2 - stickRadius;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist > maxR) {
-      dx *= maxR / dist;
-      dy *= maxR / dist;
-    }
-    lookStick.style.left = (cx - stickRadius + dx) + "px";
-    lookStick.style.top  = (cy - stickRadius + dy) + "px";
-    touchLookX = dx / maxR;
-    touchLookY = dy / maxR;
-  }
-
-  lookPad.addEventListener("touchstart", (e) => {
-    e.preventDefault();
-    const t = e.changedTouches[0];
-    lookTouchId = t.identifier;
-    updateLookStickFromTouch(t);
-  }, { passive: false });
-
-  lookPad.addEventListener("touchmove", (e) => {
-    e.preventDefault();
-    if (lookTouchId === null) return;
-    for (const t of e.touches) {
-      if (t.identifier === lookTouchId) {
-        updateLookStickFromTouch(t);
-        break;
-      }
-    }
-  }, { passive: false });
-
-  function endLookTouch(e) {
-    if (lookTouchId === null) return;
-    for (const t of e.changedTouches) {
-      if (t.identifier === lookTouchId) {
-        lookTouchId = null;
-        resetLookStick();
-        break;
-      }
-    }
-  }
-
-  lookPad.addEventListener("touchend", endLookTouch, { passive: false });
-  lookPad.addEventListener("touchcancel", endLookTouch, { passive: false });
-
-  resetLookStick();
+if (movePad && moveStick){
+  setupStick(movePad, moveStick, (x,y)=>{ touchMoveX=x; touchMoveY=y; });
+}
+if (lookPad && lookStick){
+  setupStick(lookPad, lookStick, (x,y)=>{ touchLookX=x; touchLookY=y; });
+}
+if (actionBtn){
+  const tap = (e)=>{ e.preventDefault(); doAction(); };
+  actionBtn.addEventListener("click", tap);
+  actionBtn.addEventListener("touchstart", tap, { passive:false });
 }
 
-if (actionBtn) {
-  const handleTap = (e) => {
-    e.preventDefault();
-    doAction();
-  };
-  actionBtn.addEventListener("click", handleTap);
-  actionBtn.addEventListener("touchstart", handleTap, { passive: false });
+/* =========================
+   Відбудова/рубка
+========================= */
+function tryUseNearestButton(){
+  let best=null;
+  let bestD= (2.2*2.2);
+
+  for(const b of buttons){
+    if (b.restored) continue;
+    const d = dist2(player.x, player.y, b.x, b.y);
+    if (d < bestD){
+      bestD = d; best = b;
+    }
+  }
+  if (!best) return false;
+
+  if (wood < best.cost){
+    best.flash = 0.22;
+    return true; // "кнопка використана", щоб не рубати дерево
+  }
+
+  wood -= best.cost;
+  best.restored = true;
+
+  // позначаємо як відбудоване + додаємо колайдери
+  if (best.type === "house" || best.type === "bigHouse"){
+    best.target.restored = true;
+    best.target.restoreT = 0.0001;
+
+    addColliderRect(
+      best.target.x, best.target.y,
+      best.type==="bigHouse" ? 4.1 : 3.2,
+      best.type==="bigHouse" ? 4.1 : 3.2,
+      "house"
+    );
+  } else if (best.type === "farm"){
+    best.target.restored = true;
+    best.target.restoreT = 0.0001;
+
+    addColliderRect(best.target.x, best.target.y, best.target.w/2, best.target.l/2, "farm");
+  } else if (best.type === "path"){
+    best.target.restored = true;
+    best.target.restoreT = 0.0001;
+    // доріжка колайдер не потрібен
+  }
+
+  spawnParticles("restore", best.x, best.y, 18);
+  buttons = buttons.filter(x => x !== best);
+
+  updateStats();
+  return true;
 }
 
-/* -----------------------------------------------------------
-   МУЛЬТИПЛЕЄР: UI
------------------------------------------------------------- */
+function chopNearestTree(){
+  let best=null;
+  let bestD = (2.8*2.8);
 
-function joinToPlayer(uid) {
+  for(const t of trees){
+    if (t.falling || t.removed) continue;
+    const d = dist2(player.x, player.y, t.x, t.y);
+    if (d < bestD){
+      bestD = d; best = t;
+    }
+  }
+  if (!best) return;
+
+  best.hp -= 1;
+  spawnParticles("chips", best.x, best.y, 12);
+
+  if (best.hp <= 0 && !best.falling){
+    best.falling = true;
+    best.fallT = 0;
+    // прибираємо колайдер дерева
+    const idx = colliders.indexOf(best.collider);
+    if (idx !== -1) colliders.splice(idx,1);
+
+    treesCutTotal++;
+    wood++;
+    updateStats();
+  }
+}
+
+/* =========================
+   Рендер утиліти
+========================= */
+function worldToScreen(wx,wy){
+  const sx = (wx - camera.x) * PPU + INTERNAL_W/2;
+  const sy = (wy - camera.y) * PPU + INTERNAL_H/2;
+  return { x:sx, y:sy };
+}
+
+function drawShadowCircle(ctx, x,y, r){
+  ctx.fillStyle = COL.shadow;
+  ctx.beginPath();
+  ctx.ellipse(x, y, r*1.1, r*0.7, 0, 0, Math.PI*2);
+  ctx.fill();
+}
+
+/* Малюємо “піксельні” форми (вирівнювання) */
+function pRect(ctx, x,y,w,h){
+  ctx.fillRect((x|0),(y|0),(w|0),(h|0));
+}
+function pLine(ctx,x1,y1,x2,y2){
+  ctx.beginPath();
+  ctx.moveTo((x1|0)+0.5,(y1|0)+0.5);
+  ctx.lineTo((x2|0)+0.5,(y2|0)+0.5);
+  ctx.stroke();
+}
+
+/* =========================
+   Малювання сутностей (2D "модельки")
+========================= */
+function drawHouse(ctx, h){
+  const t = h.restored ? 1 : 0.35;
+  const fade = h.restored ? (0.35 + 0.65*easeOutCubic(h.restoreT)) : 0.38;
+
+  const pos = worldToScreen(h.x, h.y);
+  const w = h.w*PPU, l = h.h*PPU;
+
+  drawShadowCircle(ctx, pos.x, pos.y + l*0.18, (Math.max(w,l)*0.25));
+
+  ctx.globalAlpha = fade;
+
+  // база
+  ctx.fillStyle = COL.wood1;
+  pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
+
+  // обводка
+  ctx.strokeStyle = "rgba(0,0,0,0.25)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect((pos.x - w/2)|0, (pos.y - l/2)|0, w|0, l|0);
+
+  // дах (ромб)
+  ctx.fillStyle = COL.roof1;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - l/2 - PPU*1.8);
+  ctx.lineTo(pos.x + w/2, pos.y - l/2 + PPU*0.6);
+  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.2);
+  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = COL.roof2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - l/2 - PPU*1.8);
+  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.2);
+  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.6);
+  ctx.closePath();
+  ctx.fill();
+
+  // двері/вікно
+  ctx.fillStyle = COL.wood2;
+  pRect(ctx, pos.x - PPU*0.8, pos.y + l*0.12, PPU*1.6, PPU*2.1);
+
+  ctx.fillStyle = "rgba(235,245,255,0.75)";
+  pRect(ctx, pos.x + PPU*1.2, pos.y - PPU*0.2, PPU*1.2, PPU*1.2);
+
+  ctx.globalAlpha = 1;
+}
+
+function drawBigHouse(ctx, h){
+  // просто трохи "потужніший" дах/деталі
+  drawHouse(ctx, h);
+  const pos = worldToScreen(h.x, h.y);
+  ctx.globalAlpha = h.restored ? (0.65 + 0.35*easeOutCubic(h.restoreT)) : 0.35;
+
+  ctx.fillStyle = "rgba(255,255,255,0.16)";
+  pRect(ctx, pos.x - (h.w*PPU)/2 + 4, pos.y - (h.h*PPU)/2 + 4, (h.w*PPU)-8, (h.h*PPU)-8);
+
+  ctx.globalAlpha = 1;
+}
+
+function drawFarm(ctx, f){
+  const fade = f.restored ? (0.35 + 0.65*easeOutCubic(f.restoreT)) : 0.38;
+  const pos = worldToScreen(f.x, f.y);
+  const w = f.w*PPU, l = f.l*PPU;
+
+  drawShadowCircle(ctx, pos.x, pos.y + l*0.22, (Math.max(w,l)*0.20));
+
+  ctx.globalAlpha = fade;
+
+  ctx.fillStyle = COL.soil;
+  pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
+
+  // грядки
+  for(let row=0; row<4; row++){
+    for(let col=0; col<Math.floor(f.w); col++){
+      const cx = pos.x - w/2 + (col+0.5)*PPU;
+      const cy = pos.y - l/2 + (row+0.6)*(l/4);
+      ctx.fillStyle = COL.crop;
+      pRect(ctx, cx-2, cy-3, 4, 6);
+      ctx.fillStyle = "rgba(0,0,0,0.18)";
+      pRect(ctx, cx-2, cy+2, 4, 1);
+    }
+  }
+
+  ctx.globalAlpha = 1;
+}
+
+function drawPath(ctx, p){
+  const fade = p.restored ? (0.40 + 0.60*easeOutCubic(p.restoreT)) : 0.35;
+  const pos = worldToScreen(p.x, p.y);
+  const w = p.w*PPU, l = p.l*PPU;
+
+  ctx.globalAlpha = fade;
+  ctx.fillStyle = COL.path;
+  pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
+
+  // “плитки”
+  ctx.fillStyle = COL.path2;
+  for(let i=0;i<10;i++){
+    const tx = pos.x - w/2 + Math.random()*w;
+    const ty = pos.y - l/2 + Math.random()*l;
+    pRect(ctx, tx, ty, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawRock(ctx, r){
+  const pos = worldToScreen(r.x, r.y);
+  const s = r.size*PPU;
+
+  drawShadowCircle(ctx, pos.x, pos.y + s*0.22, s*0.55);
+
+  ctx.fillStyle = COL.rock;
+  ctx.beginPath();
+  ctx.moveTo(pos.x - s*0.6, pos.y);
+  ctx.lineTo(pos.x - s*0.2, pos.y - s*0.45);
+  ctx.lineTo(pos.x + s*0.55, pos.y - s*0.1);
+  ctx.lineTo(pos.x + s*0.35, pos.y + s*0.50);
+  ctx.lineTo(pos.x - s*0.35, pos.y + s*0.45);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = COL.rock2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x - s*0.2, pos.y - s*0.45);
+  ctx.lineTo(pos.x + s*0.15, pos.y - s*0.30);
+  ctx.lineTo(pos.x + s*0.55, pos.y - s*0.1);
+  ctx.lineTo(pos.x + s*0.05, pos.y - s*0.05);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawMountain(ctx, m){
+  const pos = worldToScreen(m.x, m.y);
+  const base = m.base*PPU;
+  const h = m.height*PPU;
+
+  drawShadowCircle(ctx, pos.x, pos.y + base*0.25, base*0.80);
+
+  ctx.fillStyle = COL.mtn;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - h*0.55);
+  ctx.lineTo(pos.x + base*0.65, pos.y + base*0.50);
+  ctx.lineTo(pos.x - base*0.65, pos.y + base*0.50);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = COL.mtn2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - h*0.55);
+  ctx.lineTo(pos.x, pos.y + base*0.50);
+  ctx.lineTo(pos.x - base*0.65, pos.y + base*0.50);
+  ctx.closePath();
+  ctx.fill();
+
+  // сніжна шапка
+  ctx.fillStyle = COL.snow2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - h*0.55);
+  ctx.lineTo(pos.x + base*0.18, pos.y - h*0.30);
+  ctx.lineTo(pos.x, pos.y - h*0.18);
+  ctx.lineTo(pos.x - base*0.20, pos.y - h*0.30);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawTree(ctx, t){
+  const pos = worldToScreen(t.x, t.y);
+
+  // падіння (поворот навколо “пня”)
+  const fallDur = 0.60;
+  const k = t.falling ? clamp(t.fallT/fallDur, 0, 1) : 0;
+  const ang = t.falling ? (k * (Math.PI/2) * t.fallDir) : 0;
+
+  // базова тінь
+  drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.72);
+
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
+  ctx.rotate(ang);
+
+  // стовбур
+  ctx.fillStyle = COL.wood2;
+  pRect(ctx, -2, -PPU*0.10, 4, PPU*0.85);
+
+  // крона (сніжна ялинка)
+  ctx.fillStyle = COL.snow2;
+  ctx.beginPath();
+  ctx.moveTo(0, -PPU*1.55);
+  ctx.lineTo(PPU*0.95, -PPU*0.10);
+  ctx.lineTo(-PPU*0.95, -PPU*0.10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#d9ebff";
+  ctx.beginPath();
+  ctx.moveTo(0, -PPU*1.35);
+  ctx.lineTo(PPU*0.75, -PPU*0.25);
+  ctx.lineTo(-PPU*0.75, -PPU*0.25);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawCampfire(ctx, time){
+  const pos = worldToScreen(campfire.x, campfire.y);
+
+  // камінці
+  for(let i=0;i<6;i++){
+    const a = i*(Math.PI/3);
+    const px = pos.x + Math.cos(a)*PPU*1.0;
+    const py = pos.y + Math.sin(a)*PPU*0.75;
+    ctx.fillStyle = COL.rock2;
+    ctx.beginPath();
+    ctx.arc(px, py, 4, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // полум'я + мерехтіння
+  const flick = 1 + Math.sin(time*10)*0.12;
+  drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
+
+  ctx.fillStyle = COL.flame;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - 18*flick);
+  ctx.quadraticCurveTo(pos.x + 10, pos.y - 4, pos.x, pos.y + 10);
+  ctx.quadraticCurveTo(pos.x - 10, pos.y - 4, pos.x, pos.y - 18*flick);
+  ctx.fill();
+
+  ctx.fillStyle = COL.flame2;
+  ctx.beginPath();
+  ctx.moveTo(pos.x, pos.y - 12*flick);
+  ctx.quadraticCurveTo(pos.x + 7, pos.y - 2, pos.x, pos.y + 7);
+  ctx.quadraticCurveTo(pos.x - 7, pos.y - 2, pos.x, pos.y - 12*flick);
+  ctx.fill();
+
+  // теплий “глоу”
+  ctx.fillStyle = "rgba(255,120,60,0.12)";
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, 42, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawButton(ctx, b, time){
+  const pos = worldToScreen(b.x, b.y);
+  const pulse = 1 + Math.sin(time*5 + b.phase)*0.10;
+
+  drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
+
+  // платформа
+  ctx.fillStyle = COL.btn;
+  ctx.beginPath();
+  ctx.ellipse(pos.x, pos.y, 14*pulse, 10*pulse, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // глоу
+  ctx.fillStyle = COL.btnGlow;
+  ctx.beginPath();
+  ctx.ellipse(pos.x, pos.y, 20*pulse, 14*pulse, 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // “вартість”
+  ctx.font = "bold 14px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = (b.flash>0) ? "#ff4d4d" : "#ffffff";
+  ctx.fillText(String(b.cost), pos.x, pos.y - 18);
+}
+
+function drawAxe(ctx, x,y, ang, swing){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(ang + swing);
+
+  // ручка
+  ctx.fillStyle = COL.wood2;
+  pRect(ctx, -1, -10, 2, 18);
+
+  // лезо
+  ctx.fillStyle = "#c3c9d3";
+  pRect(ctx, 0, -7, 10, 6);
+  ctx.fillStyle = "#9aa2ad";
+  pRect(ctx, 0, -7, 10, 2);
+
+  ctx.restore();
+}
+
+function drawPlayer(ctx, p, time){
+  const pos = worldToScreen(p.x, p.y);
+  const bob = Math.sin(time*6)*0.8;
+
+  drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
+
+  // тіло (синя сфера)
+  const r = 10;
+  ctx.fillStyle = COL.blue;
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y + bob, r, 0, Math.PI*2);
+  ctx.fill();
+
+  // хайлайт
+  ctx.fillStyle = COL.blue2;
+  ctx.beginPath();
+  ctx.arc(pos.x - 3, pos.y - 3 + bob, 4, 0, Math.PI*2);
+  ctx.fill();
+
+  // сокира збоку + анімація удару
+  const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
+  const swing = -0.9*atk;
+  const axeX = pos.x + Math.cos(p.dir)*14;
+  const axeY = pos.y + Math.sin(p.dir)*10 + bob;
+  drawAxe(ctx, axeX, axeY, p.dir + Math.PI/2, swing);
+}
+
+function drawRemotePlayer(ctx, rp, time){
+  const pos = worldToScreen(rp.x, rp.y);
+  drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
+
+  ctx.fillStyle = "rgba(45,108,223,0.55)";
+  ctx.beginPath();
+  ctx.arc(pos.x, pos.y, 10, 0, Math.PI*2);
+  ctx.fill();
+
+  // сокира
+  const axeX = pos.x + Math.cos(rp.dir)*14;
+  const axeY = pos.y + Math.sin(rp.dir)*10;
+  drawAxe(ctx, axeX, axeY, rp.dir + Math.PI/2, 0);
+
+  // ім'я
+  ctx.font = "bold 12px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.fillText(rp.name, pos.x+1, pos.y - 14 + 1);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillText(rp.name, pos.x, pos.y - 14);
+}
+
+/* =========================
+   Мінімпа
+========================= */
+function updateMinimap(){
+  mctx.clearRect(0,0,180,180);
+  mctx.fillStyle = "#132e13";
+  mctx.fillRect(0,0,180,180);
+
+  const scale = 180 / (WORLD_HALF*2);
+  const toM = (wx,wy)=>({
+    x: (wx + WORLD_HALF)*scale,
+    y: (wy + WORLD_HALF)*scale
+  });
+
+  // колайдери (точки)
+  mctx.fillStyle = "rgba(60,255,60,0.65)";
+  for(const c of colliders){
+    const p = toM(c.x, c.y);
+    mctx.fillRect(p.x|0, p.y|0, 2, 2);
+  }
+
+  // інші гравці
+  mctx.fillStyle = "rgba(90,160,255,0.75)";
+  remoteStates.forEach((d)=>{
+    const p = toM(d.x, d.y);
+    mctx.fillRect((p.x|0)-1,(p.y|0)-1,3,3);
+  });
+
+  // гравець
+  const mp = toM(player.x, player.y);
+  mctx.save();
+  mctx.translate(mp.x, mp.y);
+  mctx.rotate(player.dir);
+  mctx.fillStyle = "#ffffff";
+  mctx.beginPath();
+  mctx.moveTo(0,-6);
+  mctx.lineTo(4,4);
+  mctx.lineTo(-4,4);
+  mctx.closePath();
+  mctx.fill();
+  mctx.restore();
+}
+
+/* =========================
+   Сніг (FX canvas)
+========================= */
+let snowflakes = [];
+function resize(){
+  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+  gameCanvas.width = Math.floor(innerWidth*dpr);
+  gameCanvas.height = Math.floor(innerHeight*dpr);
+  gctx.setTransform(dpr,0,0,dpr,0,0);
+
+  fxCanvas.width = Math.floor(innerWidth*dpr);
+  fxCanvas.height = Math.floor(innerHeight*dpr);
+  fx.setTransform(dpr,0,0,dpr,0,0);
+}
+function initSnow(count=140){
+  snowflakes = [];
+  for(let i=0;i<count;i++){
+    snowflakes.push({
+      x: Math.random()*innerWidth,
+      y: Math.random()*innerHeight,
+      r: 1 + Math.random()*1.8,
+      speed: 22 + Math.random()*36,
+      drift: -10 + Math.random()*20
+    });
+  }
+}
+function updateSnow(dt){
+  fx.clearRect(0,0,innerWidth,innerHeight);
+  fx.fillStyle = "rgba(255,255,255,0.9)";
+  for(const f of snowflakes){
+    f.y += f.speed*dt;
+    f.x += f.drift*dt;
+    if (f.y > innerHeight + f.r){ f.y = -f.r; f.x = Math.random()*innerWidth; }
+    if (f.x < -10) f.x = innerWidth + 10;
+    if (f.x > innerWidth + 10) f.x = -10;
+
+    fx.beginPath();
+    fx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+    fx.fill();
+  }
+}
+
+/* =========================
+   Мультиплеєр (як у тебе)
+========================= */
+let currentUserUid=null;
+let currentUserName=null;
+
+const gamePlayersCol = collection(db, "gamePlayers");
+const remotePlayers = new Map();  // uid -> {x,y,tx,ty,dir,tdir,name}
+const remoteStates = new Map();   // uid -> {name,x,y,dir}
+const MAX_INACTIVE_MS = 30000;
+let lastSyncTime = 0;
+const SYNC_INTERVAL = 200;
+
+function joinToPlayer(uid){
   const data = remoteStates.get(uid);
   if (!data) return;
-
-  camera.position.set(data.x + 2, 2, data.z + 2);
-  yaw = data.yaw ?? yaw;
+  player.x = data.x + 2;
+  player.y = data.y + 2;
+  player.dir = data.dir ?? player.dir;
 }
 
-function updateMpUI() {
+function updateMpUI(){
   if (!mpStatusEl || !mpListEl) return;
 
-  if (!currentUserUid) {
+  if (!currentUserUid){
     mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
   } else {
-    mpStatusEl.textContent = "Мультиплеєр: ви " + currentUserName;
+    mpStatusEl.textContent = "Мультиплеєр: ви " + (currentUserName || "Гравець");
   }
 
   mpListEl.innerHTML = "";
-
-  if (remoteStates.size === 0) {
-    const span = document.createElement("div");
-    span.textContent = "Немає інших гравців у грі";
-    mpListEl.appendChild(span);
+  if (remoteStates.size === 0){
+    const d = document.createElement("div");
+    d.textContent = "Немає інших гравців у грі";
+    mpListEl.appendChild(d);
     return;
   }
 
-  remoteStates.forEach((data, uid) => {
+  remoteStates.forEach((data, uid)=>{
     const row = document.createElement("div");
     row.className = "playerRow";
-
     const name = document.createElement("div");
-    name.textContent = data.name + " у грі";
-
+    name.textContent = `${data.name} у грі`;
     const btn = document.createElement("button");
     btn.textContent = "Приєднатися";
-    btn.onclick = () => joinToPlayer(uid);
-
+    btn.onclick = ()=> joinToPlayer(uid);
     row.appendChild(name);
     row.appendChild(btn);
     mpListEl.appendChild(row);
   });
 }
 
-/* -----------------------------------------------------------
-   МУЛЬТИПЛЕЄР: оновлення своєї позиції
------------------------------------------------------------- */
-
-async function syncGamePlayer() {
+async function syncGamePlayer(){
   if (!currentUserUid || !currentUserName) return;
-  try {
+  try{
     const ref = doc(gamePlayersCol, currentUserUid);
-    await setDoc(
-      ref,
-      {
-        name: currentUserName,
-        x: camera.position.x,
-        y: camera.position.y,
-        z: camera.position.z,
-        yaw,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-  } catch (err) {
+    await setDoc(ref, {
+      name: currentUserName,
+      x: player.x,
+      y: player.y,
+      dir: player.dir,
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+  }catch(err){
     console.error("Помилка синхронізації гравця:", err);
   }
 }
-
-function maybeSyncGamePlayer() {
+function maybeSyncGamePlayer(){
   if (!currentUserUid || !currentUserName) return;
   const now = performance.now();
   if (now - lastSyncTime < SYNC_INTERVAL) return;
@@ -1417,74 +1375,55 @@ function maybeSyncGamePlayer() {
   syncGamePlayer();
 }
 
-/* -----------------------------------------------------------
-   МУЛЬТИПЛЕЄР: слухаємо інших гравців
------------------------------------------------------------- */
+onSnapshot(gamePlayersCol, (snapshot)=>{
+  remoteStates.clear();
+  const nowMs = Date.now();
 
-onSnapshot(
-  gamePlayersCol,
-  (snapshot) => {
-    remoteStates.clear();
+  remotePlayers.forEach(p => p._seen=false);
 
-    const nowMs = Date.now();
-    remotePlayers.forEach((p) => {
-      p._seen = false;
-    });
+  snapshot.forEach((docSnap)=>{
+    const uid = docSnap.id;
+    if (uid === currentUserUid) return;
 
-    snapshot.forEach((docSnap) => {
-      const uid = docSnap.id;
-      if (uid === currentUserUid) return;
+    const data = docSnap.data() || {};
+    const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().getTime() : 0;
+    if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS){
+      remotePlayers.delete(uid);
+      return;
+    }
 
-      const data = docSnap.data() || {};
-      const updatedAt = data.updatedAt?.toDate
-        ? data.updatedAt.toDate().getTime()
-        : 0;
+    const name = data.name || "Гравець";
+    const x = data.x ?? 0;
+    const y = data.y ?? 2;
+    const dir = data.dir ?? 0;
 
-      if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS) {
-        const p = remotePlayers.get(uid);
-        if (p) {
-          scene.remove(p.group);
-          remotePlayers.delete(uid);
-        }
-        return;
-      }
+    remoteStates.set(uid, { name, x, y, dir });
 
-      const name = data.name || "Гравець";
-      const x = data.x ?? 0;
-      const y = data.y ?? 2;
-      const z = data.z ?? 0;
-      const ry = data.yaw ?? 0;
+    let rp = remotePlayers.get(uid);
+    if (!rp){
+      rp = { name, x, y, tx:x, ty:y, dir, tdir:dir, _seen:true };
+      remotePlayers.set(uid, rp);
+    } else {
+      rp.name = name;
+      rp.tx = x; rp.ty = y;
+      rp.tdir = dir;
+      rp._seen = true;
+    }
+  });
 
-      const p = getOrCreateRemotePlayer(uid, name);
-      p.group.position.set(x, 0, z);
-      p.group.rotation.y = ry;
-      p._seen = true;
-
-      remoteStates.set(uid, { name, x, y, z, yaw: ry });
-    });
-
-    remotePlayers.forEach((p, uid) => {
-      if (!p._seen) {
-        scene.remove(p.group);
-        remotePlayers.delete(uid);
-      } else {
-        delete p._seen;
-      }
-    });
-
-    updateMpUI();
-  },
-  (err) => {
-    console.error("Помилка читання gamePlayers:", err);
+  // чистимо невидимих
+  for(const [uid, rp] of remotePlayers){
+    if (!rp._seen) remotePlayers.delete(uid);
+    else delete rp._seen;
   }
-);
 
-/* -----------------------------------------------------------
-   AUTH: дізнаємось, хто ми
------------------------------------------------------------- */
+  updateMpUI();
+}, (err)=>{
+  console.error("Помилка читання gamePlayers:", err);
+});
 
-onAuthStateChanged(auth, (user) => {
-  if (user && user.displayName) {
+onAuthStateChanged(auth, (user)=>{
+  if (user && user.displayName){
     currentUserUid = user.uid;
     currentUserName = user.displayName;
   } else {
@@ -1494,182 +1433,305 @@ onAuthStateChanged(auth, (user) => {
   updateMpUI();
 });
 
-/* -----------------------------------------------------------
-   РУХ + ТЕПЛО + АНІМАЦІЯ
------------------------------------------------------------- */
+/* =========================
+   Game loop (рух/тепло/анімації)
+========================= */
+let last = performance.now();
 
-const speed = 8;
-const rotateSpeed = 1.5;
-const clock = new THREE.Clock();
-let elapsed = 0;
-
-function isColliding(p) {
-  return colliders.some(
-    (c) => p.x > c.minX && p.x < c.maxX && p.z > c.minZ && p.z < c.maxZ
-  );
-}
-
-function animate() {
-  const dt = clock.getDelta();
-  elapsed += dt;
-
-  if (isFrozen) {
+function update(dt, time){
+  if (isFrozen){
     updateSnow(dt);
-    renderer.setRenderTarget(pixelTarget);
-    renderer.render(scene, camera);
-    renderer.setRenderTarget(null);
-    renderer.render(pixelScene, pixelCamera);
-    updateMinimap();
-    requestAnimationFrame(animate);
     return;
   }
 
-  if (keys["ArrowLeft"])  yaw += rotateSpeed * dt;
-  if (keys["ArrowRight"]) yaw -= rotateSpeed * dt;
-  if (keys["ArrowUp"])    pitch += rotateSpeed * dt;
-  if (keys["ArrowDown"])  pitch -= rotateSpeed * dt;
+  // клавіші руху
+  let mx = 0, my = 0;
+  if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
+  if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
+  if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
+  if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
 
-  const lookScale = 2.2;
-  yaw   -= touchLookX * rotateSpeed * lookScale * dt;
-  pitch -= touchLookY * rotateSpeed * lookScale * dt;
-
-  pitch = Math.max(-1.2, Math.min(1.2, pitch));
-  camera.rotation.y = yaw;
-  camera.rotation.x = pitch;
-
-  const forward = new THREE.Vector3(
-    -Math.sin(yaw),
-    0,
-    -Math.cos(yaw)
-  );
-  const right = new THREE.Vector3(
-    Math.cos(yaw),
-    0,
-    -Math.sin(yaw)
-  );
-
-  let move = new THREE.Vector3();
-
-  if (keys["KeyW"]) move.add(forward);
-  if (keys["KeyS"]) move.sub(forward);
-  if (keys["KeyA"]) move.sub(right);
-  if (keys["KeyD"]) move.add(right);
-
-  if (Math.abs(touchMoveX) > 0.05 || Math.abs(touchMoveY) > 0.05) {
-    move.add(forward.clone().multiplyScalar(-touchMoveY));
-    move.add(right.clone().multiplyScalar(touchMoveX));
+  // тач-рух
+  if (Math.abs(touchMoveX) > 0.05 || Math.abs(touchMoveY) > 0.05){
+    mx += touchMoveX;
+    my += touchMoveY;
   }
 
-  if (move.length() > 0) {
-    move.normalize().multiplyScalar(speed * dt);
-    const newPos = camera.position.clone().add(move);
-    if (!isColliding(newPos)) {
-      camera.position.copy(newPos);
+  // напрям (правий джойстик / мишка)
+  let aimUsed = false;
+  if (Math.hypot(touchLookX, touchLookY) > 0.25){
+    player.dir = Math.atan2(touchLookY, touchLookX);
+    aimUsed = true;
+  } else if (mouseAim){
+    // мишка: напрям від центру екрана
+    const cx = innerWidth/2, cy = innerHeight/2;
+    const dx = mouseAim.x - cx;
+    const dy = mouseAim.y - cy;
+    if (Math.hypot(dx,dy) > 10){
+      player.dir = Math.atan2(dy, dx);
+      aimUsed = true;
     }
   }
 
-  camera.position.y = 2;
+  // рух
+  const speed = 7.8; // “швидкість ходи”
+  const len = Math.hypot(mx,my);
+  if (len > 0.001){
+    mx /= len; my /= len;
 
-  if (isAttacking) {
-    attackTime += dt;
-    const t = Math.min(attackTime / attackDuration, 1);
-    const swing = Math.sin(t * Math.PI);
+    // якщо не цілишся — напрям по руху
+    if (!aimUsed) player.dir = Math.atan2(my, mx);
 
-    weaponHolder.position.set(
-      weaponBasePos.x,
-      weaponBasePos.y - swing * 0.2,
-      weaponBasePos.z + swing * 0.05
-    );
-    weaponHolder.rotation.x = weaponBaseRot.x - swing * 0.7;
-    weaponHolder.rotation.y = weaponBaseRot.y;
-    weaponHolder.rotation.z = weaponBaseRot.z + swing * 0.25;
+    const stepX = mx * speed * dt;
+    const stepY = my * speed * dt;
 
-    if (t >= 1) {
-      isAttacking = false;
-      weaponHolder.position.copy(weaponBasePos);
-      weaponHolder.rotation.copy(weaponBaseRot);
-    }
-  } else {
-    weaponHolder.position.copy(weaponBasePos);
-    weaponHolder.rotation.copy(weaponBaseRot);
+    // окремо по осях (щоб краще ковзало)
+    let nx = player.x + stepX;
+    let ny = player.y;
+
+    // межі світу
+    nx = clamp(nx, -WORLD_HALF+1, WORLD_HALF-1);
+    ny = clamp(ny, -WORLD_HALF+1, WORLD_HALF-1);
+
+    if (!isBlocked(nx, ny, player.r)) player.x = nx;
+
+    nx = player.x;
+    ny = player.y + stepY;
+    nx = clamp(nx, -WORLD_HALF+1, WORLD_HALF-1);
+    ny = clamp(ny, -WORLD_HALF+1, WORLD_HALF-1);
+
+    if (!isBlocked(nx, ny, player.r)) player.y = ny;
   }
 
-  for (const t of trees) {
-    if (t.falling && !t.removed) {
-      t.fallTime += dt;
-      const duration = 0.6;
-      const k = Math.min(t.fallTime / duration, 1);
-      const angle = k * (Math.PI / 2) * t.fallDirection;
-      t.group.rotation.z = angle;
+  // атака
+  if (player.attackCooldown > 0) player.attackCooldown -= dt;
+  if (player.attack > 0){
+    player.attack += dt * 4.0;
+    if (player.attack >= 1) player.attack = 0;
+  }
 
-      if (k >= 1) {
+  // дерева падають
+  for(const t of trees){
+    if (t.falling && !t.removed){
+      t.fallT += dt;
+      if (t.fallT >= 0.62){
         t.removed = true;
-        scene.remove(t.group);
       }
     }
   }
   trees = trees.filter(t => !t.removed);
 
-  for (const b of buttons) {
-    const t = elapsed * 4 + b.phase;
-    const s = 0.9 + Math.sin(t) * 0.15;
-    b.mesh.scale.y = s;
-    b.light.intensity = 1.3 + Math.sin(t * 1.7) * 0.5;
+  // кнопки флеш (коли не вистачає wood)
+  for(const b of buttons){
+    if (b.flash > 0) b.flash -= dt;
   }
 
-  const dx = camera.position.x - campfirePos.x;
-  const dz = camera.position.z - campfirePos.z;
-  const dist = Math.sqrt(dx * dx + dz * dz);
+  // відбудова fade-in
+  for(const h of houses){
+    if (h.restored && h.restoreT < 1){
+      h.restoreT = Math.min(1, h.restoreT + dt*1.6);
+    }
+  }
+  for(const f of farms){
+    if (f.restored && f.restoreT < 1){
+      f.restoreT = Math.min(1, f.restoreT + dt*1.6);
+    }
+  }
+  for(const p of paths){
+    if (p.restored && p.restoreT < 1){
+      p.restoreT = Math.min(1, p.restoreT + dt*1.8);
+    }
+  }
 
+  // частинки
+  for(const pt of particles){
+    pt.t += dt;
+    pt.life -= dt;
+    pt.x += pt.vx*dt;
+    pt.y += pt.vy*dt;
+    pt.vx *= 0.90;
+    pt.vy *= 0.90;
+    if (pt.type === "chips") pt.vy += 6.5*dt;
+    if (pt.type === "restore") pt.vy -= 2.0*dt;
+  }
+  for(let i=particles.length-1;i>=0;i--){
+    if (particles[i].life <= 0) particles.splice(i,1);
+  }
+
+  // тепло/замерзання
+  const d = Math.sqrt(dist2(player.x, player.y, campfire.x, campfire.y));
   const warmRadius = 12;
   const coolRate = 0.025;
   const warmRate = 2.0;
 
-  if (dist < warmRadius) {
-    const factor = 1 - dist / warmRadius;
+  if (d < warmRadius){
+    const factor = 1 - d/warmRadius;
     heatValue += warmRate * factor * dt;
   } else {
     heatValue -= coolRate * dt;
   }
-  if (heatValue < 0) heatValue = 0;
-  if (heatValue > heatMax) heatValue = heatMax;
 
-  updateHeatBar();
+  heatValue = clamp(heatValue, 0, heatMax);
+  updateHeat();
 
-  if (!isFrozen && heatValue <= 0.01) {
+  if (!isFrozen && heatValue <= 0.01){
     isFrozen = true;
     freezeOverlay.style.opacity = "1";
-    freezeOverlay.style.pointerEvents = "auto";
+    freezeText.style.opacity = "1";
   }
 
+  // камера слідує
+  camera.x = lerp(camera.x, player.x, 0.12);
+  camera.y = lerp(camera.y, player.y, 0.12);
+
+  // інтерполяція інших гравців
+  for(const rp of remotePlayers.values()){
+    rp.x = lerp(rp.x, rp.tx, 0.22);
+    rp.y = lerp(rp.y, rp.ty, 0.22);
+
+    // найкоротший шлях по куту
+    let da = (rp.tdir - rp.dir);
+    while (da > Math.PI) da -= Math.PI*2;
+    while (da < -Math.PI) da += Math.PI*2;
+    rp.dir += da*0.22;
+  }
+
+  // сніг
   updateSnow(dt);
 
-  // 🔄 синхронізація своєї позиції у Firebase
+  // мультиплеєр sync
   maybeSyncGamePlayer();
-
-  renderer.setRenderTarget(pixelTarget);
-  renderer.render(scene, camera);
-  renderer.setRenderTarget(null);
-  renderer.render(pixelScene, pixelCamera);
-
-  updateMinimap();
-  requestAnimationFrame(animate);
 }
 
-/* -----------------------------------------------------------
-   СТАРТ
------------------------------------------------------------- */
+function render(time){
+  // земля
+  bctx.fillStyle = groundPattern;
+  bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
 
-initSnow(120);
-animate();
+  // легка віньєтка
+  bctx.fillStyle = "rgba(0,0,0,0.05)";
+  bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
 
-window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  resizeSnow();
-  initSnow(snowflakes.length || 120);
+  // межі видимості (culling)
+  const halfW = INTERNAL_W/(2*PPU);
+  const halfH = INTERNAL_H/(2*PPU);
+  const minX = camera.x - halfW - 12;
+  const maxX = camera.x + halfW + 12;
+  const minY = camera.y - halfH - 12;
+  const maxY = camera.y + halfH + 12;
+  const visible = (x,y, pad=0)=> x>=minX-pad && x<=maxX+pad && y>=minY-pad && y<=maxY+pad;
+
+  // доріжки
+  for(const p of paths){
+    if (!visible(p.x,p.y, 12)) continue;
+    drawPath(bctx, p);
+  }
+
+  // ферми
+  for(const f of farms){
+    if (!visible(f.x,f.y, 14)) continue;
+    drawFarm(bctx, f);
+  }
+
+  // будинки
+  for(const h of houses){
+    if (!visible(h.x,h.y, 16)) continue;
+    if (h.type==="bigHouse") drawBigHouse(bctx, h);
+    else drawHouse(bctx, h);
+  }
+
+  // камені
+  for(const r of rocks){
+    if (!visible(r.x,r.y, 10)) continue;
+    drawRock(bctx, r);
+  }
+
+  // гори
+  for(const m of mountains){
+    if (!visible(m.x,m.y, 20)) continue;
+    drawMountain(bctx, m);
+  }
+
+  // дерева
+  for(const t of trees){
+    if (!visible(t.x,t.y, 10)) continue;
+    drawTree(bctx, t);
+  }
+
+  // вогнище
+  if (visible(campfire.x, campfire.y, 14)) drawCampfire(bctx, time);
+
+  // кнопки
+  for(const b of buttons){
+    if (!visible(b.x,b.y, 10)) continue;
+    drawButton(bctx, b, time);
+  }
+
+  // частинки
+  for(const pt of particles){
+    const p = worldToScreen(pt.x, pt.y);
+    const a = clamp(pt.life/0.75, 0, 1);
+    if (pt.type === "chips"){
+      bctx.fillStyle = `rgba(180,120,70,${0.85*a})`;
+      bctx.fillRect((p.x|0),(p.y|0),2,2);
+    } else {
+      bctx.fillStyle = `rgba(110,255,170,${0.75*a})`;
+      bctx.fillRect((p.x|0),(p.y|0),2,2);
+    }
+  }
+
+  // інші гравці
+  for(const rp of remotePlayers.values()){
+    if (!visible(rp.x,rp.y, 12)) continue;
+    drawRemotePlayer(bctx, rp, time);
+  }
+
+  // гравець
+  drawPlayer(bctx, player, time);
+
+  // === Вивід на екран з pixel upscale ===
+  const screenW = innerWidth;
+  const screenH = innerHeight;
+
+  const scale = Math.max(1, Math.floor(Math.min(screenW/INTERNAL_W, screenH/INTERNAL_H)));
+  const drawW = INTERNAL_W * scale;
+  const drawH = INTERNAL_H * scale;
+  const ox = ((screenW - drawW)/2)|0;
+  const oy = ((screenH - drawH)/2)|0;
+
+  gctx.clearRect(0,0,screenW,screenH);
+  gctx.imageSmoothingEnabled = false;
+  gctx.drawImage(buffer, 0,0,INTERNAL_W,INTERNAL_H, ox,oy, drawW,drawH);
+
+  // UI
+  updateMinimap();
+}
+
+function loop(now){
+  const dt = Math.min(0.033, (now - last)/1000);
+  last = now;
+  const time = now/1000;
+
+  update(dt, time);
+  render(time);
+
+  requestAnimationFrame(loop);
+}
+
+/* =========================
+   Старт
+========================= */
+resize();
+initSnow(140);
+requestAnimationFrame(loop);
+window.addEventListener("resize", ()=>{
+  resize();
+  initSnow(snowflakes.length || 140);
 });
+
+/* Підказка: оновлюємо UI мультиплеєра одразу */
+updateMpUI();
 </script>
+
 </body>
 </html>
