@@ -3,250 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Village – 2D Snow Survival (Pixel)</title>
+  <title>Village – 2D Snow Survival (Pixel) v2</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: Arial, sans-serif;
+    html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; font-family:Arial,sans-serif; }
+
+    #game { position:fixed; inset:0; width:100%; height:100%; image-rendering:pixelated; image-rendering:crisp-edges; }
+    #fxCanvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:8; }
+
+    #info{
+      position:fixed; top:10px; left:10px; z-index:20;
+      padding:8px 12px; background:rgba(0,0,0,0.55); color:#fff; font-size:13px;
+      border-radius:10px; max-width:min(560px, calc(100vw - 20px));
+    }
+    #stats{
+      position:fixed; top:78px; left:10px; z-index:20;
+      padding:6px 10px; background:rgba(0,0,0,0.55); color:#fff; font-size:13px;
+      border-radius:10px;
+    }
+    #heatBar{
+      position:fixed; bottom:18px; left:50%; transform:translateX(-50%); z-index:20;
+      padding:6px 10px; background:rgba(0,0,0,0.55); color:#fff; font-size:18px;
+      border-radius:12px; letter-spacing:2px; user-select:none;
     }
 
-    /* Головний 2D canvas */
-    #game {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
+    #minimap{
+      position:fixed; right:16px; top:16px; width:180px; height:180px; z-index:22;
+      border-radius:16px; overflow:hidden; border:3px solid rgba(255,255,255,0.75);
+      background:#0f260f; box-shadow:0 10px 25px rgba(0,0,0,0.35);
+    }
+    #minimapCanvas{ width:100%; height:100%; image-rendering:pixelated; }
+
+    #mpPanel{
+      position:fixed; right:16px; top:212px; width:210px; max-height:260px; overflow-y:auto;
+      background:rgba(0,0,0,0.60); color:#fff; padding:8px; font-size:12px;
+      border-radius:12px; z-index:22; box-shadow:0 10px 25px rgba(0,0,0,0.35);
+    }
+    #mpStatus{ font-weight:800; margin-bottom:8px; }
+    #mpList .playerRow{ margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.15); padding-bottom:6px; }
+    #mpList .playerRow:last-child{ border-bottom:none; }
+    #mpList button{
+      width:100%; margin-top:4px; border:none; padding:5px 7px; border-radius:10px;
+      background:#3498db; color:#fff; cursor:pointer; font-size:12px;
+    }
+    #mpList button:hover{ background:#2980b9; }
+
+    #freezeOverlay{
+      position:fixed; inset:0; background:#000; opacity:0; pointer-events:none;
+      z-index:50; transition:opacity 1s;
+    }
+    #freezeText{
+      position:fixed; inset:0; display:grid; place-items:center; z-index:51; pointer-events:none;
+      opacity:0; transition:opacity 1s; color:#fff; text-align:center; padding:24px; font-weight:800;
+    }
+    #freezeText .card{
+      background:rgba(0,0,0,0.55); border:1px solid rgba(255,255,255,0.12);
+      border-radius:16px; padding:14px 16px; max-width:520px; box-shadow:0 10px 25px rgba(0,0,0,0.35);
     }
 
-    /* FX canvas (сніг/оверлеї) */
-    #fxCanvas {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 8;
+    /* Touch */
+    #touchControls{ position:fixed; inset:0; pointer-events:none; z-index:30; display:none; }
+    #touchControls .pad{
+      position:absolute; width:124px; height:124px; border-radius:50%;
+      border:2px solid rgba(255,255,255,0.25);
+      background:radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
+      pointer-events:auto; touch-action:none; backdrop-filter:blur(2px);
+    }
+    #movePad{ left:18px; bottom:28px; }
+    #lookPad{ right:18px; bottom:28px; }
+    #touchControls .stick{
+      position:absolute; width:60px; height:60px; border-radius:50%;
+      left:32px; top:32px; background:rgba(46,204,113,0.82); box-shadow:0 0 14px rgba(46,204,113,0.95);
+    }
+    #actionBtn{
+      position:absolute; right:30px; bottom:148px; width:74px; height:74px; border-radius:50%;
+      border:none; background:radial-gradient(circle, #ffb347 0, #e67e22 60%);
+      box-shadow:0 0 16px rgba(230,126,34,0.95); font-size:30px; color:#fff;
+      pointer-events:auto; touch-action:none; user-select:none;
     }
 
-    #info {
-      position: fixed;
-      top: 10px;
-      left: 10px;
-      padding: 8px 12px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 13px;
-      border-radius: 8px;
-      z-index: 20;
-      max-width: min(560px, calc(100vw - 20px));
-    }
-
-    #stats {
-      position: fixed;
-      top: 78px;
-      left: 10px;
-      padding: 6px 10px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 13px;
-      border-radius: 8px;
-      z-index: 20;
-    }
-
-    /* Шкала тепла */
-    #heatBar {
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 6px 10px;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-      font-size: 18px;
-      border-radius: 10px;
-      z-index: 20;
-      letter-spacing: 2px;
-      user-select: none;
-    }
-
-    /* Мінімпа */
-    #minimap {
-      position: fixed;
-      right: 16px;
-      top: 16px;
-      width: 180px;
-      height: 180px;
-      border-radius: 16px;
-      overflow: hidden;
-      z-index: 22;
-      border: 3px solid rgba(255,255,255,0.75);
-      background: #0f260f;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-    #minimapCanvas {
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-    }
-
-    /* Мультиплеєр панель */
-    #mpPanel {
-      position: fixed;
-      right: 16px;
-      top: 212px;
-      width: 210px;
-      max-height: 260px;
-      overflow-y: auto;
-      background: rgba(0,0,0,0.60);
-      color: #fff;
-      padding: 8px;
-      font-size: 12px;
-      border-radius: 12px;
-      z-index: 22;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-    #mpStatus {
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    #mpList .playerRow {
-      margin-bottom: 6px;
-      border-bottom: 1px solid rgba(255,255,255,0.15);
-      padding-bottom: 6px;
-    }
-    #mpList .playerRow:last-child { border-bottom: none; }
-    #mpList button {
-      width: 100%;
-      margin-top: 4px;
-      border: none;
-      padding: 5px 7px;
-      border-radius: 10px;
-      background: #3498db;
-      color: #fff;
-      cursor: pointer;
-      font-size: 12px;
-    }
-    #mpList button:hover { background: #2980b9; }
-
-    /* Замерзання */
-    #freezeOverlay {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 50;
-      transition: opacity 1s;
-    }
-    #freezeText {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 51;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 1s;
-      color: #fff;
-      text-align: center;
-      padding: 24px;
-      font-weight: 700;
-    }
-    #freezeText .card {
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 14px 16px;
-      max-width: 520px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-
-    /* Тач-контролер */
-    #touchControls {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 30;
-      display: none;
-    }
-    #touchControls .pad {
-      position: absolute;
-      width: 124px;
-      height: 124px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.25);
-      background: radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
-      pointer-events: auto;
-      touch-action: none;
-      backdrop-filter: blur(2px);
-    }
-    #movePad { left: 18px; bottom: 28px; }
-    #lookPad { right: 18px; bottom: 28px; }
-
-    #touchControls .stick {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      left: 32px;
-      top: 32px;
-      background: rgba(46,204,113,0.82);
-      box-shadow: 0 0 14px rgba(46,204,113,0.95);
-    }
-
-    #actionBtn {
-      position: absolute;
-      right: 30px;
-      bottom: 148px;
-      width: 74px;
-      height: 74px;
-      border-radius: 50%;
-      border: none;
-      background: radial-gradient(circle, #ffb347 0, #e67e22 60%);
-      box-shadow: 0 0 16px rgba(230,126,34,0.95);
-      font-size: 30px;
-      color: #fff;
-      pointer-events: auto;
-      touch-action: none;
-      user-select: none;
-    }
-
-    /* Tap-to-start для музики (на iOS/Android часто потрібно) */
-    #tapStart {
-      position: fixed;
-      inset: 0;
-      display: grid;
-      place-items: center;
-      z-index: 60;
-      background: rgba(0,0,0,0.55);
-      color: #fff;
-    }
-    #tapStart .btn {
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.16);
-      padding: 12px 14px;
-      border-radius: 14px;
-      font-weight: 800;
-      cursor: pointer;
-      user-select: none;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-
-    @media (pointer: coarse) {
-      #touchControls { display: block; }
-    }
+    @media (pointer:coarse){ #touchControls{ display:block; } }
   </style>
 </head>
 <body>
-
   <div id="info">
-    ПК: WASD/стрілки – рух, мишка – напрям, ЛКМ – 🪓 дія/рубка/кнопка<br>
+    ПК: WASD – рух, мишка – напрям, ЛКМ – 🪓 дія/рубка/кнопка<br>
     Телефон: лівий круг – рух, правий – напрям, 🪓 – дія/рубка/кнопка<br>
     Друзі: увійдіть у акаунти на сайті й відкрийте цю сторінку, щоб бачити один одного.
   </div>
@@ -281,22 +121,13 @@
     </div>
   </div>
 
-  <div id="tapStart"><div class="btn">Натисни, щоб почати ▶</div></div>
-
 <script type="module">
 /* =========================
    Firebase (як у тебе)
 ========================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import {
-  getFirestore,
-  collection,
-  doc,
-  setDoc,
-  onSnapshot,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
@@ -324,7 +155,7 @@ const mpStatusEl = document.getElementById("mpStatus");
 const mpListEl = document.getElementById("mpList");
 
 const gameCanvas = document.getElementById("game");
-const gctx = gameCanvas.getContext("2d", { alpha: false });
+const gctx = gameCanvas.getContext("2d", { alpha:false });
 
 const fxCanvas = document.getElementById("fxCanvas");
 const fx = fxCanvas.getContext("2d");
@@ -333,43 +164,95 @@ const mini = document.getElementById("minimapCanvas");
 const mctx = mini.getContext("2d");
 
 /* =========================
-   Tap to start audio
+   Audio (без кнопки “грайте”)
+   Музика стартує після першого жесту (мобільні обмеження)
 ========================= */
-const tapStart = document.getElementById("tapStart");
 const music = document.getElementById("bgm");
-music.volume = 0.42;
+music.volume = 0.38;
 
-function unlockAudio() {
-  tapStart.style.display = "none";
+let actx = null;
+let audioUnlocked = false;
+
+function ensureAudio(){
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  try{
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    actx = new AudioCtx();
+    if (actx.state === "suspended") actx.resume().catch(()=>{});
+  }catch(e){ actx = null; }
+
   music.play().catch(()=>{});
-  window.removeEventListener("pointerdown", unlockAudio);
-  window.removeEventListener("touchstart", unlockAudio);
 }
-window.addEventListener("pointerdown", unlockAudio, { once: true });
-window.addEventListener("touchstart", unlockAudio, { once: true });
-tapStart.addEventListener("click", unlockAudio);
+window.addEventListener("pointerdown", ensureAudio, { once:true });
+window.addEventListener("touchstart", ensureAudio, { once:true });
+
+function playTone({freq=220, dur=0.08, type="sine", vol=0.18, slideTo=null}){
+  if (!actx) return;
+  const t0 = actx.currentTime;
+  const o = actx.createOscillator();
+  const g = actx.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t0);
+  if (slideTo != null){
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+  }
+  g.gain.setValueAtTime(vol, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(actx.destination);
+  o.start(t0);
+  o.stop(t0 + dur + 0.02);
+}
+
+function playNoise({dur=0.09, vol=0.12}){
+  if (!actx) return;
+  const sr = actx.sampleRate;
+  const len = Math.floor(sr * dur);
+  const buf = actx.createBuffer(1, len, sr);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    const t = i/len;
+    data[i] = (Math.random()*2-1) * (1 - t) * 0.9;
+  }
+  const src = actx.createBufferSource();
+  src.buffer = buf;
+
+  const g = actx.createGain();
+  g.gain.value = vol;
+
+  const f = actx.createBiquadFilter();
+  f.type = "highpass";
+  f.frequency.value = 800;
+
+  src.connect(f).connect(g).connect(actx.destination);
+  src.start();
+  src.stop(actx.currentTime + dur + 0.02);
+}
+
+const SFX = {
+  swing(){ ensureAudio(); playTone({freq:260, slideTo:150, dur:0.09, type:"triangle", vol:0.14}); },
+  chop(){ ensureAudio(); playNoise({dur:0.08, vol:0.10}); playTone({freq:120, dur:0.06, type:"sine", vol:0.10}); },
+  restore(){ ensureAudio(); playTone({freq:320, slideTo:720, dur:0.13, type:"sine", vol:0.12}); playTone({freq:520, slideTo:980, dur:0.12, type:"triangle", vol:0.10}); },
+  error(){ ensureAudio(); playTone({freq:180, slideTo:120, dur:0.10, type:"square", vol:0.08}); },
+  crack(){ ensureAudio(); playNoise({dur:0.12, vol:0.08}); playTone({freq:90, dur:0.10, type:"sine", vol:0.08}); }
+};
 
 /* =========================
    Helpers
 ========================= */
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const lerp = (a,b,t) => a + (b-a)*t;
-const dist2 = (ax,ay,bx,by) => {
-  const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy;
-};
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+const dist2 = (ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
 const rand = (a,b)=> a + Math.random()*(b-a);
-
 function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
-function easeOutBack(t){
-  const c1 = 1.70158, c3 = c1 + 1;
-  return 1 + c3*Math.pow(t-1,3) + c1*Math.pow(t-1,2);
-}
+function easeOutQuint(t){ return 1 - Math.pow(1-t, 5); }
 
 /* =========================
    Pixel камера (внутр. рендер)
 ========================= */
-const INTERNAL_W = 480;     // внутрішня "піксельна" роздільна
-const INTERNAL_H = 270;
+const INTERNAL_W = 512;
+const INTERNAL_H = 288;
 
 const buffer = document.createElement("canvas");
 buffer.width = INTERNAL_W;
@@ -379,30 +262,62 @@ const bctx = buffer.getContext("2d");
 bctx.imageSmoothingEnabled = false;
 gctx.imageSmoothingEnabled = false;
 
-/* Розміри світу (в "юнiтах") */
-const WORLD_HALF = 160;     // як твоя 320x320 площина в 3D
-const PPU = 16;             // pixels per unit у внутрішньому буфері
+/* Світ */
+const WORLD_HALF = 160;
+const PPU = 16;
 
 /* =========================
-   Світ: колайдери/сутності
+   Колізії
 ========================= */
 const colliders = []; // rect: {x,y,hw,hh, tag}
-function addColliderRect(x,y,hw,hh, tag="") {
-  const r = { x, y, hw, hh, tag };
+function addColliderRect(x,y,hw,hh, tag=""){
+  const r = { x,y,hw,hh,tag };
   colliders.push(r);
   return r;
 }
-function circleRectCollide(px,py,pr, r){
+function circleRectCollide(px,py,pr,r){
   const cx = clamp(px, r.x - r.hw, r.x + r.hw);
   const cy = clamp(py, r.y - r.hh, r.y + r.hh);
   const dx = px - cx, dy = py - cy;
   return dx*dx + dy*dy <= pr*pr;
 }
-function isBlocked(px,py, pr){
-  return colliders.some(r => circleRectCollide(px,py,pr, r));
+function isBlocked(px,py,pr){
+  return colliders.some(r => circleRectCollide(px,py,pr,r));
 }
 
-/* Сутності */
+/* =========================
+   Стиль
+========================= */
+const COL = {
+  snow:"#f5f9ff", snow2:"#e9f1ff", shadow:"rgba(0,0,0,0.35)",
+  path:"#b38a5d", path2:"#a67c52",
+  soil:"#5b3a1a", crop:"#e9f6ff",
+  rock:"#7f8894", rock2:"#5f6772",
+  mtn:"#6a707a", mtn2:"#52585f",
+  btn:"#32d26c", btnGlow:"rgba(50,210,108,0.55)",
+  blue:"#2d6cdf", blue2:"#68a0ff",
+  green:"#1dbb5a", green2:"#67ffb0",
+  flame:"#ff6b2a", flame2:"#ffcc33"
+};
+
+/* Сніговий патерн землі */
+const groundPattern = (() => {
+  const c = document.createElement("canvas");
+  c.width = 64; c.height = 64;
+  const x = c.getContext("2d");
+  x.fillStyle = COL.snow;
+  x.fillRect(0,0,64,64);
+  for(let i=0;i<140;i++){
+    const px=(Math.random()*64)|0, py=(Math.random()*64)|0;
+    x.fillStyle = Math.random()<0.6 ? COL.snow2 : "#ffffff";
+    x.fillRect(px,py,1,1);
+  }
+  return bctx.createPattern(c, "repeat");
+})();
+
+/* =========================
+   Сутності світу
+========================= */
 const houses = [];
 const farms = [];
 const paths = [];
@@ -411,140 +326,95 @@ const mountains = [];
 let trees = [];
 let buttons = [];
 
-const campfire = { x: 0, y: 30 };
+const campfire = { x:0, y:30 };
 
 /* =========================
-   Стиль/кольори
-========================= */
-const COL = {
-  snow: "#f5f9ff",
-  snow2:"#e9f1ff",
-  shadow:"rgba(0,0,0,0.35)",
-  path: "#b38a5d",
-  path2:"#a67c52",
-  wood1:"#9a6a3d",
-  wood2:"#7c4f2b",
-  roof1:"#c84d3a",
-  roof2:"#a73a2a",
-  soil:"#5b3a1a",
-  crop:"#e9f6ff",
-  rock:"#7f8894",
-  rock2:"#5f6772",
-  mtn:"#6a707a",
-  mtn2:"#52585f",
-  btn:"#32d26c",
-  btnGlow:"rgba(50,210,108,0.55)",
-  blue:"#2d6cdf",
-  blue2:"#68a0ff",
-  white:"#ffffff",
-  black:"#000000",
-  flame:"#ff6b2a",
-  flame2:"#ffcc33"
-};
-
-/* Сніговий патерн для землі */
-const groundPattern = (() => {
-  const c = document.createElement("canvas");
-  c.width = 64; c.height = 64;
-  const x = c.getContext("2d");
-  x.fillStyle = COL.snow;
-  x.fillRect(0,0,64,64);
-  for(let i=0;i<120;i++){
-    const px = (Math.random()*64)|0;
-    const py = (Math.random()*64)|0;
-    x.fillStyle = Math.random()<0.6 ? COL.snow2 : "#ffffff";
-    x.fillRect(px,py,1,1);
-  }
-  return bctx.createPattern(c, "repeat");
-})();
-
-/* =========================
-   Генерація світу (як у 3D)
+   Відбудова кнопки
 ========================= */
 function createRestoreButton(x,y,cost,type,target){
-  buttons.push({
-    x, y, cost, type, target,
-    restored: false,
-    phase: Math.random()*Math.PI*2,
-    flash: 0
-  });
+  buttons.push({ x,y,cost,type,target, restored:false, phase:Math.random()*Math.PI*2, flash:0 });
 }
 
-function createHouse(x,y){
-  const h = {
-    type:"house",
-    x,y,
-    w: 6, h: 6,
-    restored:false,
-    restoreT:0
-  };
+/* =========================
+   Будинки / варіанти
+========================= */
+function mkHouseVariant(i){
+  const variants = [
+    { walls:"#9a6a3d", walls2:"#7c4f2b", roof:"#c84d3a", roof2:"#a73a2a", window:"#ffe7a8", chimney:true  },
+    { walls:"#7d5c3a", walls2:"#5a3f28", roof:"#3d6fb3", roof2:"#2e568f", window:"#ffe2a0", chimney:false },
+    { walls:"#b07d4f", walls2:"#8a5a33", roof:"#3a3a3a", roof2:"#242424", window:"#ffe7a8", chimney:true  },
+    { walls:"#8b8b8b", walls2:"#6f6f6f", roof:"#a63b2f", roof2:"#7f2a22", window:"#ffeab5", chimney:false }
+  ];
+  return variants[i % variants.length];
+}
+
+function createHouse(x,y, variantIndex=0){
+  const v = mkHouseVariant(variantIndex);
+  const h = { kind:"small", x,y, w:6, h:6, restored:false, restoreT:0, v, cost:45 };
   houses.push(h);
-  createRestoreButton(x, y + 4.2, 45, "house", h);
+  createRestoreButton(x, y+4.2, h.cost, "house", h);
 }
-
-function createBigHouse(x,y){
-  const h = {
-    type:"bigHouse",
-    x,y,
-    w: 7, h: 7,
-    restored:false,
-    restoreT:0
-  };
+function createBigHouse(x,y, variantIndex=1){
+  const v = mkHouseVariant(variantIndex);
+  const h = { kind:"big", x,y, w:7, h:7, restored:false, restoreT:0, v, cost:65 };
   houses.push(h);
-  createRestoreButton(x, y + 4.8, 65, "bigHouse", h);
+  createRestoreButton(x, y+4.8, h.cost, "bigHouse", h);
 }
 
-function createFarm(x,y,w,l){
-  const f = { x,y,w,l, restored:false, restoreT:0 };
+/* =========================
+   Ферми / варіанти
+========================= */
+function createFarm(x,y,w,l, cropType=0){
+  const f = { x,y,w,l, restored:false, restoreT:0, cropType, cost:15 };
   farms.push(f);
-  createRestoreButton(x, y + l/2 + 1.2, 15, "farm", f);
+  createRestoreButton(x, y + l/2 + 1.2, f.cost, "farm", f);
 }
 
+/* Доріжки */
 function createPath(x,y,w,l){
-  const p = { x,y,w,l, restored:false, restoreT:0 };
+  const p = { x,y,w,l, restored:false, restoreT:0, cost:5 };
   paths.push(p);
-  createRestoreButton(x, y, 5, "path", p);
+  createRestoreButton(x,y,p.cost,"path",p);
 }
 
+/* Скелі/гори */
 function createRock(x,y,size){
-  const r = { x,y,size };
-  rocks.push(r);
+  rocks.push({ x,y,size });
   addColliderRect(x,y, size*0.9, size*0.9, "rock");
 }
-
 function createMountain(x,y){
   const base = 8 + Math.random()*6;
   const height = 10 + Math.random()*8;
-  const m = { x,y, base, height };
-  mountains.push(m);
+  mountains.push({ x,y,base,height });
   addColliderRect(x,y, base*0.85, base*0.85, "mountain");
 }
-
 function createMountainsBorder(){
-  for(let x=-150; x<=150; x+=15){
-    createMountain(x, -150);
-    createMountain(x, 150);
-  }
-  for(let y=-150; y<=150; y+=15){
-    createMountain(-150, y);
-    createMountain(150, y);
-  }
-  for (let i=0;i<35;i++){
-    const a = Math.random()*Math.PI*2;
-    const r = 110 + Math.random()*25;
+  for(let x=-150;x<=150;x+=15){ createMountain(x,-150); createMountain(x,150); }
+  for(let y=-150;y<=150;y+=15){ createMountain(-150,y); createMountain(150,y); }
+  for(let i=0;i<35;i++){
+    const a=Math.random()*Math.PI*2;
+    const r=110 + Math.random()*25;
     createMountain(Math.cos(a)*r, Math.sin(a)*r);
   }
 }
 
+/* =========================
+   Ялинки (різноманітні)
+========================= */
 function createTree(x,y){
+  const kind = (Math.random()*3)|0;          // 0..2
+  const scale = rand(0.85, 1.25);
+  const snowiness = rand(0.55, 1.0);
+  const trunk = rand(0.9, 1.35);
   const t = {
     x,y,
-    hp: 4,
+    hp: 4 + (Math.random()<0.2 ? 1 : 0),
     falling:false,
     fallT:0,
     fallDir: Math.random()<0.5 ? -1 : 1,
     removed:false,
-    collider: null
+    collider:null,
+    kind, scale, snowiness, trunk
   };
   t.collider = addColliderRect(x,y, 0.85, 0.85, "tree");
   trees.push(t);
@@ -552,50 +422,60 @@ function createTree(x,y){
 
 function forestRing(cx,cy, inner, outer, count){
   for(let i=0;i<count;i++){
-    const a = Math.random()*Math.PI*2;
-    const r = inner + Math.random()*(outer-inner);
-    const x = cx + Math.cos(a)*r;
-    const y = cy + Math.sin(a)*r;
+    const a=Math.random()*Math.PI*2;
+    const r=inner + Math.random()*(outer-inner);
+    const x=cx + Math.cos(a)*r;
+    const y=cy + Math.sin(a)*r;
     if (Math.sqrt(x*x+y*y) < 20) continue;
     createTree(x,y);
   }
 }
-
 function createForestRocks(count){
   for(let i=0;i<count;i++){
-    const a = Math.random()*Math.PI*2;
-    const r = 30 + Math.random()*70;
-    const x = Math.cos(a)*r;
-    const y = Math.sin(a)*r;
-    if (Math.sqrt(x*x+y*y) < 25) { i--; continue; }
-    const size = 0.8 + Math.random()*1.4;
-    createRock(x,y,size);
+    const a=Math.random()*Math.PI*2;
+    const r=30 + Math.random()*70;
+    const x=Math.cos(a)*r;
+    const y=Math.sin(a)*r;
+    if (Math.sqrt(x*x+y*y) < 25){ i--; continue; }
+    createRock(x,y, 0.8 + Math.random()*1.4);
   }
 }
 
-/* Село */
-createHouse(0,0);
-createHouse(10,-6);
-createHouse(-10,6);
-createHouse(0,-14);
-createHouse(14,10);
-createHouse(-14,-10);
-createHouse(20,0);
-createHouse(-20,0);
-createHouse(8,18);
-createHouse(-8,-20);
+/* =========================
+   Село (гарна розстановка + різні будинки)
+========================= */
+function buildVillage(){
+  // центральна площа
+  createHouse(  0,   0, 0);
+  createHouse( 18,  -6, 1);
+  createHouse(-18,   8, 2);
+  createHouse(  0, -20, 3);
+  createHouse( 26,  14, 0);
+  createHouse(-26, -14, 1);
+  createHouse( 36,   0, 2);
+  createHouse(-36,   0, 3);
+  createHouse( 12,  28, 1);
+  createHouse(-12, -30, 0);
 
-createBigHouse(16,-20);
-createBigHouse(-16,20);
+  // великі будинки
+  createBigHouse( 30, -28, 2);
+  createBigHouse(-30,  28, 3);
 
-createPath(0,-7,4,14);
-createPath(0, 7,4,14);
-createPath(7, 0,14,4);
-createPath(-7,0,14,4);
+  // доріжки (хрест + відгалуження)
+  createPath(0,-8,  4,18);
+  createPath(0, 8,  4,18);
+  createPath(8,0,  18,4);
+  createPath(-8,0, 18,4);
 
-createFarm(0,-22,10,6);
-createFarm(18, 6,10,6);
-createFarm(-18,-6,10,6);
+  createPath(18,-14, 14,4);
+  createPath(-18,14, 14,4);
+
+  // ферми (різні “культури”)
+  createFarm(  0, -36, 12, 7, 0);
+  createFarm( 26,   6, 11, 7, 1);
+  createFarm(-26,  -6, 11, 7, 2);
+}
+buildVillage();
 
 forestRing(0,0,24,42,100);
 forestRing(0,0,42,70,140);
@@ -605,7 +485,7 @@ createForestRocks(30);
 createMountainsBorder();
 
 /* =========================
-   Гравець/статистика/тепло
+   Статистика/тепло
 ========================= */
 let treesCutTotal = 0;
 let wood = 0;
@@ -614,44 +494,60 @@ const heatMax = 9;
 let heatValue = heatMax;
 let isFrozen = false;
 
-function updateStats(){
-  statsEl.textContent = `Дерев зрубано: ${treesCutTotal} | Дерево: ${wood}`;
-}
+function updateStats(){ statsEl.textContent = `Дерев зрубано: ${treesCutTotal} | Дерево: ${wood}`; }
 function updateHeat(){
   const full = Math.round(heatValue);
-  let s = "";
-  for(let i=0;i<heatMax;i++) s += i < full ? "🔥" : "·";
+  let s=""; for(let i=0;i<heatMax;i++) s += i<full ? "🔥" : "·";
   heatEl.textContent = s;
 }
 updateStats(); updateHeat();
 
+/* =========================
+   Гравець/камера
+========================= */
 const player = {
-  x: 0,
-  y: 35,
-  r: 0.60,
-  dir: -Math.PI/2,      // напрям (в радіанах)
-  attack: 0,            // 0..1
-  attackCooldown: 0
+  x:0, y:35,
+  r:0.60,
+  dir:-Math.PI/2,
+  attack:0,
+  attackCooldown:0
 };
-
-const camera = { x: player.x, y: player.y };
+const camera = { x:player.x, y:player.y };
 
 /* =========================
-   Частинки (ефекти)
+   День/ніч (кожні 5 хв)
+========================= */
+const SWITCH_EVERY = 300;     // 5 хв
+const TRANSITION = 14;        // плавність
+let dayNightTimer = 0;
+let isNight = false;
+let light = 1;                // 1=день, 0=ніч
+let fromLight = 1, toLight = 1, transT = 1;
+
+function updateDayNight(dt){
+  dayNightTimer += dt;
+  if (dayNightTimer >= SWITCH_EVERY){
+    dayNightTimer -= SWITCH_EVERY;
+    isNight = !isNight;
+    fromLight = light;
+    toLight = isNight ? 0 : 1;
+    transT = 0;
+  }
+  if (transT < 1){
+    transT = Math.min(1, transT + dt/TRANSITION);
+    light = lerp(fromLight, toLight, easeOutQuint(transT));
+  }
+}
+
+/* =========================
+   Частинки
 ========================= */
 const particles = [];
-function spawnParticles(type, x,y, count=10){
+function spawnParticles(type,x,y,count=10){
   for(let i=0;i<count;i++){
-    const a = Math.random()*Math.PI*2;
-    const sp = rand(1.5, 5.5);
-    particles.push({
-      type,
-      x, y,
-      vx: Math.cos(a)*sp,
-      vy: Math.sin(a)*sp,
-      life: rand(0.35, 0.75),
-      t: 0
-    });
+    const a=Math.random()*Math.PI*2;
+    const sp=rand(1.5,5.5);
+    particles.push({ type, x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:rand(0.35,0.75) });
   }
 }
 
@@ -659,36 +555,15 @@ function spawnParticles(type, x,y, count=10){
    Керування: клавіші + мишка
 ========================= */
 const keys = {};
-document.addEventListener("keydown",(e)=> keys[e.code]=true);
-document.addEventListener("keyup",(e)=> keys[e.code]=false);
+document.addEventListener("keydown",(e)=>keys[e.code]=true);
+document.addEventListener("keyup",(e)=>keys[e.code]=false);
 
 let mouseAim = null;
-window.addEventListener("mousemove",(e)=>{
-  mouseAim = { x: e.clientX, y: e.clientY };
-});
+window.addEventListener("mousemove",(e)=>{ mouseAim={x:e.clientX,y:e.clientY}; });
 window.addEventListener("mouseleave",()=>{ mouseAim=null; });
 
-function doAction(){
-  if (isFrozen) return;
-  if (player.attackCooldown > 0) return;
-
-  player.attack = 0.0001;
-  player.attackCooldown = 0.22;
-
-  // 1) кнопка відбудови
-  if (tryUseNearestButton()) return;
-
-  // 2) рубка дерева
-  chopNearestTree();
-}
-
-window.addEventListener("mousedown",(e)=>{
-  if (e.button!==0) return;
-  doAction();
-});
-
 /* =========================
-   Touch джойстики (рух/напрям)
+   Touch джойстики
 ========================= */
 const movePad = document.getElementById("movePad");
 const moveStick = document.getElementById("moveStick");
@@ -700,35 +575,35 @@ let touchMoveX=0, touchMoveY=0;
 let touchLookX=0, touchLookY=0;
 
 function setupStick(pad, stick, onMove){
-  const stickRadius = 30;
-  let touchId = null;
+  const stickRadius=30;
+  let touchId=null;
 
   function reset(){
-    const rect = pad.getBoundingClientRect();
-    const cx = rect.width/2, cy = rect.height/2;
-    stick.style.left = (cx - stickRadius) + "px";
-    stick.style.top  = (cy - stickRadius) + "px";
+    const rect=pad.getBoundingClientRect();
+    const cx=rect.width/2, cy=rect.height/2;
+    stick.style.left=(cx-stickRadius)+"px";
+    stick.style.top =(cy-stickRadius)+"px";
     onMove(0,0);
   }
   function updateFromTouch(t){
-    const rect = pad.getBoundingClientRect();
-    const cx = rect.width/2, cy = rect.height/2;
-    let dx = t.clientX - (rect.left + cx);
-    let dy = t.clientY - (rect.top  + cy);
-    const maxR = rect.width/2 - stickRadius;
-    const d = Math.hypot(dx,dy);
-    if (d > maxR) { dx*=maxR/d; dy*=maxR/d; }
-    stick.style.left = (cx - stickRadius + dx) + "px";
-    stick.style.top  = (cy - stickRadius + dy) + "px";
+    const rect=pad.getBoundingClientRect();
+    const cx=rect.width/2, cy=rect.height/2;
+    let dx=t.clientX - (rect.left+cx);
+    let dy=t.clientY - (rect.top +cy);
+    const maxR=rect.width/2 - stickRadius;
+    const d=Math.hypot(dx,dy);
+    if (d>maxR){ dx*=maxR/d; dy*=maxR/d; }
+    stick.style.left=(cx-stickRadius+dx)+"px";
+    stick.style.top =(cy-stickRadius+dy)+"px";
     onMove(dx/maxR, dy/maxR);
   }
 
   pad.addEventListener("touchstart",(e)=>{
     e.preventDefault();
-    const t = e.changedTouches[0];
-    touchId = t.identifier;
+    const t=e.changedTouches[0];
+    touchId=t.identifier;
     updateFromTouch(t);
-  },{ passive:false });
+  },{passive:false});
 
   pad.addEventListener("touchmove",(e)=>{
     e.preventDefault();
@@ -736,60 +611,74 @@ function setupStick(pad, stick, onMove){
     for(const t of e.touches){
       if (t.identifier===touchId){ updateFromTouch(t); break; }
     }
-  },{ passive:false });
+  },{passive:false});
 
   function end(e){
     if (touchId===null) return;
     for(const t of e.changedTouches){
-      if (t.identifier===touchId){
-        touchId=null; reset(); break;
-      }
+      if (t.identifier===touchId){ touchId=null; reset(); break; }
     }
   }
-  pad.addEventListener("touchend", end, { passive:false });
-  pad.addEventListener("touchcancel", end, { passive:false });
+  pad.addEventListener("touchend", end, {passive:false});
+  pad.addEventListener("touchcancel", end, {passive:false});
 
   reset();
 }
 
-if (movePad && moveStick){
-  setupStick(movePad, moveStick, (x,y)=>{ touchMoveX=x; touchMoveY=y; });
+if (movePad && moveStick) setupStick(movePad, moveStick, (x,y)=>{ touchMoveX=x; touchMoveY=y; });
+if (lookPad && lookStick) setupStick(lookPad, lookStick, (x,y)=>{ touchLookX=x; touchLookY=y; });
+
+/* =========================
+   Механіка дії (🪓)
+   + більша затримка проти спаму
+========================= */
+const AXE_COOLDOWN = 0.55; // було менше — тепер анти-спам
+
+function doAction(){
+  if (isFrozen) return;
+  ensureAudio();
+
+  if (player.attackCooldown > 0) return;
+
+  player.attack = 0.0001;
+  player.attackCooldown = AXE_COOLDOWN;
+
+  SFX.swing();
+
+  const used = tryUseNearestButton();
+  if (!used) chopNearestTree();
 }
-if (lookPad && lookStick){
-  setupStick(lookPad, lookStick, (x,y)=>{ touchLookX=x; touchLookY=y; });
-}
+
+window.addEventListener("mousedown",(e)=>{ if(e.button===0) doAction(); });
+
 if (actionBtn){
-  const tap = (e)=>{ e.preventDefault(); doAction(); };
+  const tap=(e)=>{ e.preventDefault(); doAction(); };
   actionBtn.addEventListener("click", tap);
-  actionBtn.addEventListener("touchstart", tap, { passive:false });
+  actionBtn.addEventListener("touchstart", tap, {passive:false});
 }
 
 /* =========================
    Відбудова/рубка
 ========================= */
 function tryUseNearestButton(){
-  let best=null;
-  let bestD= (2.2*2.2);
-
+  let best=null, bestD=(2.2*2.2);
   for(const b of buttons){
     if (b.restored) continue;
-    const d = dist2(player.x, player.y, b.x, b.y);
-    if (d < bestD){
-      bestD = d; best = b;
-    }
+    const d=dist2(player.x,player.y,b.x,b.y);
+    if (d<bestD){ bestD=d; best=b; }
   }
   if (!best) return false;
 
   if (wood < best.cost){
     best.flash = 0.22;
-    return true; // "кнопка використана", щоб не рубати дерево
+    SFX.error();
+    return true;
   }
 
   wood -= best.cost;
   best.restored = true;
 
-  // позначаємо як відбудоване + додаємо колайдери
-  if (best.type === "house" || best.type === "bigHouse"){
+  if (best.type==="house" || best.type==="bigHouse"){
     best.target.restored = true;
     best.target.restoreT = 0.0001;
 
@@ -799,164 +688,190 @@ function tryUseNearestButton(){
       best.type==="bigHouse" ? 4.1 : 3.2,
       "house"
     );
-  } else if (best.type === "farm"){
+  } else if (best.type==="farm"){
     best.target.restored = true;
     best.target.restoreT = 0.0001;
-
     addColliderRect(best.target.x, best.target.y, best.target.w/2, best.target.l/2, "farm");
-  } else if (best.type === "path"){
+  } else if (best.type==="path"){
     best.target.restored = true;
     best.target.restoreT = 0.0001;
-    // доріжка колайдер не потрібен
   }
 
   spawnParticles("restore", best.x, best.y, 18);
-  buttons = buttons.filter(x => x !== best);
+  SFX.restore();
+  buttons = buttons.filter(x=>x!==best);
 
   updateStats();
   return true;
 }
 
 function chopNearestTree(){
-  let best=null;
-  let bestD = (2.8*2.8);
-
+  let best=null, bestD=(2.8*2.8);
   for(const t of trees){
     if (t.falling || t.removed) continue;
-    const d = dist2(player.x, player.y, t.x, t.y);
-    if (d < bestD){
-      bestD = d; best = t;
-    }
+    const d=dist2(player.x,player.y,t.x,t.y);
+    if (d<bestD){ bestD=d; best=t; }
   }
   if (!best) return;
 
   best.hp -= 1;
   spawnParticles("chips", best.x, best.y, 12);
+  SFX.chop();
 
-  if (best.hp <= 0 && !best.falling){
-    best.falling = true;
-    best.fallT = 0;
-    // прибираємо колайдер дерева
-    const idx = colliders.indexOf(best.collider);
-    if (idx !== -1) colliders.splice(idx,1);
+  if (best.hp<=0 && !best.falling){
+    best.falling=true;
+    best.fallT=0;
+
+    const idx=colliders.indexOf(best.collider);
+    if (idx!==-1) colliders.splice(idx,1);
 
     treesCutTotal++;
     wood++;
     updateStats();
+    SFX.crack();
   }
 }
 
 /* =========================
-   Рендер утиліти
+   Рендер helpers
 ========================= */
 function worldToScreen(wx,wy){
-  const sx = (wx - camera.x) * PPU + INTERNAL_W/2;
-  const sy = (wy - camera.y) * PPU + INTERNAL_H/2;
+  const sx=(wx-camera.x)*PPU + INTERNAL_W/2;
+  const sy=(wy-camera.y)*PPU + INTERNAL_H/2;
   return { x:sx, y:sy };
 }
-
-function drawShadowCircle(ctx, x,y, r){
+function drawShadowCircle(ctx,x,y,r){
   ctx.fillStyle = COL.shadow;
   ctx.beginPath();
-  ctx.ellipse(x, y, r*1.1, r*0.7, 0, 0, Math.PI*2);
+  ctx.ellipse(x,y,r*1.1,r*0.7,0,0,Math.PI*2);
   ctx.fill();
 }
-
-/* Малюємо “піксельні” форми (вирівнювання) */
-function pRect(ctx, x,y,w,h){
-  ctx.fillRect((x|0),(y|0),(w|0),(h|0));
-}
-function pLine(ctx,x1,y1,x2,y2){
-  ctx.beginPath();
-  ctx.moveTo((x1|0)+0.5,(y1|0)+0.5);
-  ctx.lineTo((x2|0)+0.5,(y2|0)+0.5);
-  ctx.stroke();
-}
+function pRect(ctx,x,y,w,h){ ctx.fillRect((x|0),(y|0),(w|0),(h|0)); }
 
 /* =========================
-   Малювання сутностей (2D "модельки")
+   Малювання (покращені “моделі”)
 ========================= */
-function drawHouse(ctx, h){
-  const t = h.restored ? 1 : 0.35;
-  const fade = h.restored ? (0.35 + 0.65*easeOutCubic(h.restoreT)) : 0.38;
-
-  const pos = worldToScreen(h.x, h.y);
+function drawHouse(ctx, h, time){
+  const v = h.v;
+  const fade = h.restored ? (0.40 + 0.60*easeOutCubic(h.restoreT)) : 0.38;
+  const pos = worldToScreen(h.x,h.y);
   const w = h.w*PPU, l = h.h*PPU;
 
-  drawShadowCircle(ctx, pos.x, pos.y + l*0.18, (Math.max(w,l)*0.25));
+  drawShadowCircle(ctx, pos.x, pos.y + l*0.18, Math.max(w,l)*0.25);
 
   ctx.globalAlpha = fade;
 
-  // база
-  ctx.fillStyle = COL.wood1;
+  // base
+  ctx.fillStyle = v.walls;
   pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
 
-  // обводка
+  // inner shading
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  pRect(ctx, pos.x - w/2 + 3, pos.y - l/2 + 3, w-6, l-6);
+
+  // outline
   ctx.strokeStyle = "rgba(0,0,0,0.25)";
   ctx.lineWidth = 2;
   ctx.strokeRect((pos.x - w/2)|0, (pos.y - l/2)|0, w|0, l|0);
 
-  // дах (ромб)
-  ctx.fillStyle = COL.roof1;
+  // roof
+  const roofH = (h.kind==="big") ? PPU*2.3 : PPU*2.0;
+  ctx.fillStyle = v.roof;
   ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y - l/2 - PPU*1.8);
-  ctx.lineTo(pos.x + w/2, pos.y - l/2 + PPU*0.6);
-  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.2);
-  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.6);
+  ctx.moveTo(pos.x, pos.y - l/2 - roofH);
+  ctx.lineTo(pos.x + w/2, pos.y - l/2 + PPU*0.7);
+  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.4);
+  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.7);
   ctx.closePath();
   ctx.fill();
 
-  ctx.fillStyle = COL.roof2;
+  ctx.fillStyle = v.roof2;
   ctx.beginPath();
-  ctx.moveTo(pos.x, pos.y - l/2 - PPU*1.8);
-  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.2);
-  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.6);
+  ctx.moveTo(pos.x, pos.y - l/2 - roofH);
+  ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.4);
+  ctx.lineTo(pos.x - w/2, pos.y - l/2 + PPU*0.7);
   ctx.closePath();
   ctx.fill();
 
-  // двері/вікно
-  ctx.fillStyle = COL.wood2;
-  pRect(ctx, pos.x - PPU*0.8, pos.y + l*0.12, PPU*1.6, PPU*2.1);
+  // chimney (інколи)
+  if (v.chimney){
+    ctx.fillStyle = "#3b3b3b";
+    pRect(ctx, pos.x + w*0.18, pos.y - l/2 - roofH*0.6, PPU*0.55, PPU*1.2);
+  }
 
-  ctx.fillStyle = "rgba(235,245,255,0.75)";
-  pRect(ctx, pos.x + PPU*1.2, pos.y - PPU*0.2, PPU*1.2, PPU*1.2);
+  // door
+  ctx.fillStyle = v.walls2;
+  pRect(ctx, pos.x - PPU*0.9, pos.y + l*0.10, PPU*1.8, PPU*2.3);
 
-  ctx.globalAlpha = 1;
-}
+  // windows
+  const night = 1 - light;
+  const windowGlow = h.restored ? (0.15 + 0.85*night) : 0.12;
 
-function drawBigHouse(ctx, h){
-  // просто трохи "потужніший" дах/деталі
-  drawHouse(ctx, h);
-  const pos = worldToScreen(h.x, h.y);
-  ctx.globalAlpha = h.restored ? (0.65 + 0.35*easeOutCubic(h.restoreT)) : 0.35;
+  // left window
+  ctx.fillStyle = `rgba(255,230,160,${0.35*windowGlow})`;
+  pRect(ctx, pos.x - PPU*2.1, pos.y - PPU*0.3, PPU*1.2, PPU*1.2);
 
-  ctx.fillStyle = "rgba(255,255,255,0.16)";
-  pRect(ctx, pos.x - (h.w*PPU)/2 + 4, pos.y - (h.h*PPU)/2 + 4, (h.w*PPU)-8, (h.h*PPU)-8);
+  // right window
+  ctx.fillStyle = `rgba(255,230,160,${0.45*windowGlow})`;
+  pRect(ctx, pos.x + PPU*1.2, pos.y - PPU*0.3, PPU*1.2, PPU*1.2);
+
+  // night light halo
+  if (h.restored && night > 0.02){
+    const g = ctx.createRadialGradient(pos.x, pos.y, 8, pos.x, pos.y, 58);
+    g.addColorStop(0, `rgba(255,210,120,${0.18*night})`);
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 58, 0, Math.PI*2);
+    ctx.fill();
+  }
 
   ctx.globalAlpha = 1;
 }
 
 function drawFarm(ctx, f){
-  const fade = f.restored ? (0.35 + 0.65*easeOutCubic(f.restoreT)) : 0.38;
-  const pos = worldToScreen(f.x, f.y);
+  const fade = f.restored ? (0.40 + 0.60*easeOutCubic(f.restoreT)) : 0.38;
+  const pos = worldToScreen(f.x,f.y);
   const w = f.w*PPU, l = f.l*PPU;
 
-  drawShadowCircle(ctx, pos.x, pos.y + l*0.22, (Math.max(w,l)*0.20));
+  drawShadowCircle(ctx, pos.x, pos.y + l*0.22, Math.max(w,l)*0.20);
 
   ctx.globalAlpha = fade;
 
+  // soil
   ctx.fillStyle = COL.soil;
   pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
 
-  // грядки
+  // furrows
+  ctx.fillStyle = "rgba(0,0,0,0.18)";
+  for(let r=0;r<5;r++){
+    const yy = pos.y - l/2 + (r+0.5)*(l/5);
+    pRect(ctx, pos.x - w/2 + 2, yy, w-4, 1);
+  }
+
+  // crops variants
   for(let row=0; row<4; row++){
     for(let col=0; col<Math.floor(f.w); col++){
       const cx = pos.x - w/2 + (col+0.5)*PPU;
-      const cy = pos.y - l/2 + (row+0.6)*(l/4);
-      ctx.fillStyle = COL.crop;
-      pRect(ctx, cx-2, cy-3, 4, 6);
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      pRect(ctx, cx-2, cy+2, 4, 1);
+      const cy = pos.y - l/2 + (row+0.65)*(l/4);
+
+      if (f.cropType === 0){
+        // “пшениця” (світло-жовті точки)
+        ctx.fillStyle = "rgba(255,244,200,0.85)";
+        pRect(ctx, cx-1, cy-3, 2, 6);
+      } else if (f.cropType === 1){
+        // “морква” (зелень + крапка)
+        ctx.fillStyle = "rgba(120,255,170,0.85)";
+        pRect(ctx, cx-1, cy-3, 2, 4);
+        ctx.fillStyle = "rgba(255,160,90,0.85)";
+        pRect(ctx, cx-1, cy+1, 2, 2);
+      } else {
+        // “капуста” (білі кущики)
+        ctx.fillStyle = "rgba(230,245,255,0.9)";
+        pRect(ctx, cx-2, cy-2, 4, 4);
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        pRect(ctx, cx-2, cy+2, 4, 1);
+      }
     }
   }
 
@@ -964,17 +879,16 @@ function drawFarm(ctx, f){
 }
 
 function drawPath(ctx, p){
-  const fade = p.restored ? (0.40 + 0.60*easeOutCubic(p.restoreT)) : 0.35;
-  const pos = worldToScreen(p.x, p.y);
+  const fade = p.restored ? (0.45 + 0.55*easeOutCubic(p.restoreT)) : 0.35;
+  const pos = worldToScreen(p.x,p.y);
   const w = p.w*PPU, l = p.l*PPU;
 
   ctx.globalAlpha = fade;
   ctx.fillStyle = COL.path;
   pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
 
-  // “плитки”
   ctx.fillStyle = COL.path2;
-  for(let i=0;i<10;i++){
+  for(let i=0;i<24;i++){
     const tx = pos.x - w/2 + Math.random()*w;
     const ty = pos.y - l/2 + Math.random()*l;
     pRect(ctx, tx, ty, 2, 2);
@@ -983,9 +897,8 @@ function drawPath(ctx, p){
 }
 
 function drawRock(ctx, r){
-  const pos = worldToScreen(r.x, r.y);
+  const pos = worldToScreen(r.x,r.y);
   const s = r.size*PPU;
-
   drawShadowCircle(ctx, pos.x, pos.y + s*0.22, s*0.55);
 
   ctx.fillStyle = COL.rock;
@@ -1009,7 +922,7 @@ function drawRock(ctx, r){
 }
 
 function drawMountain(ctx, m){
-  const pos = worldToScreen(m.x, m.y);
+  const pos = worldToScreen(m.x,m.y);
   const base = m.base*PPU;
   const h = m.height*PPU;
 
@@ -1031,7 +944,6 @@ function drawMountain(ctx, m){
   ctx.closePath();
   ctx.fill();
 
-  // сніжна шапка
   ctx.fillStyle = COL.snow2;
   ctx.beginPath();
   ctx.moveTo(pos.x, pos.y - h*0.55);
@@ -1043,40 +955,91 @@ function drawMountain(ctx, m){
 }
 
 function drawTree(ctx, t){
-  const pos = worldToScreen(t.x, t.y);
+  const pos = worldToScreen(t.x,t.y);
 
-  // падіння (поворот навколо “пня”)
-  const fallDur = 0.60;
+  // падіння (покращено)
+  const fallDur = 0.72;
   const k = t.falling ? clamp(t.fallT/fallDur, 0, 1) : 0;
-  const ang = t.falling ? (k * (Math.PI/2) * t.fallDir) : 0;
+  const kk = easeOutQuint(k);
+  const ang = t.falling ? (kk * (Math.PI/2) * t.fallDir) : 0;
 
-  // базова тінь
-  drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.72);
+  const s = t.scale;
+  const trunkH = PPU*(0.95*t.trunk)*s;
+
+  drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.72*s);
 
   ctx.save();
   ctx.translate(pos.x, pos.y);
+
+  // маленький “зсув” під час падіння (виглядає живіше)
+  if (t.falling){
+    ctx.translate(kk * PPU*0.35 * t.fallDir, kk * PPU*0.08);
+  }
+
+  // pivot near base
+  ctx.translate(0, PPU*0.25*s);
   ctx.rotate(ang);
+  ctx.translate(0, -PPU*0.25*s);
 
-  // стовбур
-  ctx.fillStyle = COL.wood2;
-  pRect(ctx, -2, -PPU*0.10, 4, PPU*0.85);
+  // trunk
+  ctx.fillStyle = "#6b4625";
+  pRect(ctx, -2*s, -trunkH*0.15, 4*s, trunkH);
 
-  // крона (сніжна ялинка)
-  ctx.fillStyle = COL.snow2;
-  ctx.beginPath();
-  ctx.moveTo(0, -PPU*1.55);
-  ctx.lineTo(PPU*0.95, -PPU*0.10);
-  ctx.lineTo(-PPU*0.95, -PPU*0.10);
-  ctx.closePath();
-  ctx.fill();
+  // canopy різні форми
+  const snowA = t.snowiness;
+  const topCol = `rgba(233,241,255,${0.65*snowA})`;
+  const topCol2 = `rgba(245,249,255,${0.85*snowA})`;
 
-  ctx.fillStyle = "#d9ebff";
-  ctx.beginPath();
-  ctx.moveTo(0, -PPU*1.35);
-  ctx.lineTo(PPU*0.75, -PPU*0.25);
-  ctx.lineTo(-PPU*0.75, -PPU*0.25);
-  ctx.closePath();
-  ctx.fill();
+  if (t.kind === 0){
+    // класична ялинка 2 трикутники
+    ctx.fillStyle = topCol2;
+    ctx.beginPath();
+    ctx.moveTo(0, -PPU*1.65*s);
+    ctx.lineTo(PPU*1.0*s, -PPU*0.10*s);
+    ctx.lineTo(-PPU*1.0*s, -PPU*0.10*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = topCol;
+    ctx.beginPath();
+    ctx.moveTo(0, -PPU*1.25*s);
+    ctx.lineTo(PPU*0.8*s, -PPU*0.30*s);
+    ctx.lineTo(-PPU*0.8*s, -PPU*0.30*s);
+    ctx.closePath();
+    ctx.fill();
+  } else if (t.kind === 1){
+    // “пухнаста”
+    ctx.fillStyle = topCol2;
+    ctx.beginPath();
+    ctx.moveTo(0, -PPU*1.55*s);
+    ctx.lineTo(PPU*1.15*s, -PPU*0.25*s);
+    ctx.lineTo(0, -PPU*0.05*s);
+    ctx.lineTo(-PPU*1.15*s, -PPU*0.25*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = topCol;
+    ctx.beginPath();
+    ctx.arc(0, -PPU*0.75*s, PPU*0.65*s, 0, Math.PI*2);
+    ctx.fill();
+  } else {
+    // “висока”
+    ctx.fillStyle = topCol2;
+    ctx.beginPath();
+    ctx.moveTo(0, -PPU*1.80*s);
+    ctx.lineTo(PPU*0.85*s, -PPU*0.05*s);
+    ctx.lineTo(-PPU*0.85*s, -PPU*0.05*s);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = topCol;
+    ctx.beginPath();
+    ctx.moveTo(0, -PPU*1.10*s);
+    ctx.lineTo(PPU*0.65*s, -PPU*0.25*s);
+    ctx.lineTo(-PPU*0.65*s, -PPU*0.25*s);
+    ctx.closePath();
+    ctx.fill();
+  }
 
   ctx.restore();
 }
@@ -1095,8 +1058,9 @@ function drawCampfire(ctx, time){
     ctx.fill();
   }
 
-  // полум'я + мерехтіння
+  const night = 1 - light;
   const flick = 1 + Math.sin(time*10)*0.12;
+
   drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
 
   ctx.fillStyle = COL.flame;
@@ -1113,32 +1077,32 @@ function drawCampfire(ctx, time){
   ctx.quadraticCurveTo(pos.x - 7, pos.y - 2, pos.x, pos.y - 12*flick);
   ctx.fill();
 
-  // теплий “глоу”
-  ctx.fillStyle = "rgba(255,120,60,0.12)";
+  // glow (вночі сильніше)
+  const g = ctx.createRadialGradient(pos.x, pos.y, 12, pos.x, pos.y, 70);
+  g.addColorStop(0, `rgba(255,120,60,${0.18 + 0.18*night})`);
+  g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g;
   ctx.beginPath();
-  ctx.arc(pos.x, pos.y, 42, 0, Math.PI*2);
+  ctx.arc(pos.x, pos.y, 70, 0, Math.PI*2);
   ctx.fill();
 }
 
 function drawButton(ctx, b, time){
-  const pos = worldToScreen(b.x, b.y);
+  const pos = worldToScreen(b.x,b.y);
   const pulse = 1 + Math.sin(time*5 + b.phase)*0.10;
 
   drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
 
-  // платформа
   ctx.fillStyle = COL.btn;
   ctx.beginPath();
   ctx.ellipse(pos.x, pos.y, 14*pulse, 10*pulse, 0, 0, Math.PI*2);
   ctx.fill();
 
-  // глоу
   ctx.fillStyle = COL.btnGlow;
   ctx.beginPath();
   ctx.ellipse(pos.x, pos.y, 20*pulse, 14*pulse, 0, 0, Math.PI*2);
   ctx.fill();
 
-  // “вартість”
   ctx.font = "bold 14px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
@@ -1146,16 +1110,14 @@ function drawButton(ctx, b, time){
   ctx.fillText(String(b.cost), pos.x, pos.y - 18);
 }
 
-function drawAxe(ctx, x,y, ang, swing){
+function drawAxe(ctx,x,y, ang, swing){
   ctx.save();
   ctx.translate(x,y);
   ctx.rotate(ang + swing);
 
-  // ручка
-  ctx.fillStyle = COL.wood2;
+  ctx.fillStyle = "#7c4f2b";
   pRect(ctx, -1, -10, 2, 18);
 
-  // лезо
   ctx.fillStyle = "#c3c9d3";
   pRect(ctx, 0, -7, 10, 6);
   ctx.fillStyle = "#9aa2ad";
@@ -1165,47 +1127,54 @@ function drawAxe(ctx, x,y, ang, swing){
 }
 
 function drawPlayer(ctx, p, time){
-  const pos = worldToScreen(p.x, p.y);
+  const pos = worldToScreen(p.x,p.y);
   const bob = Math.sin(time*6)*0.8;
 
   drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
 
-  // тіло (синя сфера)
   const r = 10;
   ctx.fillStyle = COL.blue;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y + bob, r, 0, Math.PI*2);
   ctx.fill();
 
-  // хайлайт
   ctx.fillStyle = COL.blue2;
   ctx.beginPath();
   ctx.arc(pos.x - 3, pos.y - 3 + bob, 4, 0, Math.PI*2);
   ctx.fill();
 
-  // сокира збоку + анімація удару
   const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
-  const swing = -0.9*atk;
+  const swing = -0.95*atk;
+
   const axeX = pos.x + Math.cos(p.dir)*14;
   const axeY = pos.y + Math.sin(p.dir)*10 + bob;
   drawAxe(ctx, axeX, axeY, p.dir + Math.PI/2, swing);
 }
 
+/* =========================
+   Мультиплеєр: кольори (дехто зелений)
+========================= */
+function hashUid(uid){
+  let h=0;
+  for(let i=0;i<uid.length;i++) h = (h*31 + uid.charCodeAt(i))|0;
+  return Math.abs(h);
+}
+
 function drawRemotePlayer(ctx, rp, time){
-  const pos = worldToScreen(rp.x, rp.y);
+  const pos = worldToScreen(rp.x,rp.y);
   drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
 
-  ctx.fillStyle = "rgba(45,108,223,0.55)";
+  const isGreen = rp.color === "green";
+  const body = isGreen ? "rgba(29,187,90,0.58)" : "rgba(45,108,223,0.55)";
+  ctx.fillStyle = body;
   ctx.beginPath();
   ctx.arc(pos.x, pos.y, 10, 0, Math.PI*2);
   ctx.fill();
 
-  // сокира
   const axeX = pos.x + Math.cos(rp.dir)*14;
   const axeY = pos.y + Math.sin(rp.dir)*10;
   drawAxe(ctx, axeX, axeY, rp.dir + Math.PI/2, 0);
 
-  // ім'я
   ctx.font = "bold 12px Arial";
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
@@ -1218,97 +1187,94 @@ function drawRemotePlayer(ctx, rp, time){
 /* =========================
    Мінімпа
 ========================= */
+const remoteStates = new Map(); // uid -> {name,x,y,dir}
 function updateMinimap(){
   mctx.clearRect(0,0,180,180);
-  mctx.fillStyle = "#132e13";
+  mctx.fillStyle="#132e13";
   mctx.fillRect(0,0,180,180);
 
-  const scale = 180 / (WORLD_HALF*2);
-  const toM = (wx,wy)=>({
-    x: (wx + WORLD_HALF)*scale,
-    y: (wy + WORLD_HALF)*scale
-  });
+  const scale = 180/(WORLD_HALF*2);
+  const toM=(wx,wy)=>({ x:(wx+WORLD_HALF)*scale, y:(wy+WORLD_HALF)*scale });
 
-  // колайдери (точки)
-  mctx.fillStyle = "rgba(60,255,60,0.65)";
+  mctx.fillStyle="rgba(60,255,60,0.65)";
   for(const c of colliders){
-    const p = toM(c.x, c.y);
+    const p=toM(c.x,c.y);
     mctx.fillRect(p.x|0, p.y|0, 2, 2);
   }
 
-  // інші гравці
-  mctx.fillStyle = "rgba(90,160,255,0.75)";
+  // інші
   remoteStates.forEach((d)=>{
-    const p = toM(d.x, d.y);
+    const p=toM(d.x,d.y);
+    mctx.fillStyle="rgba(90,160,255,0.75)";
     mctx.fillRect((p.x|0)-1,(p.y|0)-1,3,3);
   });
 
-  // гравець
-  const mp = toM(player.x, player.y);
+  // я
+  const mp=toM(player.x,player.y);
   mctx.save();
   mctx.translate(mp.x, mp.y);
   mctx.rotate(player.dir);
-  mctx.fillStyle = "#ffffff";
+  mctx.fillStyle="#ffffff";
   mctx.beginPath();
-  mctx.moveTo(0,-6);
-  mctx.lineTo(4,4);
-  mctx.lineTo(-4,4);
-  mctx.closePath();
-  mctx.fill();
+  mctx.moveTo(0,-6); mctx.lineTo(4,4); mctx.lineTo(-4,4);
+  mctx.closePath(); mctx.fill();
   mctx.restore();
 }
 
 /* =========================
-   Сніг (FX canvas)
+   Сніг (FX)
 ========================= */
-let snowflakes = [];
+let snowflakes=[];
 function resize(){
-  const dpr = Math.max(1, Math.min(2, window.devicePixelRatio||1));
+  const dpr=Math.max(1, Math.min(2, window.devicePixelRatio||1));
   gameCanvas.width = Math.floor(innerWidth*dpr);
-  gameCanvas.height = Math.floor(innerHeight*dpr);
+  gameCanvas.height= Math.floor(innerHeight*dpr);
   gctx.setTransform(dpr,0,0,dpr,0,0);
 
   fxCanvas.width = Math.floor(innerWidth*dpr);
-  fxCanvas.height = Math.floor(innerHeight*dpr);
+  fxCanvas.height= Math.floor(innerHeight*dpr);
   fx.setTransform(dpr,0,0,dpr,0,0);
 }
-function initSnow(count=140){
-  snowflakes = [];
+function initSnow(count=150){
+  snowflakes=[];
   for(let i=0;i<count;i++){
     snowflakes.push({
-      x: Math.random()*innerWidth,
-      y: Math.random()*innerHeight,
-      r: 1 + Math.random()*1.8,
-      speed: 22 + Math.random()*36,
-      drift: -10 + Math.random()*20
+      x:Math.random()*innerWidth,
+      y:Math.random()*innerHeight,
+      r:1 + Math.random()*1.8,
+      speed:22 + Math.random()*36,
+      drift:-10 + Math.random()*20
     });
   }
 }
 function updateSnow(dt){
   fx.clearRect(0,0,innerWidth,innerHeight);
-  fx.fillStyle = "rgba(255,255,255,0.9)";
+
+  const night = 1 - light;
+  fx.fillStyle = `rgba(255,255,255,${0.90 - 0.18*night})`;
+
   for(const f of snowflakes){
     f.y += f.speed*dt;
     f.x += f.drift*dt;
-    if (f.y > innerHeight + f.r){ f.y = -f.r; f.x = Math.random()*innerWidth; }
-    if (f.x < -10) f.x = innerWidth + 10;
-    if (f.x > innerWidth + 10) f.x = -10;
+    if (f.y > innerHeight + f.r){ f.y=-f.r; f.x=Math.random()*innerWidth; }
+    if (f.x < -10) f.x=innerWidth+10;
+    if (f.x > innerWidth+10) f.x=-10;
 
     fx.beginPath();
-    fx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+    fx.arc(f.x,f.y,f.r,0,Math.PI*2);
     fx.fill();
   }
 }
 
 /* =========================
-   Мультиплеєр (як у тебе)
+   Мультиплеєр: Firestore
 ========================= */
 let currentUserUid=null;
 let currentUserName=null;
 
 const gamePlayersCol = collection(db, "gamePlayers");
-const remotePlayers = new Map();  // uid -> {x,y,tx,ty,dir,tdir,name}
-const remoteStates = new Map();   // uid -> {name,x,y,dir}
+const remotePlayers = new Map(); // uid -> {x,y,tx,ty,dir,tdir,name,color}
+
 const MAX_INACTIVE_MS = 30000;
 let lastSyncTime = 0;
 const SYNC_INTERVAL = 200;
@@ -1322,32 +1288,26 @@ function joinToPlayer(uid){
 }
 
 function updateMpUI(){
-  if (!mpStatusEl || !mpListEl) return;
-
-  if (!currentUserUid){
-    mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
-  } else {
-    mpStatusEl.textContent = "Мультиплеєр: ви " + (currentUserName || "Гравець");
-  }
+  if (!currentUserUid) mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
+  else mpStatusEl.textContent = "Мультиплеєр: ви " + (currentUserName || "Гравець");
 
   mpListEl.innerHTML = "";
   if (remoteStates.size === 0){
-    const d = document.createElement("div");
-    d.textContent = "Немає інших гравців у грі";
+    const d=document.createElement("div");
+    d.textContent="Немає інших гравців у грі";
     mpListEl.appendChild(d);
     return;
   }
 
   remoteStates.forEach((data, uid)=>{
-    const row = document.createElement("div");
-    row.className = "playerRow";
-    const name = document.createElement("div");
+    const row=document.createElement("div");
+    row.className="playerRow";
+    const name=document.createElement("div");
     name.textContent = `${data.name} у грі`;
-    const btn = document.createElement("button");
-    btn.textContent = "Приєднатися";
-    btn.onclick = ()=> joinToPlayer(uid);
-    row.appendChild(name);
-    row.appendChild(btn);
+    const btn=document.createElement("button");
+    btn.textContent="Приєднатися";
+    btn.onclick=()=>joinToPlayer(uid);
+    row.appendChild(name); row.appendChild(btn);
     mpListEl.appendChild(row);
   });
 }
@@ -1363,9 +1323,7 @@ async function syncGamePlayer(){
       dir: player.dir,
       updatedAt: serverTimestamp()
     }, { merge:true });
-  }catch(err){
-    console.error("Помилка синхронізації гравця:", err);
-  }
+  }catch(err){ console.error("Помилка синхронізації гравця:", err); }
 }
 function maybeSyncGamePlayer(){
   if (!currentUserUid || !currentUserName) return;
@@ -1377,9 +1335,9 @@ function maybeSyncGamePlayer(){
 
 onSnapshot(gamePlayersCol, (snapshot)=>{
   remoteStates.clear();
-  const nowMs = Date.now();
 
-  remotePlayers.forEach(p => p._seen=false);
+  const nowMs = Date.now();
+  remotePlayers.forEach(p=>p._seen=false);
 
   snapshot.forEach((docSnap)=>{
     const uid = docSnap.id;
@@ -1387,6 +1345,7 @@ onSnapshot(gamePlayersCol, (snapshot)=>{
 
     const data = docSnap.data() || {};
     const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().getTime() : 0;
+
     if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS){
       remotePlayers.delete(uid);
       return;
@@ -1401,7 +1360,9 @@ onSnapshot(gamePlayersCol, (snapshot)=>{
 
     let rp = remotePlayers.get(uid);
     if (!rp){
-      rp = { name, x, y, tx:x, ty:y, dir, tdir:dir, _seen:true };
+      const h = hashUid(uid);
+      const color = (h % 3 === 0) ? "green" : "blue"; // інколи зелений
+      rp = { name, x, y, tx:x, ty:y, dir, tdir:dir, color, _seen:true };
       remotePlayers.set(uid, rp);
     } else {
       rp.name = name;
@@ -1411,16 +1372,13 @@ onSnapshot(gamePlayersCol, (snapshot)=>{
     }
   });
 
-  // чистимо невидимих
   for(const [uid, rp] of remotePlayers){
     if (!rp._seen) remotePlayers.delete(uid);
     else delete rp._seen;
   }
 
   updateMpUI();
-}, (err)=>{
-  console.error("Помилка читання gamePlayers:", err);
-});
+}, (err)=>console.error("Помилка читання gamePlayers:", err));
 
 onAuthStateChanged(auth, (user)=>{
   if (user && user.displayName){
@@ -1434,244 +1392,178 @@ onAuthStateChanged(auth, (user)=>{
 });
 
 /* =========================
-   Game loop (рух/тепло/анімації)
+   Update + Render loop
 ========================= */
 let last = performance.now();
 
 function update(dt, time){
+  updateDayNight(dt);
+
   if (isFrozen){
     updateSnow(dt);
     return;
   }
 
-  // клавіші руху
-  let mx = 0, my = 0;
+  // рух
+  let mx=0,my=0;
   if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
   if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
   if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
   if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
 
-  // тач-рух
-  if (Math.abs(touchMoveX) > 0.05 || Math.abs(touchMoveY) > 0.05){
+  if (Math.abs(touchMoveX)>0.05 || Math.abs(touchMoveY)>0.05){
     mx += touchMoveX;
     my += touchMoveY;
   }
 
-  // напрям (правий джойстик / мишка)
-  let aimUsed = false;
+  // напрям
+  let aimUsed=false;
   if (Math.hypot(touchLookX, touchLookY) > 0.25){
     player.dir = Math.atan2(touchLookY, touchLookX);
-    aimUsed = true;
+    aimUsed=true;
   } else if (mouseAim){
-    // мишка: напрям від центру екрана
-    const cx = innerWidth/2, cy = innerHeight/2;
-    const dx = mouseAim.x - cx;
-    const dy = mouseAim.y - cy;
-    if (Math.hypot(dx,dy) > 10){
-      player.dir = Math.atan2(dy, dx);
-      aimUsed = true;
+    const cx=innerWidth/2, cy=innerHeight/2;
+    const dx=mouseAim.x - cx;
+    const dy=mouseAim.y - cy;
+    if (Math.hypot(dx,dy)>10){
+      player.dir = Math.atan2(dy,dx);
+      aimUsed=true;
     }
   }
 
-  // рух
-  const speed = 7.8; // “швидкість ходи”
+  const speed = 7.6;
   const len = Math.hypot(mx,my);
-  if (len > 0.001){
-    mx /= len; my /= len;
+  if (len>0.001){
+    mx/=len; my/=len;
+    if (!aimUsed) player.dir = Math.atan2(my,mx);
 
-    // якщо не цілишся — напрям по руху
-    if (!aimUsed) player.dir = Math.atan2(my, mx);
-
-    const stepX = mx * speed * dt;
-    const stepY = my * speed * dt;
-
-    // окремо по осях (щоб краще ковзало)
-    let nx = player.x + stepX;
-    let ny = player.y;
-
-    // межі світу
-    nx = clamp(nx, -WORLD_HALF+1, WORLD_HALF-1);
-    ny = clamp(ny, -WORLD_HALF+1, WORLD_HALF-1);
-
+    let nx = clamp(player.x + mx*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
+    let ny = clamp(player.y,              -WORLD_HALF+1, WORLD_HALF-1);
     if (!isBlocked(nx, ny, player.r)) player.x = nx;
 
-    nx = player.x;
-    ny = player.y + stepY;
-    nx = clamp(nx, -WORLD_HALF+1, WORLD_HALF-1);
-    ny = clamp(ny, -WORLD_HALF+1, WORLD_HALF-1);
-
+    nx = clamp(player.x,                  -WORLD_HALF+1, WORLD_HALF-1);
+    ny = clamp(player.y + my*speed*dt,    -WORLD_HALF+1, WORLD_HALF-1);
     if (!isBlocked(nx, ny, player.r)) player.y = ny;
   }
 
   // атака
-  if (player.attackCooldown > 0) player.attackCooldown -= dt;
-  if (player.attack > 0){
-    player.attack += dt * 4.0;
-    if (player.attack >= 1) player.attack = 0;
+  if (player.attackCooldown>0) player.attackCooldown -= dt;
+  if (player.attack>0){
+    player.attack += dt*3.2;
+    if (player.attack>=1) player.attack=0;
   }
 
   // дерева падають
   for(const t of trees){
     if (t.falling && !t.removed){
       t.fallT += dt;
-      if (t.fallT >= 0.62){
-        t.removed = true;
-      }
+      if (t.fallT >= 0.75) t.removed = true;
     }
   }
-  trees = trees.filter(t => !t.removed);
+  trees = trees.filter(t=>!t.removed);
 
-  // кнопки флеш (коли не вистачає wood)
+  // кнопки flash
   for(const b of buttons){
-    if (b.flash > 0) b.flash -= dt;
+    if (b.flash>0) b.flash -= dt;
   }
 
-  // відбудова fade-in
-  for(const h of houses){
-    if (h.restored && h.restoreT < 1){
-      h.restoreT = Math.min(1, h.restoreT + dt*1.6);
-    }
-  }
-  for(const f of farms){
-    if (f.restored && f.restoreT < 1){
-      f.restoreT = Math.min(1, f.restoreT + dt*1.6);
-    }
-  }
-  for(const p of paths){
-    if (p.restored && p.restoreT < 1){
-      p.restoreT = Math.min(1, p.restoreT + dt*1.8);
-    }
-  }
+  // fade-in відбудови
+  for(const h of houses) if (h.restored && h.restoreT<1) h.restoreT = Math.min(1, h.restoreT + dt*1.6);
+  for(const f of farms)  if (f.restored && f.restoreT<1) f.restoreT = Math.min(1, f.restoreT + dt*1.6);
+  for(const p of paths)  if (p.restored && p.restoreT<1) p.restoreT = Math.min(1, p.restoreT + dt*1.8);
 
   // частинки
   for(const pt of particles){
-    pt.t += dt;
     pt.life -= dt;
     pt.x += pt.vx*dt;
     pt.y += pt.vy*dt;
     pt.vx *= 0.90;
     pt.vy *= 0.90;
-    if (pt.type === "chips") pt.vy += 6.5*dt;
-    if (pt.type === "restore") pt.vy -= 2.0*dt;
+    if (pt.type==="chips") pt.vy += 6.5*dt;
+    if (pt.type==="restore") pt.vy -= 2.0*dt;
   }
-  for(let i=particles.length-1;i>=0;i--){
-    if (particles[i].life <= 0) particles.splice(i,1);
-  }
+  for(let i=particles.length-1;i>=0;i--) if (particles[i].life<=0) particles.splice(i,1);
 
-  // тепло/замерзання
-  const d = Math.sqrt(dist2(player.x, player.y, campfire.x, campfire.y));
-  const warmRadius = 12;
-  const coolRate = 0.025;
-  const warmRate = 2.0;
+  // тепло
+  const d = Math.sqrt(dist2(player.x,player.y,campfire.x,campfire.y));
+  const warmRadius=12;
+  const coolRate=0.025;
+  const warmRate=2.0;
 
-  if (d < warmRadius){
-    const factor = 1 - d/warmRadius;
-    heatValue += warmRate * factor * dt;
-  } else {
-    heatValue -= coolRate * dt;
-  }
+  if (d<warmRadius){
+    const factor=1-d/warmRadius;
+    heatValue += warmRate*factor*dt;
+  } else heatValue -= coolRate*dt;
 
   heatValue = clamp(heatValue, 0, heatMax);
   updateHeat();
 
-  if (!isFrozen && heatValue <= 0.01){
-    isFrozen = true;
-    freezeOverlay.style.opacity = "1";
-    freezeText.style.opacity = "1";
+  if (!isFrozen && heatValue<=0.01){
+    isFrozen=true;
+    freezeOverlay.style.opacity="1";
+    freezeText.style.opacity="1";
   }
 
-  // камера слідує
+  // камера
   camera.x = lerp(camera.x, player.x, 0.12);
   camera.y = lerp(camera.y, player.y, 0.12);
 
-  // інтерполяція інших гравців
+  // інтерполяція гравців
   for(const rp of remotePlayers.values()){
     rp.x = lerp(rp.x, rp.tx, 0.22);
     rp.y = lerp(rp.y, rp.ty, 0.22);
 
-    // найкоротший шлях по куту
     let da = (rp.tdir - rp.dir);
     while (da > Math.PI) da -= Math.PI*2;
     while (da < -Math.PI) da += Math.PI*2;
     rp.dir += da*0.22;
   }
 
-  // сніг
   updateSnow(dt);
-
-  // мультиплеєр sync
   maybeSyncGamePlayer();
 }
 
 function render(time){
-  // земля
+  // фон
   bctx.fillStyle = groundPattern;
   bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
 
-  // легка віньєтка
-  bctx.fillStyle = "rgba(0,0,0,0.05)";
-  bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
-
-  // межі видимості (culling)
+  // culling
   const halfW = INTERNAL_W/(2*PPU);
   const halfH = INTERNAL_H/(2*PPU);
-  const minX = camera.x - halfW - 12;
-  const maxX = camera.x + halfW + 12;
-  const minY = camera.y - halfH - 12;
-  const maxY = camera.y + halfH + 12;
-  const visible = (x,y, pad=0)=> x>=minX-pad && x<=maxX+pad && y>=minY-pad && y<=maxY+pad;
+  const minX = camera.x - halfW - 12, maxX = camera.x + halfW + 12;
+  const minY = camera.y - halfH - 12, maxY = camera.y + halfH + 12;
+  const visible = (x,y,pad=0)=> x>=minX-pad && x<=maxX+pad && y>=minY-pad && y<=maxY+pad;
 
-  // доріжки
-  for(const p of paths){
-    if (!visible(p.x,p.y, 12)) continue;
-    drawPath(bctx, p);
-  }
+  // paths
+  for(const p of paths) if (visible(p.x,p.y,12)) drawPath(bctx,p);
 
-  // ферми
-  for(const f of farms){
-    if (!visible(f.x,f.y, 14)) continue;
-    drawFarm(bctx, f);
-  }
+  // farms
+  for(const f of farms) if (visible(f.x,f.y,14)) drawFarm(bctx,f);
 
-  // будинки
-  for(const h of houses){
-    if (!visible(h.x,h.y, 16)) continue;
-    if (h.type==="bigHouse") drawBigHouse(bctx, h);
-    else drawHouse(bctx, h);
-  }
+  // houses
+  for(const h of houses) if (visible(h.x,h.y,16)) drawHouse(bctx,h,time);
 
-  // камені
-  for(const r of rocks){
-    if (!visible(r.x,r.y, 10)) continue;
-    drawRock(bctx, r);
-  }
+  // rocks
+  for(const r of rocks) if (visible(r.x,r.y,10)) drawRock(bctx,r);
 
-  // гори
-  for(const m of mountains){
-    if (!visible(m.x,m.y, 20)) continue;
-    drawMountain(bctx, m);
-  }
+  // mountains
+  for(const m of mountains) if (visible(m.x,m.y,20)) drawMountain(bctx,m);
 
-  // дерева
-  for(const t of trees){
-    if (!visible(t.x,t.y, 10)) continue;
-    drawTree(bctx, t);
-  }
+  // trees
+  for(const t of trees) if (visible(t.x,t.y,10)) drawTree(bctx,t);
 
-  // вогнище
-  if (visible(campfire.x, campfire.y, 14)) drawCampfire(bctx, time);
+  // campfire
+  if (visible(campfire.x,campfire.y,14)) drawCampfire(bctx,time);
 
-  // кнопки
-  for(const b of buttons){
-    if (!visible(b.x,b.y, 10)) continue;
-    drawButton(bctx, b, time);
-  }
+  // buttons
+  for(const b of buttons) if (visible(b.x,b.y,10)) drawButton(bctx,b,time);
 
-  // частинки
+  // particles
   for(const pt of particles){
-    const p = worldToScreen(pt.x, pt.y);
-    const a = clamp(pt.life/0.75, 0, 1);
-    if (pt.type === "chips"){
+    const p = worldToScreen(pt.x,pt.y);
+    const a = clamp(pt.life/0.75,0,1);
+    if (pt.type==="chips"){
       bctx.fillStyle = `rgba(180,120,70,${0.85*a})`;
       bctx.fillRect((p.x|0),(p.y|0),2,2);
     } else {
@@ -1680,22 +1572,32 @@ function render(time){
     }
   }
 
-  // інші гравці
+  // remote players
   for(const rp of remotePlayers.values()){
-    if (!visible(rp.x,rp.y, 12)) continue;
-    drawRemotePlayer(bctx, rp, time);
+    if (visible(rp.x,rp.y,12)) drawRemotePlayer(bctx,rp,time);
   }
 
-  // гравець
-  drawPlayer(bctx, player, time);
+  // player
+  drawPlayer(bctx,player,time);
 
-  // === Вивід на екран з pixel upscale ===
-  const screenW = innerWidth;
-  const screenH = innerHeight;
+  // day/night overlay
+  const night = 1 - light;
+  if (night > 0.001){
+    bctx.fillStyle = `rgba(10,20,40,${0.10 + 0.55*night})`;
+    bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
 
+    // легка віньєтка
+    const g = bctx.createRadialGradient(INTERNAL_W/2, INTERNAL_H/2, 30, INTERNAL_W/2, INTERNAL_H/2, 220);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(1, `rgba(0,0,0,${0.18 + 0.22*night})`);
+    bctx.fillStyle = g;
+    bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
+  }
+
+  // upscale to screen
+  const screenW = innerWidth, screenH = innerHeight;
   const scale = Math.max(1, Math.floor(Math.min(screenW/INTERNAL_W, screenH/INTERNAL_H)));
-  const drawW = INTERNAL_W * scale;
-  const drawH = INTERNAL_H * scale;
+  const drawW = INTERNAL_W*scale, drawH = INTERNAL_H*scale;
   const ox = ((screenW - drawW)/2)|0;
   const oy = ((screenH - drawH)/2)|0;
 
@@ -1703,7 +1605,6 @@ function render(time){
   gctx.imageSmoothingEnabled = false;
   gctx.drawImage(buffer, 0,0,INTERNAL_W,INTERNAL_H, ox,oy, drawW,drawH);
 
-  // UI
   updateMinimap();
 }
 
@@ -1712,7 +1613,7 @@ function loop(now){
   last = now;
   const time = now/1000;
 
-  update(dt, time);
+  update(dt,time);
   render(time);
 
   requestAnimationFrame(loop);
@@ -1722,16 +1623,52 @@ function loop(now){
    Старт
 ========================= */
 resize();
-initSnow(140);
+initSnow(150);
 requestAnimationFrame(loop);
-window.addEventListener("resize", ()=>{
-  resize();
-  initSnow(snowflakes.length || 140);
+window.addEventListener("resize", ()=>{ resize(); initSnow(snowflakes.length||150); });
+
+/* =========================
+   Мультиплеєр UI init
+========================= */
+updateMpUI();
+
+/* =========================
+   AUTH
+========================= */
+onAuthStateChanged(auth, (user)=>{
+  if (user && user.displayName){
+    currentUserUid = user.uid;
+    currentUserName = user.displayName;
+  } else {
+    currentUserUid = null;
+    currentUserName = null;
+  }
+  updateMpUI();
 });
 
-/* Підказка: оновлюємо UI мультиплеєра одразу */
-updateMpUI();
+/* =========================
+   Sync
+========================= */
+async function syncGamePlayer(){
+  if (!currentUserUid || !currentUserName) return;
+  try{
+    const ref = doc(gamePlayersCol, currentUserUid);
+    await setDoc(ref, {
+      name: currentUserName,
+      x: player.x,
+      y: player.y,
+      dir: player.dir,
+      updatedAt: serverTimestamp()
+    }, { merge:true });
+  }catch(err){ console.error("Помилка синхронізації гравця:", err); }
+}
+function maybeSyncGamePlayer(){
+  if (!currentUserUid || !currentUserName) return;
+  const now = performance.now();
+  if (now - lastSyncTime < SYNC_INTERVAL) return;
+  lastSyncTime = now;
+  syncGamePlayer();
+}
 </script>
-
 </body>
 </html>
