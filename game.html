@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Village – 2D Snow Survival (Smooth)</title>
+  <title>Village – 2D Snow Survival</title>
   <style>
-    html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; font-family: "Segoe UI", Arial, sans-serif; touch-action:none; }
-    #game { position:fixed; inset:0; width:100%; height:100%; z-index:1; }
-    #fxCanvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:8; }
+    html, body { margin:0; padding:0; height:100%; overflow:hidden; background:#000; font-family:"Segoe UI", Arial, sans-serif; touch-action:none; }
+    #game { position:fixed; inset:0; width:100%; height:100%; z-index:1; display:block; }
+    #fxCanvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:8; display:block; }
 
     #info{
       position:fixed; top:10px; left:10px; z-index:20;
@@ -33,7 +33,7 @@
       background:#0f260f; box-shadow:0 12px 28px rgba(0,0,0,0.35);
       backdrop-filter: blur(2px);
     }
-    #minimapCanvas{ width:100%; height:100%; }
+    #minimapCanvas{ width:100%; height:100%; display:block; }
 
     #mpToggle{
       position:fixed; right:14px; top:194px; z-index:23;
@@ -71,7 +71,7 @@
 
     #errBox{
       position:fixed; left:10px; right:10px; bottom:10px; z-index:99;
-      background:rgba(120,0,0,0.80); color:#fff; padding:10px 12px; border-radius:12px;
+      background:rgba(120,0,0,0.85); color:#fff; padding:10px 12px; border-radius:12px;
       font: 12px/1.35 monospace; display:none; white-space:pre-wrap;
       border:1px solid rgba(255,255,255,0.18);
     }
@@ -154,1067 +154,1018 @@
   (function(){
     const errBox = document.getElementById("errBox");
     function showErr(msg){ errBox.style.display="block"; errBox.textContent = msg; }
-    window.addEventListener("error", (e)=> showErr("JS ERROR:\n" + (e.message || e.error || e)));
-    window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
 
-    const isCoarse = matchMedia("(pointer:coarse)").matches;
+    window.addEventListener("error", (e)=> {
+      showErr("JS ERROR:\n" + (e && e.message ? e.message : String(e)));
+    });
+    window.addEventListener("unhandledrejection", (e)=> {
+      const r = e && e.reason ? e.reason : e;
+      showErr("PROMISE ERROR:\n" + (r && r.message ? r.message : String(r)));
+    });
 
-    const gameCanvas = document.getElementById("game");
-    const ctx = gameCanvas.getContext("2d");
-    const fxCanvas = document.getElementById("fxCanvas");
-    const fx = fxCanvas.getContext("2d");
-    const mini = document.getElementById("minimapCanvas");
-    const mctx = mini.getContext("2d");
+    try{
+      const isCoarse = matchMedia("(pointer:coarse)").matches;
 
-    ctx.imageSmoothingEnabled = true;
-    fx.imageSmoothingEnabled = true;
-    mctx.imageSmoothingEnabled = true;
+      const gameCanvas = document.getElementById("game");
+      const ctx = gameCanvas.getContext("2d");
+      const fxCanvas = document.getElementById("fxCanvas");
+      const fx = fxCanvas.getContext("2d");
+      const mini = document.getElementById("minimapCanvas");
+      const mctx = mini.getContext("2d");
 
-    // roundRect fallback (на всяк випадок)
-    if (!CanvasRenderingContext2D.prototype.roundRect) {
-      CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
-        r = Math.min(r, w/2, h/2);
-        this.beginPath();
-        this.moveTo(x+r, y);
-        this.arcTo(x+w, y, x+w, y+h, r);
-        this.arcTo(x+w, y+h, x, y+h, r);
-        this.arcTo(x, y+h, x, y, r);
-        this.arcTo(x, y, x+w, y, r);
-        this.closePath();
-        return this;
+      ctx.imageSmoothingEnabled = true;
+      fx.imageSmoothingEnabled = true;
+      mctx.imageSmoothingEnabled = true;
+
+      // roundRect fallback
+      if (!CanvasRenderingContext2D.prototype.roundRect) {
+        CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+          r = Math.min(r, w/2, h/2);
+          this.beginPath();
+          this.moveTo(x+r, y);
+          this.arcTo(x+w, y, x+w, y+h, r);
+          this.arcTo(x+w, y+h, x, y+h, r);
+          this.arcTo(x, y+h, x, y, r);
+          this.arcTo(x, y, x+w, y, r);
+          this.closePath();
+          return this;
+        };
+      }
+
+      /* Firebase */
+      const firebaseConfig = {
+        apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
+        authDomain: "pine-tycoon.firebaseapp.com",
+        projectId: "pine-tycoon",
+        storageBucket: "pine-tycoon.firebasestorage.app",
+        messagingSenderId: "949986190236",
+        appId: "1:949986190236:web:4f5d50078326f5c1981e59",
+        measurementId: "G-2DY6KSY4G7"
       };
-    }
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
 
-    /* Firebase */
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
-      authDomain: "pine-tycoon.firebaseapp.com",
-      projectId: "pine-tycoon",
-      storageBucket: "pine-tycoon.firebasestorage.app",
-      messagingSenderId: "949986190236",
-      appId: "1:949986190236:web:4f5d50078326f5c1981e59",
-      measurementId: "G-2DY6KSY4G7"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+      /* UI */
+      const statsEl = document.getElementById("stats");
+      const heatEl  = document.getElementById("heatBar");
+      const freezeOverlay = document.getElementById("freezeOverlay");
+      const freezeText = document.getElementById("freezeText");
 
-    /* UI */
-    const statsEl = document.getElementById("stats");
-    const heatEl  = document.getElementById("heatBar");
-    const freezeOverlay = document.getElementById("freezeOverlay");
-    const freezeText = document.getElementById("freezeText");
+      const mpStatusEl = document.getElementById("mpStatus");
+      const mpListEl = document.getElementById("mpList");
+      const mpPanel = document.getElementById("mpPanel");
+      const mpToggle = document.getElementById("mpToggle");
 
-    const mpStatusEl = document.getElementById("mpStatus");
-    const mpListEl = document.getElementById("mpList");
-    const mpPanel = document.getElementById("mpPanel");
-    const mpToggle = document.getElementById("mpToggle");
+      /* Audio */
+      const dayBgm = document.getElementById("bgmDay");
+      const nightBgm = document.getElementById("bgmNight");
+      dayBgm.volume = 0;
+      nightBgm.volume = 0;
 
-    /* Audio */
-    const dayBgm = document.getElementById("bgmDay");
-    const nightBgm = document.getElementById("bgmNight");
-    dayBgm.volume = 0;
-    nightBgm.volume = 0;
+      let actx=null;
+      let audioUnlocked=false;
 
-    let actx=null;
-    let audioUnlocked=false;
+      function ensureAudio(){
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        try{
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          actx = new AudioCtx();
+          if (actx.state === "suspended") actx.resume().catch(()=>{});
+        }catch(e){ actx=null; }
 
-    function ensureAudio(){
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-      try{
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        actx = new AudioCtx();
-        if (actx.state === "suspended") actx.resume().catch(()=>{});
-      }catch(e){ actx=null; }
-
-      dayBgm.play().catch(()=>{});
-      nightBgm.play().catch(()=>{});
-    }
-    window.addEventListener("pointerdown", ensureAudio, { once:true });
-    window.addEventListener("touchstart", ensureAudio, { once:true });
-
-    function playTone({freq=220, dur=0.08, type="sine", vol=0.18, slideTo=null}){
-      if (!actx) return;
-      const t0 = actx.currentTime;
-      const o = actx.createOscillator();
-      const g = actx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(freq, t0);
-      if (slideTo != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
-      g.gain.setValueAtTime(vol, t0);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g).connect(actx.destination);
-      o.start(t0); o.stop(t0 + dur + 0.02);
-    }
-    function playNoise({dur=0.09, vol=0.12}){
-      if (!actx) return;
-      const sr = actx.sampleRate;
-      const len = Math.floor(sr * dur);
-      const buf = actx.createBuffer(1, len, sr);
-      const data = buf.getChannelData(0);
-      for(let i=0;i<len;i++){
-        const t = i/len;
-        data[i] = (Math.random()*2-1) * (1 - t) * 0.9;
+        dayBgm.play().catch(()=>{});
+        nightBgm.play().catch(()=>{});
       }
-      const src = actx.createBufferSource();
-      src.buffer = buf;
-      const g = actx.createGain(); g.gain.value = vol;
-      const f = actx.createBiquadFilter(); f.type="highpass"; f.frequency.value=800;
-      src.connect(f).connect(g).connect(actx.destination);
-      src.start(); src.stop(actx.currentTime + dur + 0.02);
-    }
-    const SFX = {
-      swing(){ ensureAudio(); playTone({freq:280, slideTo:160, dur:0.08, type:"triangle", vol:0.12}); },
-      chop(){ ensureAudio(); playNoise({dur:0.07, vol:0.10}); playTone({freq:120, dur:0.05, type:"sine", vol:0.08}); },
-      restore(){ ensureAudio(); playTone({freq:340, slideTo:760, dur:0.12, type:"sine", vol:0.11}); },
-      error(){ ensureAudio(); playTone({freq:180, slideTo:120, dur:0.10, type:"square", vol:0.07}); },
-      crack(){ ensureAudio(); playNoise({dur:0.10, vol:0.08}); playTone({freq:95, dur:0.08, type:"sine", vol:0.07}); }
-    };
+      window.addEventListener("pointerdown", ensureAudio, { once:true });
+      window.addEventListener("touchstart", ensureAudio, { once:true });
 
-    /* Helpers */
-    const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-    const lerp=(a,b,t)=>a+(b-a)*t;
-    const dist2=(ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
-    const rand=(a,b)=>a+Math.random()*(b-a);
-    const TAU=Math.PI*2;
-    const easeOutQuint=t=>1-Math.pow(1-t,5);
-    const easeOutCubic=t=>1-Math.pow(1-t,3);
-
-    /* World scale */
-    const WORLD_HALF=160;
-    let PPU = isCoarse ? 22 : 26;
-
-    const player = { x:0, y:35, r:0.60, dir:-Math.PI/2, attack:0, attackCooldown:0 };
-    const camera = { x:player.x, y:player.y };
-
-    /* Colliders */
-    const colliders=[];
-    function addColliderRect(x,y,hw,hh,tag=""){ const r={x,y,hw,hh,tag}; colliders.push(r); return r; }
-    function circleRectCollide(px,py,pr,r){
-      const cx=clamp(px, r.x-r.hw, r.x+r.hw);
-      const cy=clamp(py, r.y-r.hh, r.y+r.hh);
-      const dx=px-cx, dy=py-cy;
-      return dx*dx+dy*dy <= pr*pr;
-    }
-    function isBlocked(px,py,pr){ return colliders.some(r=>circleRectCollide(px,py,pr,r)); }
-
-    /* Day/Night */
-    const SWITCH_EVERY=300;
-    const TRANSITION=14;
-    let dayNightTimer=0;
-    let isNight=false;
-    let light=1;
-    let fromLight=1, toLight=1, transT=1;
-
-    function updateDayNight(dt){
-      dayNightTimer += dt;
-      if (dayNightTimer >= SWITCH_EVERY){
-        dayNightTimer -= SWITCH_EVERY;
-        isNight = !isNight;
-        fromLight = light;
-        toLight = isNight ? 0 : 1;
-        transT = 0;
+      function playTone(o){
+        if (!actx) return;
+        const freq=o.freq||220, dur=o.dur||0.08, type=o.type||"sine", vol=o.vol||0.18;
+        const slideTo = (o.slideTo===undefined ? null : o.slideTo);
+        const t0 = actx.currentTime;
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t0);
+        if (slideTo != null) osc.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
+        gain.gain.setValueAtTime(vol, t0);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        osc.connect(gain).connect(actx.destination);
+        osc.start(t0); osc.stop(t0 + dur + 0.02);
       }
-      if (transT < 1){
-        transT = Math.min(1, transT + dt/TRANSITION);
-        light = lerp(fromLight, toLight, easeOutQuint(transT));
-      }
-      if (audioUnlocked){
-        const base=0.38;
-        dayBgm.volume   = base * light;
-        nightBgm.volume = base * (1 - light);
-      }
-    }
-
-    /* Snow pattern */
-    function makeSnowPattern(){
-      const c=document.createElement("canvas");
-      c.width=320; c.height=320;
-      const x=c.getContext("2d");
-      x.fillStyle="#f6fbff"; x.fillRect(0,0,c.width,c.height);
-
-      const g=x.createLinearGradient(0,0,0,c.height);
-      g.addColorStop(0,"rgba(255,255,255,0)");
-      g.addColorStop(1,"rgba(210,235,255,0.35)");
-      x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
-
-      for(let i=0;i<2200;i++){
-        const px=(Math.random()*c.width)|0;
-        const py=(Math.random()*c.height)|0;
-        const a=Math.random()<0.6?0.10:0.18;
-        x.fillStyle=`rgba(255,255,255,${a})`;
-        x.fillRect(px,py,1,1);
-      }
-      for(let i=0;i<900;i++){
-        const px=(Math.random()*c.width)|0;
-        const py=(Math.random()*c.height)|0;
-        x.fillStyle="rgba(140,190,220,0.06)";
-        x.fillRect(px,py,2,2);
-      }
-      return ctx.createPattern(c,"repeat");
-    }
-    const snowPattern = makeSnowPattern();
-
-    /* Entities */
-    const houses=[], farms=[], paths=[], rocks=[], mountains=[], lamps=[];
-    const campfire = { x:0, y:30 };
-
-    let trees=[];
-    let buttons=[];
-
-    function createRestoreButton(x,y,cost,type,target){
-      buttons.push({ x,y,cost,type,target, restored:false, phase:Math.random()*TAU, flash:0 });
-    }
-
-    function mkHouseVariant(i){
-      const v=[
-        { walls:"#b47a44", trim:"#84562f", roof:"#c84d3a", roof2:"#a73a2a", chimney:true },
-        { walls:"#8b6a44", trim:"#604325", roof:"#3d6fb3", roof2:"#2e568f", chimney:false },
-        { walls:"#c08a52", trim:"#8f5f35", roof:"#3c3c3c", roof2:"#252525", chimney:true },
-        { walls:"#9b9b9b", trim:"#6e6e6e", roof:"#a63b2f", roof2:"#7f2a22", chimney:false }
-      ];
-      return v[i%v.length];
-    }
-
-    function createHouse(x,y,vi=0){
-      const h={ kind:"small", x,y, w:6, h:6, restored:false, restoreT:0, v:mkHouseVariant(vi), cost:45 };
-      houses.push(h);
-      createRestoreButton(x, y+4.2, h.cost, "house", h);
-    }
-    function createBigHouse(x,y,vi=1){
-      const h={ kind:"big", x,y, w:7, h:7, restored:false, restoreT:0, v:mkHouseVariant(vi), cost:65 };
-      houses.push(h);
-      createRestoreButton(x, y+4.8, h.cost, "bigHouse", h);
-    }
-    function createFarm(x,y,w,l,cropType=0){
-      const f={ x,y,w,l, restored:false, restoreT:0, cropType, cost:15 };
-      farms.push(f);
-      createRestoreButton(x, y + l/2 + 1.2, f.cost, "farm", f);
-    }
-    function createPath(x,y,w,l){
-      const p={ x,y,w,l, restored:false, restoreT:0, cost:5 };
-      paths.push(p);
-      createRestoreButton(x,y,p.cost,"path",p);
-    }
-    function createLamp(x,y){
-      lamps.push({ x,y, flick:Math.random()*10 });
-      addColliderRect(x,y,0.45,0.45,"lamp");
-    }
-    function createRock(x,y,size){
-      rocks.push({ x,y,size });
-      addColliderRect(x,y,size*0.9,size*0.9,"rock");
-    }
-    function createMountain(x,y){
-      const base=8+Math.random()*6;
-      const height=10+Math.random()*8;
-      mountains.push({ x,y,base,height });
-      addColliderRect(x,y,base*0.85,base*0.85,"mountain");
-    }
-    function createMountainsBorder(){
-      for(let x=-150;x<=150;x+=15){ createMountain(x,-150); createMountain(x,150); }
-      for(let y=-150;y<=150;y+=15){ createMountain(-150,y); createMountain(150,y); }
-      for(let i=0;i<35;i++){
-        const a=Math.random()*TAU;
-        const r=110+Math.random()*25;
-        createMountain(Math.cos(a)*r, Math.sin(a)*r);
-      }
-    }
-
-    function createTree(x,y){
-      const kind=(Math.random()*4)|0;
-      const scale=rand(0.85,1.35);
-      const snowiness=rand(0.20,0.80);
-      const trunk=rand(0.9,1.45);
-      const hp=3 + (Math.random()<0.20 ? 1 : 0);
-      const t={ x,y, kind, scale, snowiness, trunk, hp, falling:false, fallT:0, fallDir:Math.random()<0.5?-1:1, removed:false, stump:true, collider:null };
-      t.collider = addColliderRect(x,y,0.85,0.85,"tree");
-      trees.push(t);
-    }
-    function forestRing(cx,cy,inner,outer,count){
-      for(let i=0;i<count;i++){
-        const a=Math.random()*TAU;
-        const r=inner+Math.random()*(outer-inner);
-        const x=cx+Math.cos(a)*r;
-        const y=cy+Math.sin(a)*r;
-        if (Math.sqrt(x*x+y*y) < 20) continue;
-        createTree(x,y);
-      }
-    }
-    function createForestRocks(count){
-      for(let i=0;i<count;i++){
-        const a=Math.random()*TAU;
-        const r=30+Math.random()*70;
-        const x=Math.cos(a)*r;
-        const y=Math.sin(a)*r;
-        if (Math.sqrt(x*x+y*y) < 25){ i--; continue; }
-        createRock(x,y,0.8+Math.random()*1.4);
-      }
-    }
-
-    function buildVillage(){
-      createHouse(  0,   0, 0);
-      createHouse( 20,  -8, 1);
-      createHouse(-22,  10, 2);
-      createHouse(  4, -24, 3);
-      createHouse( 28,  16, 0);
-      createHouse(-30, -16, 1);
-      createHouse( 40,   2, 2);
-      createHouse(-40,  -2, 3);
-      createHouse( 14,  30, 1);
-      createHouse(-14, -32, 0);
-
-      createBigHouse( 32, -30, 2);
-      createBigHouse(-34,  30, 3);
-
-      createPath(0,-8,  4,20);
-      createPath(0, 8,  4,20);
-      createPath(8,0,  20,4);
-      createPath(-8,0, 20,4);
-      createPath(20,-14, 16,4);
-      createPath(-20,14, 16,4);
-
-      createFarm(  0, -40, 12, 7, 0);
-      createFarm( 28,   8, 11, 7, 1);
-      createFarm(-28,  -8, 11, 7, 2);
-
-      createLamp(  0,  12);
-      createLamp(  0, -12);
-      createLamp( 12,  0);
-      createLamp(-12,  0);
-      createLamp( 22, -14);
-      createLamp(-22,  14);
-    }
-
-    buildVillage();
-    forestRing(0,0,24,42,95);
-    forestRing(0,0,42,70,130);
-    forestRing(0,0,70,100,170);
-    createForestRocks(30);
-    createMountainsBorder();
-
-    /* Stats/Heat */
-    let treesCutTotal=0, wood=0;
-    const heatMax=9;
-    let heatValue=heatMax;
-    let isFrozen=false;
-
-    function updateStats(){ statsEl.textContent = `Дерев зрубано: ${treesCutTotal} | Дерево: ${wood}`; }
-    function updateHeat(){
-      const full=Math.round(heatValue);
-      let s=""; for(let i=0;i<heatMax;i++) s += i<full ? "🔥" : "·";
-      heatEl.textContent=s;
-    }
-    updateStats(); updateHeat();
-
-    /* Particles */
-    const particles=[];
-    function spawnParticles(type,x,y,count=10){
-      for(let i=0;i<count;i++){
-        const a=Math.random()*TAU;
-        const sp=rand(1.5,7.0);
-        particles.push({ type, x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:rand(0.35,0.85) });
-      }
-    }
-
-    /* Controls */
-    const keys={};
-    document.addEventListener("keydown",(e)=>keys[e.code]=true);
-    document.addEventListener("keyup",(e)=>keys[e.code]=false);
-
-    let mouseAim=null;
-    window.addEventListener("mousemove",(e)=>{ mouseAim={x:e.clientX,y:e.clientY}; });
-    window.addEventListener("mouseleave",()=>{ mouseAim=null; });
-
-    const movePad=document.getElementById("movePad");
-    const moveStick=document.getElementById("moveStick");
-    const actionBtn=document.getElementById("actionBtn");
-
-    let touchMoveX=0, touchMoveY=0;
-
-    function setupMoveStick(pad, stick){
-      const stickRadius=30;
-      let touchId=null;
-
-      function reset(){
-        const rect=pad.getBoundingClientRect();
-        const cx=rect.width/2, cy=rect.height/2;
-        stick.style.left=(cx-stickRadius)+"px";
-        stick.style.top =(cy-stickRadius)+"px";
-        touchMoveX=0; touchMoveY=0;
-      }
-      function updateFromTouch(t){
-        const rect=pad.getBoundingClientRect();
-        const cx=rect.width/2, cy=rect.height/2;
-        let dx=t.clientX-(rect.left+cx);
-        let dy=t.clientY-(rect.top+cy);
-        const maxR=rect.width/2-stickRadius;
-        const d=Math.hypot(dx,dy);
-        if (d>maxR){ dx*=maxR/d; dy*=maxR/d; }
-        stick.style.left=(cx-stickRadius+dx)+"px";
-        stick.style.top =(cy-stickRadius+dy)+"px";
-        touchMoveX=dx/maxR; touchMoveY=dy/maxR;
-      }
-
-      pad.addEventListener("touchstart",(e)=>{
-        e.preventDefault();
-        const t=e.changedTouches[0];
-        touchId=t.identifier;
-        updateFromTouch(t);
-      },{passive:false});
-
-      pad.addEventListener("touchmove",(e)=>{
-        e.preventDefault();
-        if (touchId===null) return;
-        for (const t of e.touches){
-          if (t.identifier===touchId){ updateFromTouch(t); break; }
+      function playNoise(o){
+        if (!actx) return;
+        const dur=o.dur||0.09, vol=o.vol||0.12;
+        const sr = actx.sampleRate;
+        const len = Math.floor(sr * dur);
+        const buf = actx.createBuffer(1, len, sr);
+        const data = buf.getChannelData(0);
+        for(let i=0;i<len;i++){
+          const t = i/len;
+          data[i] = (Math.random()*2-1) * (1 - t) * 0.9;
         }
-      },{passive:false});
+        const src = actx.createBufferSource();
+        src.buffer = buf;
+        const g = actx.createGain(); g.gain.value = vol;
+        const f = actx.createBiquadFilter(); f.type="highpass"; f.frequency.value=800;
+        src.connect(f).connect(g).connect(actx.destination);
+        src.start(); src.stop(actx.currentTime + dur + 0.02);
+      }
+      const SFX = {
+        swing(){ ensureAudio(); playTone({freq:280, slideTo:160, dur:0.08, type:"triangle", vol:0.12}); },
+        chop(){ ensureAudio(); playNoise({dur:0.07, vol:0.10}); playTone({freq:120, dur:0.05, type:"sine", vol:0.08}); },
+        restore(){ ensureAudio(); playTone({freq:340, slideTo:760, dur:0.12, type:"sine", vol:0.11}); },
+        error(){ ensureAudio(); playTone({freq:180, slideTo:120, dur:0.10, type:"square", vol:0.07}); },
+        crack(){ ensureAudio(); playNoise({dur:0.10, vol:0.08}); playTone({freq:95, dur:0.08, type:"sine", vol:0.07}); }
+      };
 
-      function end(e){
-        if (touchId===null) return;
-        for (const t of e.changedTouches){
-          if (t.identifier===touchId){ touchId=null; reset(); break; }
+      /* Helpers */
+      const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+      const lerp=(a,b,t)=>a+(b-a)*t;
+      const dist2=(ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
+      const rand=(a,b)=>a+Math.random()*(b-a);
+      const TAU=Math.PI*2;
+      const easeOutQuint=t=>1-Math.pow(1-t,5);
+
+      /* World scale */
+      const WORLD_HALF=160;
+      let PPU = isCoarse ? 22 : 26;
+
+      const player = { x:0, y:35, r:0.60, dir:-Math.PI/2, attack:0, attackCooldown:0 };
+      const camera = { x:player.x, y:player.y };
+
+      /* Colliders */
+      const colliders=[];
+      function addColliderRect(x,y,hw,hh,tag){ colliders.push({x,y,hw,hh,tag:tag||""}); }
+      function circleRectCollide(px,py,pr,r){
+        const cx=clamp(px, r.x-r.hw, r.x+r.hw);
+        const cy=clamp(py, r.y-r.hh, r.y+r.hh);
+        const dx=px-cx, dy=py-cy;
+        return dx*dx+dy*dy <= pr*pr;
+      }
+      function isBlocked(px,py,pr){ return colliders.some(r=>circleRectCollide(px,py,pr,r)); }
+
+      /* Day/Night */
+      const SWITCH_EVERY=300, TRANSITION=14;
+      let dayNightTimer=0, isNight=false, light=1, fromLight=1, toLight=1, transT=1;
+
+      function updateDayNight(dt){
+        dayNightTimer += dt;
+        if (dayNightTimer >= SWITCH_EVERY){
+          dayNightTimer -= SWITCH_EVERY;
+          isNight = !isNight;
+          fromLight = light;
+          toLight = isNight ? 0 : 1;
+          transT = 0;
+        }
+        if (transT < 1){
+          transT = Math.min(1, transT + dt/TRANSITION);
+          light = lerp(fromLight, toLight, easeOutQuint(transT));
+        }
+        if (audioUnlocked){
+          const base=0.38;
+          dayBgm.volume   = base * light;
+          nightBgm.volume = base * (1 - light);
         }
       }
-      pad.addEventListener("touchend", end, {passive:false});
-      pad.addEventListener("touchcancel", end, {passive:false});
 
-      reset();
-    }
-    if (movePad && moveStick) setupMoveStick(movePad, moveStick);
-
-    const AXE_COOLDOWN=0.34;
-
-    function tryUseNearestButton(){
-      let best=null, bestD=(2.2*2.2);
-      for (const b of buttons){
-        const d=dist2(player.x,player.y,b.x,b.y);
-        if (d<bestD){ bestD=d; best=b; }
+      /* Snow pattern */
+      function makeSnowPattern(){
+        const c=document.createElement("canvas");
+        c.width=320; c.height=320;
+        const x=c.getContext("2d");
+        x.fillStyle="#f6fbff"; x.fillRect(0,0,c.width,c.height);
+        const g=x.createLinearGradient(0,0,0,c.height);
+        g.addColorStop(0,"rgba(255,255,255,0)");
+        g.addColorStop(1,"rgba(210,235,255,0.35)");
+        x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
+        for(let i=0;i<2200;i++){
+          const px=(Math.random()*c.width)|0, py=(Math.random()*c.height)|0;
+          const a=Math.random()<0.6?0.10:0.18;
+          x.fillStyle="rgba(255,255,255,"+a+")";
+          x.fillRect(px,py,1,1);
+        }
+        for(let i=0;i<900;i++){
+          const px=(Math.random()*c.width)|0, py=(Math.random()*c.height)|0;
+          x.fillStyle="rgba(140,190,220,0.06)";
+          x.fillRect(px,py,2,2);
+        }
+        return ctx.createPattern(c,"repeat");
       }
-      if (!best) return false;
+      const snowPattern = makeSnowPattern();
 
-      if (wood < best.cost){
-        best.flash=0.22;
-        SFX.error();
+      /* Entities */
+      let trees=[];
+      let buttons=[];
+      const campfire = { x:0, y:30 };
+
+      function createRestoreButton(x,y,cost,type,target){
+        buttons.push({ x,y,cost,type,target, restored:false, phase:Math.random()*TAU, flash:0 });
+      }
+
+      function mkHouseVariant(i){
+        const v=[
+          { walls:"#b47a44", trim:"#84562f", roof:"#c84d3a", roof2:"#a73a2a" },
+          { walls:"#8b6a44", trim:"#604325", roof:"#3d6fb3", roof2:"#2e568f" },
+          { walls:"#c08a52", trim:"#8f5f35", roof:"#3c3c3c", roof2:"#252525" },
+          { walls:"#9b9b9b", trim:"#6e6e6e", roof:"#a63b2f", roof2:"#7f2a22" }
+        ];
+        return v[i%v.length];
+      }
+
+      const houses=[], farms=[], paths=[], rocks=[], mountains=[];
+      function createHouse(x,y,vi){
+        const h={ kind:"small", x,y, v:mkHouseVariant(vi||0), restored:false, restoreT:0, cost:45 };
+        houses.push(h);
+        createRestoreButton(x, y+4.2, h.cost, "house", h);
+      }
+      function createBigHouse(x,y,vi){
+        const h={ kind:"big", x,y, v:mkHouseVariant(vi||1), restored:false, restoreT:0, cost:65 };
+        houses.push(h);
+        createRestoreButton(x, y+4.8, h.cost, "bigHouse", h);
+      }
+      function createFarm(x,y,w,l){
+        const f={ x,y,w,l, restored:false, restoreT:0, cost:15 };
+        farms.push(f);
+        createRestoreButton(x, y + l/2 + 1.2, f.cost, "farm", f);
+      }
+      function createPath(x,y,w,l){
+        const p={ x,y,w,l, restored:false, restoreT:0, cost:5 };
+        paths.push(p);
+        createRestoreButton(x,y,p.cost,"path",p);
+      }
+      function createRock(x,y,size){
+        rocks.push({ x,y,size });
+        addColliderRect(x,y,size*0.9,size*0.9,"rock");
+      }
+      function createMountain(x,y){
+        const base=8+Math.random()*6;
+        mountains.push({ x,y,base });
+        addColliderRect(x,y,base*0.85,base*0.85,"mountain");
+      }
+      function createMountainsBorder(){
+        for(let x=-150;x<=150;x+=15){ createMountain(x,-150); createMountain(x,150); }
+        for(let y=-150;y<=150;y+=15){ createMountain(-150,y); createMountain(150,y); }
+        for(let i=0;i<35;i++){
+          const a=Math.random()*TAU;
+          const r=110+Math.random()*25;
+          createMountain(Math.cos(a)*r, Math.sin(a)*r);
+        }
+      }
+
+      function createTree(x,y){
+        const kind=(Math.random()*4)|0;
+        const scale=rand(0.85,1.35);
+        const snowiness=rand(0.20,0.80);
+        const trunk=rand(0.9,1.45);
+        const hp=3 + (Math.random()<0.20 ? 1 : 0);
+        const t={ x,y, kind, scale, snowiness, trunk, hp, falling:false, fallT:0, fallDir:Math.random()<0.5?-1:1, removed:false, stump:true, collider:null };
+        t.collider = { x:x, y:y, hw:0.85, hh:0.85, tag:"tree" };
+        colliders.push(t.collider);
+        trees.push(t);
+      }
+      function forestRing(cx,cy,inner,outer,count){
+        for(let i=0;i<count;i++){
+          const a=Math.random()*TAU;
+          const r=inner+Math.random()*(outer-inner);
+          const x=cx+Math.cos(a)*r;
+          const y=cy+Math.sin(a)*r;
+          if (Math.sqrt(x*x+y*y) < 20) continue;
+          createTree(x,y);
+        }
+      }
+      function createForestRocks(count){
+        for(let i=0;i<count;i++){
+          const a=Math.random()*TAU;
+          const r=30+Math.random()*70;
+          const x=Math.cos(a)*r;
+          const y=Math.sin(a)*r;
+          if (Math.sqrt(x*x+y*y) < 25){ i--; continue; }
+          createRock(x,y,0.8+Math.random()*1.4);
+        }
+      }
+
+      function buildVillage(){
+        createHouse(  0,   0, 0);
+        createHouse( 20,  -8, 1);
+        createHouse(-22,  10, 2);
+        createHouse(  4, -24, 3);
+        createHouse( 28,  16, 0);
+        createHouse(-30, -16, 1);
+        createHouse( 40,   2, 2);
+        createHouse(-40,  -2, 3);
+        createHouse( 14,  30, 1);
+        createHouse(-14, -32, 0);
+
+        createBigHouse( 32, -30, 2);
+        createBigHouse(-34,  30, 3);
+
+        createPath(0,-8,  4,20);
+        createPath(0, 8,  4,20);
+        createPath(8,0,  20,4);
+        createPath(-8,0, 20,4);
+
+        createFarm(  0, -40, 12, 7);
+        createFarm( 28,   8, 11, 7);
+        createFarm(-28,  -8, 11, 7);
+      }
+
+      buildVillage();
+      forestRing(0,0,24,42,95);
+      forestRing(0,0,42,70,130);
+      forestRing(0,0,70,100,170);
+      createForestRocks(30);
+      createMountainsBorder();
+
+      /* Stats/Heat */
+      let treesCutTotal=0, wood=0;
+      const heatMax=9;
+      let heatValue=heatMax;
+      let isFrozen=false;
+
+      function updateStats(){ statsEl.textContent = "Дерев зрубано: "+treesCutTotal+" | Дерево: "+wood; }
+      function updateHeat(){
+        const full=Math.round(heatValue);
+        let s=""; for(let i=0;i<heatMax;i++) s += i<full ? "🔥" : "·";
+        heatEl.textContent=s;
+      }
+      updateStats(); updateHeat();
+
+      /* Controls */
+      const keys={};
+      document.addEventListener("keydown",(e)=>keys[e.code]=true);
+      document.addEventListener("keyup",(e)=>keys[e.code]=false);
+
+      let mouseAim=null;
+      window.addEventListener("mousemove",(e)=>{ mouseAim={x:e.clientX,y:e.clientY}; });
+      window.addEventListener("mouseleave",()=>{ mouseAim=null; });
+
+      const movePad=document.getElementById("movePad");
+      const moveStick=document.getElementById("moveStick");
+      const actionBtn=document.getElementById("actionBtn");
+
+      let touchMoveX=0, touchMoveY=0;
+
+      function setupMoveStick(pad, stick){
+        const stickRadius=30;
+        let touchId=null;
+
+        function reset(){
+          const rect=pad.getBoundingClientRect();
+          const cx=rect.width/2, cy=rect.height/2;
+          stick.style.left=(cx-stickRadius)+"px";
+          stick.style.top =(cy-stickRadius)+"px";
+          touchMoveX=0; touchMoveY=0;
+        }
+        function updateFromTouch(t){
+          const rect=pad.getBoundingClientRect();
+          const cx=rect.width/2, cy=rect.height/2;
+          let dx=t.clientX-(rect.left+cx);
+          let dy=t.clientY-(rect.top+cy);
+          const maxR=rect.width/2-stickRadius;
+          const d=Math.hypot(dx,dy);
+          if (d>maxR){ dx*=maxR/d; dy*=maxR/d; }
+          stick.style.left=(cx-stickRadius+dx)+"px";
+          stick.style.top =(cy-stickRadius+dy)+"px";
+          touchMoveX=dx/maxR; touchMoveY=dy/maxR;
+        }
+
+        pad.addEventListener("touchstart",(e)=>{
+          e.preventDefault();
+          const t=e.changedTouches[0];
+          touchId=t.identifier;
+          updateFromTouch(t);
+        },{passive:false});
+
+        pad.addEventListener("touchmove",(e)=>{
+          e.preventDefault();
+          if (touchId===null) return;
+          for (const t of e.touches){
+            if (t.identifier===touchId){ updateFromTouch(t); break; }
+          }
+        },{passive:false});
+
+        function end(e){
+          if (touchId===null) return;
+          for (const t of e.changedTouches){
+            if (t.identifier===touchId){ touchId=null; reset(); break; }
+          }
+        }
+        pad.addEventListener("touchend", end, {passive:false});
+        pad.addEventListener("touchcancel", end, {passive:false});
+        reset();
+      }
+      if (movePad && moveStick) setupMoveStick(movePad, moveStick);
+
+      const AXE_COOLDOWN=0.34;
+
+      function tryUseNearestButton(){
+        let best=null, bestD=(2.2*2.2);
+        for (const b of buttons){
+          const d=dist2(player.x,player.y,b.x,b.y);
+          if (d<bestD){ bestD=d; best=b; }
+        }
+        if (!best) return false;
+
+        if (wood < best.cost){
+          best.flash=0.22;
+          SFX.error();
+          return true;
+        }
+
+        wood -= best.cost;
+        if (best.type==="house" || best.type==="bigHouse"){
+          addColliderRect(best.target.x, best.target.y, best.type==="bigHouse"?4.2:3.2, best.type==="bigHouse"?4.2:3.2, "house");
+        } else if (best.type==="farm"){
+          addColliderRect(best.target.x, best.target.y, best.target.w/2, best.target.l/2, "farm");
+        }
+
+        SFX.restore();
+        buttons = buttons.filter(x=>x!==best);
+        updateStats();
         return true;
       }
 
-      wood -= best.cost;
-      if (best.type==="house" || best.type==="bigHouse"){
-        best.target.restored=true; best.target.restoreT=0.0001;
-        addColliderRect(best.target.x, best.target.y, best.type==="bigHouse"?4.2:3.2, best.type==="bigHouse"?4.2:3.2, "house");
-      } else if (best.type==="farm"){
-        best.target.restored=true; best.target.restoreT=0.0001;
-        addColliderRect(best.target.x, best.target.y, best.target.w/2, best.target.l/2, "farm");
-      } else if (best.type==="path"){
-        best.target.restored=true; best.target.restoreT=0.0001;
+      function chopNearestTree(){
+        let best=null, bestD=(3.2*3.2);
+        for (const t of trees){
+          if (t.falling || t.removed) continue;
+          const d=dist2(player.x,player.y,t.x,t.y);
+          if (d<bestD){ bestD=d; best=t; }
+        }
+        if (!best) return;
+
+        best.hp -= 1;
+        SFX.chop();
+
+        if (best.hp<=0 && !best.falling){
+          best.falling=true;
+          best.fallT=0;
+          const idx=colliders.indexOf(best.collider);
+          if (idx!==-1) colliders.splice(idx,1);
+
+          treesCutTotal++;
+          wood++;
+          updateStats();
+          SFX.crack();
+        }
       }
 
-      spawnParticles("restore", best.x, best.y, 18);
-      SFX.restore();
+      function doAction(){
+        if (isFrozen) return;
+        ensureAudio();
+        if (player.attackCooldown > 0) return;
 
-      buttons = buttons.filter(x=>x!==best);
+        player.attack = 0.0001;
+        player.attackCooldown = AXE_COOLDOWN;
 
-      updateStats();
-      return true;
-    }
-
-    function chopNearestTree(){
-      let best=null, bestD=(3.2*3.2);
-      for (const t of trees){
-        if (t.falling || t.removed) continue;
-        const d=dist2(player.x,player.y,t.x,t.y);
-        if (d<bestD){ bestD=d; best=t; }
-      }
-      if (!best) return;
-
-      best.hp -= 1;
-      spawnParticles("chips", best.x, best.y, 12);
-      SFX.chop();
-
-      if (best.hp<=0 && !best.falling){
-        best.falling=true;
-        best.fallT=0;
-        const idx=colliders.indexOf(best.collider);
-        if (idx!==-1) colliders.splice(idx,1);
-
-        treesCutTotal++;
-        wood++;
-        updateStats();
-        SFX.crack();
-      }
-    }
-
-    function doAction(){
-      if (isFrozen) return;
-      ensureAudio();
-      if (player.attackCooldown > 0) return;
-
-      player.attack = 0.0001;
-      player.attackCooldown = AXE_COOLDOWN;
-
-      SFX.swing();
-      const used = tryUseNearestButton();
-      if (!used) chopNearestTree();
-    }
-
-    window.addEventListener("mousedown",(e)=>{ if (e.button===0) doAction(); });
-
-    if (actionBtn){
-      const tap=(e)=>{ e.preventDefault(); doAction(); };
-      actionBtn.addEventListener("click", tap);
-      actionBtn.addEventListener("touchstart", tap, {passive:false});
-    }
-
-    /* Screen sizing */
-    function resize(){
-      const dpr=Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      gameCanvas.width = Math.floor(innerWidth*dpr);
-      gameCanvas.height= Math.floor(innerHeight*dpr);
-      ctx.setTransform(dpr,0,0,dpr,0,0);
-
-      fxCanvas.width = Math.floor(innerWidth*dpr);
-      fxCanvas.height= Math.floor(innerHeight*dpr);
-      fx.setTransform(dpr,0,0,dpr,0,0);
-
-      PPU = isCoarse ? 22 : (Math.min(innerWidth,innerHeight) > 900 ? 28 : 26);
-    }
-
-    /* Minimap */
-    const remoteStates=new Map();
-    const remotePlayers=new Map();
-    function updateMinimap(){
-      mctx.clearRect(0,0,mini.width,mini.height);
-      mctx.fillStyle="#132e13"; mctx.fillRect(0,0,mini.width,mini.height);
-
-      const scale = mini.width/(WORLD_HALF*2);
-      const toM=(wx,wy)=>({ x:(wx+WORLD_HALF)*scale, y:(wy+WORLD_HALF)*scale });
-
-      mctx.strokeStyle="rgba(255,255,255,0.20)";
-      mctx.lineWidth=2;
-      mctx.strokeRect(1,1,mini.width-2,mini.height-2);
-
-      mctx.fillStyle="rgba(80,255,120,0.45)";
-      for (const c of colliders){
-        const p=toM(c.x,c.y);
-        mctx.fillRect(p.x|0, p.y|0, 2, 2);
+        SFX.swing();
+        const used = tryUseNearestButton();
+        if (!used) chopNearestTree();
       }
 
-      const cf=toM(campfire.x,campfire.y);
-      mctx.fillStyle="rgba(255,160,90,0.95)";
-      mctx.beginPath(); mctx.arc(cf.x, cf.y, 3, 0, TAU); mctx.fill();
+      window.addEventListener("mousedown",(e)=>{ if (e.button===0) doAction(); });
+      if (actionBtn){
+        const tap=(e)=>{ e.preventDefault(); doAction(); };
+        actionBtn.addEventListener("click", tap);
+        actionBtn.addEventListener("touchstart", tap, {passive:false});
+      }
 
-      remoteStates.forEach((d)=>{
-        const p=toM(d.x,d.y);
-        mctx.fillStyle="rgba(90,160,255,0.85)";
-        mctx.fillRect((p.x|0)-1,(p.y|0)-1,3,3);
-      });
+      /* Screen sizing */
+      function resize(){
+        const dpr=Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+        gameCanvas.width = Math.floor(innerWidth*dpr);
+        gameCanvas.height= Math.floor(innerHeight*dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
 
-      const mp=toM(player.x,player.y);
-      mctx.save();
-      mctx.translate(mp.x, mp.y);
-      mctx.rotate(player.dir);
-      mctx.fillStyle="#ffffff";
-      mctx.beginPath(); mctx.moveTo(0,-6); mctx.lineTo(4,4); mctx.lineTo(-4,4); mctx.closePath(); mctx.fill();
-      mctx.restore();
-    }
+        fxCanvas.width = Math.floor(innerWidth*dpr);
+        fxCanvas.height= Math.floor(innerHeight*dpr);
+        fx.setTransform(dpr,0,0,dpr,0,0);
 
-    /* Snow (blue) */
-    let snowflakes=[];
-    function initSnow(count=160){
-      snowflakes=[];
-      for(let i=0;i<count;i++){
-        snowflakes.push({
-          x:Math.random()*innerWidth,
-          y:Math.random()*innerHeight,
-          r:1.2+Math.random()*2.0,
-          speed:26+Math.random()*44,
-          drift:-14+Math.random()*26,
-          a:0.35+Math.random()*0.45
+        PPU = isCoarse ? 22 : (Math.min(innerWidth,innerHeight) > 900 ? 28 : 26);
+      }
+
+      /* Minimap + MP */
+      const remoteStates=new Map();
+      const remotePlayers=new Map();
+
+      function updateMinimap(){
+        mctx.clearRect(0,0,mini.width,mini.height);
+        mctx.fillStyle="#132e13"; mctx.fillRect(0,0,mini.width,mini.height);
+
+        const scale = mini.width/(WORLD_HALF*2);
+        const toM=(wx,wy)=>({ x:(wx+WORLD_HALF)*scale, y:(wy+WORLD_HALF)*scale });
+
+        mctx.strokeStyle="rgba(255,255,255,0.20)";
+        mctx.lineWidth=2;
+        mctx.strokeRect(1,1,mini.width-2,mini.height-2);
+
+        mctx.fillStyle="rgba(80,255,120,0.45)";
+        for (const c of colliders){
+          const p=toM(c.x,c.y);
+          mctx.fillRect(p.x|0, p.y|0, 2, 2);
+        }
+
+        const cf=toM(campfire.x,campfire.y);
+        mctx.fillStyle="rgba(255,160,90,0.95)";
+        mctx.beginPath(); mctx.arc(cf.x, cf.y, 3, 0, TAU); mctx.fill();
+
+        remoteStates.forEach((d)=>{
+          const p=toM(d.x,d.y);
+          mctx.fillStyle="rgba(90,160,255,0.85)";
+          mctx.fillRect((p.x|0)-1,(p.y|0)-1,3,3);
+        });
+
+        const mp=toM(player.x,player.y);
+        mctx.save();
+        mctx.translate(mp.x, mp.y);
+        mctx.rotate(player.dir);
+        mctx.fillStyle="#ffffff";
+        mctx.beginPath(); mctx.moveTo(0,-6); mctx.lineTo(4,4); mctx.lineTo(-4,4); mctx.closePath(); mctx.fill();
+        mctx.restore();
+      }
+
+      let mpOpen=true;
+      function setMpOpen(v){
+        mpOpen=v;
+        mpPanel.style.display = mpOpen ? "block":"none";
+        mpToggle.textContent = mpOpen ? "👥 Друзі":"👥";
+      }
+      mpToggle.addEventListener("click", ()=>setMpOpen(!mpOpen));
+      if (isCoarse) setMpOpen(false);
+
+      function updateMpUI(){
+        mpListEl.innerHTML="";
+        if (remoteStates.size===0){
+          const d=document.createElement("div");
+          d.textContent="Немає інших гравців у грі";
+          mpListEl.appendChild(d);
+          return;
+        }
+        remoteStates.forEach((data, uid)=>{
+          const row=document.createElement("div");
+          row.className="playerRow";
+          const name=document.createElement("div");
+          name.textContent=data.name+" у грі";
+          const btn=document.createElement("button");
+          btn.textContent="Приєднатися";
+          btn.onclick=()=>{
+            const st=remoteStates.get(uid);
+            if (!st) return;
+            player.x = st.x + 2;
+            player.y = st.y + 2;
+            player.dir = st.dir || player.dir;
+          };
+          row.appendChild(name); row.appendChild(btn);
+          mpListEl.appendChild(row);
         });
       }
-    }
-    function updateSnow(dt){
-      fx.clearRect(0,0,innerWidth,innerHeight);
-      const night=1-light;
-      for (const f of snowflakes){
-        f.y += f.speed*dt;
-        f.x += f.drift*dt;
-        if (f.y > innerHeight+f.r){ f.y=-f.r; f.x=Math.random()*innerWidth; }
-        if (f.x < -20) f.x=innerWidth+20;
-        if (f.x > innerWidth+20) f.x=-20;
 
-        fx.beginPath();
-        fx.fillStyle = `rgba(170,220,255,${(f.a)*(0.9-0.2*night)})`;
-        fx.shadowBlur=6;
-        fx.shadowColor="rgba(120,180,255,0.25)";
-        fx.arc(f.x,f.y,f.r,0,TAU);
-        fx.fill();
+      let currentUserUid=null, currentUserName=null;
+      const MAX_INACTIVE_MS=30000;
+      let lastSyncTime=0;
+      const SYNC_INTERVAL=220;
+
+      function hashUid(uid){
+        let h=0;
+        for (let i=0;i<uid.length;i++) h=(h*31 + uid.charCodeAt(i))|0;
+        return Math.abs(h);
       }
-      fx.shadowBlur=0;
-    }
 
-    /* MP panel */
-    let mpOpen=true;
-    function setMpOpen(v){
-      mpOpen=v;
-      mpPanel.style.display = mpOpen ? "block":"none";
-      mpToggle.textContent = mpOpen ? "👥 Друзі":"👥";
-    }
-    mpToggle.addEventListener("click", ()=>setMpOpen(!mpOpen));
-    if (isCoarse) setMpOpen(false);
-
-    function updateMpUI(){
-      mpListEl.innerHTML="";
-      if (remoteStates.size===0){
-        const d=document.createElement("div");
-        d.textContent="Немає інших гравців у грі";
-        mpListEl.appendChild(d);
-        return;
-      }
-      remoteStates.forEach((data, uid)=>{
-        const row=document.createElement("div");
-        row.className="playerRow";
-        const name=document.createElement("div");
-        name.textContent=`${data.name} у грі`;
-        const btn=document.createElement("button");
-        btn.textContent="Приєднатися";
-        btn.onclick=()=>{
-          const st=remoteStates.get(uid);
-          if (!st) return;
-          player.x = st.x + 2;
-          player.y = st.y + 2;
-          player.dir = st.dir ?? player.dir;
-        };
-        row.appendChild(name); row.appendChild(btn);
-        mpListEl.appendChild(row);
-      });
-    }
-
-    /* AUTH + FIRESTORE LISTEN */
-    let currentUserUid=null, currentUserName=null;
-    const MAX_INACTIVE_MS=30000;
-    let lastSyncTime=0;
-    const SYNC_INTERVAL=220;
-
-    function hashUid(uid){
-      let h=0;
-      for (let i=0;i<uid.length;i++) h=(h*31 + uid.charCodeAt(i))|0;
-      return Math.abs(h);
-    }
-
-    auth.onAuthStateChanged((user)=>{
-      if (user && user.displayName){
-        currentUserUid=user.uid;
-        currentUserName=user.displayName;
-        mpStatusEl.textContent = "Мультиплеєр: ви " + currentUserName;
-      } else {
-        currentUserUid=null;
-        currentUserName=null;
-        mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
-      }
-    });
-
-    db.collection("gamePlayers").onSnapshot((snapshot)=>{
-      remoteStates.clear();
-
-      const nowMs=Date.now();
-      snapshot.forEach((docSnap)=>{
-        const uid=docSnap.id;
-        if (uid===currentUserUid) return;
-
-        const data=docSnap.data()||{};
-        const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().getTime() : 0;
-        if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS) return;
-
-        const name=data.name||"Гравець";
-        const x=data.x ?? 0;
-        const y=data.y ?? 0;
-        const dir=data.dir ?? 0;
-
-        remoteStates.set(uid,{name,x,y,dir});
-
-        let rp=remotePlayers.get(uid);
-        if (!rp){
-          const h=hashUid(uid);
-          const color=(h%3===0) ? "green":"blue";
-          rp={ name, x,y, tx:x,ty:y, dir, tdir:dir, color };
-          remotePlayers.set(uid,rp);
+      auth.onAuthStateChanged((user)=>{
+        if (user && user.displayName){
+          currentUserUid=user.uid;
+          currentUserName=user.displayName;
+          mpStatusEl.textContent = "Мультиплеєр: ви " + currentUserName;
         } else {
-          rp.name=name; rp.tx=x; rp.ty=y; rp.tdir=dir;
+          currentUserUid=null; currentUserName=null;
+          mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
         }
       });
 
-      updateMpUI();
-    });
+      db.collection("gamePlayers").onSnapshot((snapshot)=>{
+        remoteStates.clear();
 
-    function maybeSyncGamePlayer(){
-      if (!currentUserUid || !currentUserName) return;
-      const now = performance.now();
-      if (now - lastSyncTime < SYNC_INTERVAL) return;
-      lastSyncTime = now;
+        const nowMs=Date.now();
+        snapshot.forEach((docSnap)=>{
+          const uid=docSnap.id;
+          if (uid===currentUserUid) return;
 
-      db.collection("gamePlayers").doc(currentUserUid).set({
-        name: currentUserName,
-        x: player.x,
-        y: player.y,
-        dir: player.dir,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true }).catch(err=>console.error(err));
-    }
+          const data=docSnap.data()||{};
+          const updatedAt = data.updatedAt && data.updatedAt.toDate ? data.updatedAt.toDate().getTime() : 0;
+          if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS) return;
 
-    /* Render helpers */
-    function worldToScreen(wx,wy){
-      return { x:(wx-camera.x)*PPU + innerWidth/2, y:(wy-camera.y)*PPU + innerHeight/2 };
-    }
-    function visible(wx,wy){
-      const halfW=innerWidth/(2*PPU);
-      const halfH=innerHeight/(2*PPU);
-      return !(wx<camera.x-halfW-22 || wx>camera.x+halfW+22 || wy<camera.y-halfH-22 || wy>camera.y+halfH+22);
-    }
+          const name=data.name||"Гравець";
+          const x=data.x ?? 0;
+          const y=data.y ?? 0;
+          const dir=data.dir ?? 0;
 
-    function drawBackground(){
-      const night=1-light;
-      const sky=ctx.createLinearGradient(0,0,0,innerHeight);
-      sky.addColorStop(0, `rgba(${lerp(210,18,night)|0},${lerp(235,28,night)|0},${lerp(255,55,night)|0},1)`);
-      sky.addColorStop(1, `rgba(${lerp(235,10,night)|0},${lerp(245,18,night)|0},${lerp(255,40,night)|0},1)`);
-      ctx.fillStyle=sky;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
+          remoteStates.set(uid,{name,x,y,dir});
 
-      ctx.fillStyle=snowPattern;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
+          let rp=remotePlayers.get(uid);
+          if (!rp){
+            const h=hashUid(uid);
+            const color=(h%3===0) ? "green":"blue";
+            rp={ name, x:x, y:y, tx:x,ty:y, dir:dir, tdir:dir, color:color };
+            remotePlayers.set(uid,rp);
+          } else {
+            rp.name=name; rp.tx=x; rp.ty=y; rp.tdir=dir;
+          }
+        });
 
-      const vg=ctx.createRadialGradient(innerWidth/2, innerHeight/2, 120, innerWidth/2, innerHeight/2, Math.max(innerWidth,innerHeight)*0.85);
-      vg.addColorStop(0,"rgba(0,0,0,0)");
-      vg.addColorStop(1, `rgba(0,0,0,${0.12+0.28*night})`);
-      ctx.fillStyle=vg;
-      ctx.fillRect(0,0,innerWidth,innerHeight);
-    }
+        updateMpUI();
+      });
 
-    function drawSoftShadow(x,y,rx,ry,a=0.28){
-      ctx.save();
-      ctx.fillStyle=`rgba(0,0,0,${a})`;
-      ctx.beginPath();
-      ctx.ellipse(x,y,rx,ry,0,0,TAU);
-      ctx.fill();
-      ctx.restore();
-    }
+      function maybeSyncGamePlayer(){
+        if (!currentUserUid || !currentUserName) return;
+        const now = performance.now();
+        if (now - lastSyncTime < SYNC_INTERVAL) return;
+        lastSyncTime = now;
 
-    function drawAxe(x,y,ang,swing){
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.rotate(ang + swing);
-
-      ctx.lineCap="round";
-      ctx.strokeStyle="#7a4a26";
-      ctx.lineWidth=6;
-      ctx.beginPath(); ctx.moveTo(0,18); ctx.lineTo(0,-14); ctx.stroke();
-
-      const g=ctx.createLinearGradient(-2,-14, 14, -6);
-      g.addColorStop(0,"#d7dee7");
-      g.addColorStop(1,"#8e98a6");
-      ctx.fillStyle=g;
-      ctx.roundRect(-2,-16, 18, 12, 6);
-      ctx.fill();
-
-      ctx.fillStyle="rgba(255,255,255,0.18)";
-      ctx.roundRect(2,-14, 10, 4, 4);
-      ctx.fill();
-
-      ctx.restore();
-    }
-
-    function drawPlayerBall(p, time){
-      const s=worldToScreen(p.x,p.y);
-      const bob=Math.sin(time*6)*1.2;
-      drawSoftShadow(s.x, s.y+16, 18, 10, 0.30);
-
-      const g=ctx.createRadialGradient(s.x-6, s.y-10+bob, 6, s.x, s.y+bob, 22);
-      if (p.color==="green"){
-        g.addColorStop(0,"rgba(140,255,190,0.95)");
-        g.addColorStop(1,"rgba(20,140,80,0.75)");
-      } else {
-        g.addColorStop(0,"rgba(140,190,255,0.95)");
-        g.addColorStop(1,"rgba(30,90,210,0.75)");
-      }
-      ctx.fillStyle=g;
-      ctx.beginPath(); ctx.arc(s.x, s.y+bob, 14, 0, TAU); ctx.fill();
-
-      ctx.strokeStyle="rgba(255,255,255,0.18)";
-      ctx.lineWidth=2;
-      ctx.beginPath(); ctx.arc(s.x-3, s.y-4+bob, 10, 0.6, 4.2); ctx.stroke();
-
-      const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
-      const swing = -0.95*atk;
-
-      const axeX = s.x + Math.cos(p.dir)*20;
-      const axeY = s.y + Math.sin(p.dir)*12 + bob;
-      drawAxe(axeX, axeY, p.dir + Math.PI/2, swing);
-    }
-
-    function drawTree(t){
-      const s=worldToScreen(t.x,t.y);
-      const sc=t.scale;
-      const fallDur=0.82;
-      const k=t.falling ? clamp(t.fallT/fallDur,0,1) : 0;
-      const kk=easeOutQuint(k);
-      const ang=t.falling ? (kk*(Math.PI/2)*t.fallDir) : 0;
-
-      drawSoftShadow(s.x, s.y+18, 18*sc, 10*sc, 0.26);
-
-      if (!t.falling && t.stump){
-        ctx.fillStyle="#6b4222";
-        ctx.beginPath(); ctx.ellipse(s.x, s.y+10, 7*sc, 4*sc, 0, 0, TAU); ctx.fill();
+        db.collection("gamePlayers").doc(currentUserUid).set({
+          name: currentUserName,
+          x: player.x,
+          y: player.y,
+          dir: player.dir,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge:true }).catch(()=>{});
       }
 
-      ctx.save();
-      ctx.translate(s.x, s.y+10);
-      if (t.falling) ctx.translate(kk*18*t.fallDir, kk*3);
-      ctx.rotate(ang);
-      ctx.translate(0,-22*sc);
-
-      const trunkH=40*sc*t.trunk;
-      const tg=ctx.createLinearGradient(-6,0,6,0);
-      tg.addColorStop(0,"#5a351c");
-      tg.addColorStop(1,"#8a5a2f");
-      ctx.fillStyle=tg;
-      ctx.roundRect(-6*sc, 0, 12*sc, trunkH, 8*sc);
-      ctx.fill();
-
-      const greenBase = (t.kind===3) ? "#2c6f42" : "#347a4a";
-      const greenHi   = (t.kind===3) ? "#4fbf7a" : "#5fd28a";
-      const snowA=t.snowiness;
-
-      function drawLayer(y,w){
-        const g1=ctx.createLinearGradient(0,y,0,y+34*sc);
-        g1.addColorStop(0,greenHi);
-        g1.addColorStop(1,greenBase);
-        ctx.fillStyle=g1;
-        ctx.beginPath();
-        ctx.moveTo(0,y);
-        ctx.lineTo(w, y+34*sc);
-        ctx.lineTo(-w, y+34*sc);
-        ctx.closePath();
-        ctx.fill();
-
-        ctx.fillStyle=`rgba(245,250,255,${0.20+0.55*snowA})`;
-        ctx.beginPath();
-        ctx.moveTo(0,y+10*sc);
-        ctx.lineTo(w*0.65, y+26*sc);
-        ctx.lineTo(-w*0.65, y+26*sc);
-        ctx.closePath();
-        ctx.fill();
+      /* Render helpers */
+      function worldToScreen(wx,wy){
+        return { x:(wx-camera.x)*PPU + innerWidth/2, y:(wy-camera.y)*PPU + innerHeight/2 };
+      }
+      function visible(wx,wy){
+        const halfW=innerWidth/(2*PPU);
+        const halfH=innerHeight/(2*PPU);
+        return !(wx<camera.x-halfW-22 || wx>camera.x+halfW+22 || wy<camera.y-halfH-22 || wy>camera.y+halfH+22);
+      }
+      function drawSoftShadow(x,y,rx,ry,a){
+        ctx.save();
+        ctx.fillStyle="rgba(0,0,0,"+(a||0.28)+")";
+        ctx.beginPath(); ctx.ellipse(x,y,rx,ry,0,0,TAU); ctx.fill();
+        ctx.restore();
       }
 
-      const w1=34*sc*(t.kind===1?1.10:1.00);
-      const w2=26*sc*(t.kind===2?1.15:1.00);
-      const w3=18*sc*(t.kind===0?1.12:1.00);
+      function drawBackground(){
+        const night=1-light;
+        const sky=ctx.createLinearGradient(0,0,0,innerHeight);
+        sky.addColorStop(0, "rgba("+((210*(light)+18*(night))|0)+","+((235*(light)+28*(night))|0)+","+((255*(light)+55*(night))|0)+",1)");
+        sky.addColorStop(1, "rgba("+((235*(light)+10*(night))|0)+","+((245*(light)+18*(night))|0)+","+((255*(light)+40*(night))|0)+",1)");
+        ctx.fillStyle=sky;
+        ctx.fillRect(0,0,innerWidth,innerHeight);
 
-      drawLayer(-20*sc,w1);
-      drawLayer(-44*sc,w2);
-      drawLayer(-62*sc,w3);
+        ctx.fillStyle=snowPattern;
+        ctx.fillRect(0,0,innerWidth,innerHeight);
 
-      ctx.restore();
-    }
-
-    function drawButtons(time){
-      for (const b of buttons){
-        if (!visible(b.x,b.y)) continue;
-        const s=worldToScreen(b.x,b.y);
-        drawSoftShadow(s.x,s.y+14,16,10,0.26);
-        const pulse=1+Math.sin(time*5+b.phase)*0.10;
-
-        const glow=ctx.createRadialGradient(s.x,s.y,6,s.x,s.y,32);
-        glow.addColorStop(0,"rgba(80,255,160,0.70)");
-        glow.addColorStop(1,"rgba(80,255,160,0.00)");
-        ctx.fillStyle=glow;
-        ctx.beginPath(); ctx.arc(s.x,s.y,32*pulse,0,TAU); ctx.fill();
-
-        ctx.fillStyle="rgba(50,210,108,0.95)";
-        ctx.beginPath(); ctx.ellipse(s.x,s.y,14*pulse,10*pulse,0,0,TAU); ctx.fill();
-
-        ctx.font="900 14px Segoe UI, Arial";
-        ctx.textAlign="center"; ctx.textBaseline="middle";
-        ctx.fillStyle = (b.flash>0) ? "#ff4d4d" : "#ffffff";
-        ctx.fillText(String(b.cost), s.x, s.y-22);
-      }
-    }
-
-    function drawCampfire(time){
-      const s=worldToScreen(campfire.x,campfire.y);
-      drawSoftShadow(s.x,s.y+16,16,10,0.28);
-
-      ctx.fillStyle="#646c76";
-      for (let i=0;i<6;i++){
-        const a=i*(TAU/6);
-        ctx.beginPath();
-        ctx.arc(s.x+Math.cos(a)*18, s.y+Math.sin(a)*12, 5, 0, TAU);
-        ctx.fill();
-      }
-
-      const night=1-light;
-      const flick=1+Math.sin(time*10)*0.18;
-
-      const g=ctx.createRadialGradient(s.x, s.y-6, 6, s.x, s.y, 42);
-      g.addColorStop(0,"rgba(255,220,120,0.95)");
-      g.addColorStop(0.5,"rgba(255,120,60,0.85)");
-      g.addColorStop(1,"rgba(255,60,20,0.10)");
-      ctx.fillStyle=g;
-
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y-34*flick);
-      ctx.quadraticCurveTo(s.x+16, s.y-10, s.x, s.y+14);
-      ctx.quadraticCurveTo(s.x-16, s.y-10, s.x, s.y-34*flick);
-      ctx.fill();
-
-      const gg=ctx.createRadialGradient(s.x,s.y,16,s.x,s.y,140);
-      gg.addColorStop(0, `rgba(255,130,60,${0.22+0.26*night})`);
-      gg.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle=gg;
-      ctx.beginPath(); ctx.arc(s.x,s.y,140,0,TAU); ctx.fill();
-    }
-
-    /* Snowflakes */
-    let snowflakes=[];
-    function initSnow(count=160){
-      snowflakes=[];
-      for(let i=0;i<count;i++){
-        snowflakes.push({ x:Math.random()*innerWidth, y:Math.random()*innerHeight, r:1.2+Math.random()*2.0, speed:26+Math.random()*44, drift:-14+Math.random()*26, a:0.35+Math.random()*0.45 });
-      }
-    }
-
-    /* Main loop */
-    let last = performance.now();
-
-    function update(dt, time){
-      updateDayNight(dt);
-
-      if (isFrozen){
-        updateSnow(dt);
-        return;
-      }
-
-      let mx=0,my=0;
-      if (keys["KeyW"]||keys["ArrowUp"]) my-=1;
-      if (keys["KeyS"]||keys["ArrowDown"]) my+=1;
-      if (keys["KeyA"]||keys["ArrowLeft"]) mx-=1;
-      if (keys["KeyD"]||keys["ArrowRight"]) mx+=1;
-
-      if (Math.abs(touchMoveX)>0.05 || Math.abs(touchMoveY)>0.05){
-        mx += touchMoveX; my += touchMoveY;
-      }
-
-      const len=Math.hypot(mx,my);
-
-      if (!isCoarse && mouseAim){
-        const dx=mouseAim.x - innerWidth/2;
-        const dy=mouseAim.y - innerHeight/2;
-        if (Math.hypot(dx,dy)>6) player.dir = Math.atan2(dy,dx);
-      } else if (len>0.001){
-        player.dir = Math.atan2(my,mx);
-      }
-
-      const speed=7.8;
-      if (len>0.001){
-        const nx=clamp(player.x + (mx/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
-        if (!isBlocked(nx, player.y, player.r)) player.x=nx;
-
-        const ny=clamp(player.y + (my/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
-        if (!isBlocked(player.x, ny, player.r)) player.y=ny;
-      }
-
-      if (player.attackCooldown>0) player.attackCooldown -= dt;
-      if (player.attack>0){
-        player.attack += dt*3.2;
-        if (player.attack>=1) player.attack=0;
-      }
-
-      for (const t of trees){
-        if (t.falling && !t.removed){
-          t.fallT += dt;
-          if (t.fallT >= 0.90) t.removed = true;
-        }
-      }
-      trees = trees.filter(t=>!t.removed);
-
-      for (const b of buttons) if (b.flash>0) b.flash -= dt;
-
-      // Heat
-      const d=Math.sqrt(dist2(player.x,player.y,campfire.x,campfire.y));
-      const warmRadius=12, coolRate=0.025, warmRate=2.1;
-      if (d<warmRadius){
-        const factor=1-d/warmRadius;
-        heatValue += warmRate*factor*dt;
-      } else heatValue -= coolRate*dt;
-
-      heatValue = clamp(heatValue,0,heatMax);
-      updateHeat();
-
-      if (!isFrozen && heatValue<=0.01){
-        isFrozen=true;
-        freezeOverlay.style.opacity="1";
-        freezeText.style.opacity="1";
-      }
-
-      camera.x = lerp(camera.x, player.x, 0.12);
-      camera.y = lerp(camera.y, player.y, 0.12);
-
-      for (const rp of remotePlayers.values()){
-        rp.x = lerp(rp.x, rp.tx, 0.22);
-        rp.y = lerp(rp.y, rp.ty, 0.22);
-        let da=(rp.tdir - rp.dir);
-        while (da > Math.PI) da -= TAU;
-        while (da < -Math.PI) da += TAU;
-        rp.dir += da*0.22;
-      }
-
-      updateSnow(dt);
-      maybeSyncGamePlayer();
-    }
-
-    function render(time){
-      ctx.clearRect(0,0,innerWidth,innerHeight);
-      drawBackground();
-
-      // world (простий рендер: дерева/вогнище/кнопки/гравці)
-      for (const t of trees) if (visible(t.x,t.y)) drawTree(t);
-      drawCampfire(time);
-      drawButtons(time);
-
-      // remote players (у 2 кольорах)
-      for (const rp of remotePlayers.values()){
-        if (!visible(rp.x,rp.y)) continue;
-        drawPlayerBall({ x:rp.x, y:rp.y, dir:rp.dir, attack:0, color: rp.color==="green" ? "green" : "blue" }, time);
-      }
-
-      // local player
-      drawPlayerBall({ x:player.x, y:player.y, dir:player.dir, attack:player.attack, color:"blue" }, time);
-
-      const night=1-light;
-      if (night > 0.001){
-        ctx.fillStyle = `rgba(10,20,40,${0.06 + 0.46*night})`;
+        const vg=ctx.createRadialGradient(innerWidth/2, innerHeight/2, 120, innerWidth/2, innerHeight/2, Math.max(innerWidth,innerHeight)*0.85);
+        vg.addColorStop(0,"rgba(0,0,0,0)");
+        vg.addColorStop(1, "rgba(0,0,0,"+(0.12+0.28*(1-light))+")");
+        ctx.fillStyle=vg;
         ctx.fillRect(0,0,innerWidth,innerHeight);
       }
 
-      updateMinimap();
-    }
+      function drawAxe(x,y,ang,swing){
+        ctx.save();
+        ctx.translate(x,y);
+        ctx.rotate(ang + swing);
 
-    function loop(now){
-      const dt=Math.min(0.033, (now-last)/1000);
-      last=now;
-      const time=now/1000;
-      update(dt,time);
-      render(time);
+        ctx.lineCap="round";
+        ctx.strokeStyle="#7a4a26";
+        ctx.lineWidth=6;
+        ctx.beginPath(); ctx.moveTo(0,18); ctx.lineTo(0,-14); ctx.stroke();
+
+        const g=ctx.createLinearGradient(-2,-14, 14, -6);
+        g.addColorStop(0,"#d7dee7"); g.addColorStop(1,"#8e98a6");
+        ctx.fillStyle=g;
+        ctx.roundRect(-2,-16, 18, 12, 6); ctx.fill();
+
+        ctx.fillStyle="rgba(255,255,255,0.18)";
+        ctx.roundRect(2,-14, 10, 4, 4); ctx.fill();
+        ctx.restore();
+      }
+
+      function drawPlayerBall(p, time){
+        const s=worldToScreen(p.x,p.y);
+        const bob=Math.sin(time*6)*1.2;
+        drawSoftShadow(s.x, s.y+16, 18, 10, 0.30);
+
+        const g=ctx.createRadialGradient(s.x-6, s.y-10+bob, 6, s.x, s.y+bob, 22);
+        if (p.color==="green"){
+          g.addColorStop(0,"rgba(140,255,190,0.95)");
+          g.addColorStop(1,"rgba(20,140,80,0.75)");
+        } else {
+          g.addColorStop(0,"rgba(140,190,255,0.95)");
+          g.addColorStop(1,"rgba(30,90,210,0.75)");
+        }
+        ctx.fillStyle=g;
+        ctx.beginPath(); ctx.arc(s.x, s.y+bob, 14, 0, TAU); ctx.fill();
+
+        ctx.strokeStyle="rgba(255,255,255,0.18)";
+        ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(s.x-3, s.y-4+bob, 10, 0.6, 4.2); ctx.stroke();
+
+        const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
+        const swing = -0.95*atk;
+
+        const axeX = s.x + Math.cos(p.dir)*20;
+        const axeY = s.y + Math.sin(p.dir)*12 + bob;
+        drawAxe(axeX, axeY, p.dir + Math.PI/2, swing);
+      }
+
+      function drawTree(t){
+        const s=worldToScreen(t.x,t.y);
+        const sc=t.scale;
+        const fallDur=0.82;
+        const k=t.falling ? clamp(t.fallT/fallDur,0,1) : 0;
+        const kk=easeOutQuint(k);
+        const ang=t.falling ? (kk*(Math.PI/2)*t.fallDir) : 0;
+
+        drawSoftShadow(s.x, s.y+18, 18*sc, 10*sc, 0.26);
+
+        if (!t.falling && t.stump){
+          ctx.fillStyle="#6b4222";
+          ctx.beginPath(); ctx.ellipse(s.x, s.y+10, 7*sc, 4*sc, 0, 0, TAU); ctx.fill();
+        }
+
+        ctx.save();
+        ctx.translate(s.x, s.y+10);
+        if (t.falling) ctx.translate(kk*18*t.fallDir, kk*3);
+        ctx.rotate(ang);
+        ctx.translate(0,-22*sc);
+
+        const trunkH=40*sc*t.trunk;
+        const tg=ctx.createLinearGradient(-6,0,6,0);
+        tg.addColorStop(0,"#5a351c"); tg.addColorStop(1,"#8a5a2f");
+        ctx.fillStyle=tg;
+        ctx.roundRect(-6*sc, 0, 12*sc, trunkH, 8*sc);
+        ctx.fill();
+
+        const greenBase = (t.kind===3) ? "#2c6f42" : "#347a4a";
+        const greenHi   = (t.kind===3) ? "#4fbf7a" : "#5fd28a";
+        const snowA=t.snowiness;
+
+        function drawLayer(y,w){
+          const g1=ctx.createLinearGradient(0,y,0,y+34*sc);
+          g1.addColorStop(0,greenHi); g1.addColorStop(1,greenBase);
+          ctx.fillStyle=g1;
+          ctx.beginPath();
+          ctx.moveTo(0,y);
+          ctx.lineTo(w, y+34*sc);
+          ctx.lineTo(-w, y+34*sc);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.fillStyle="rgba(245,250,255,"+(0.20+0.55*snowA)+")";
+          ctx.beginPath();
+          ctx.moveTo(0,y+10*sc);
+          ctx.lineTo(w*0.65, y+26*sc);
+          ctx.lineTo(-w*0.65, y+26*sc);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        const w1=34*sc*(t.kind===1?1.10:1.00);
+        const w2=26*sc*(t.kind===2?1.15:1.00);
+        const w3=18*sc*(t.kind===0?1.12:1.00);
+
+        drawLayer(-20*sc,w1);
+        drawLayer(-44*sc,w2);
+        drawLayer(-62*sc,w3);
+
+        ctx.restore();
+      }
+
+      function drawButtons(time){
+        for (const b of buttons){
+          if (!visible(b.x,b.y)) continue;
+          const s=worldToScreen(b.x,b.y);
+          drawSoftShadow(s.x,s.y+14,16,10,0.26);
+          const pulse=1+Math.sin(time*5+b.phase)*0.10;
+
+          const glow=ctx.createRadialGradient(s.x,s.y,6,s.x,s.y,32);
+          glow.addColorStop(0,"rgba(80,255,160,0.70)");
+          glow.addColorStop(1,"rgba(80,255,160,0.00)");
+          ctx.fillStyle=glow;
+          ctx.beginPath(); ctx.arc(s.x,s.y,32*pulse,0,TAU); ctx.fill();
+
+          ctx.fillStyle="rgba(50,210,108,0.95)";
+          ctx.beginPath(); ctx.ellipse(s.x,s.y,14*pulse,10*pulse,0,0,TAU); ctx.fill();
+
+          ctx.font="900 14px Segoe UI, Arial";
+          ctx.textAlign="center"; ctx.textBaseline="middle";
+          ctx.fillStyle = (b.flash>0) ? "#ff4d4d" : "#ffffff";
+          ctx.fillText(String(b.cost), s.x, s.y-22);
+        }
+      }
+
+      function drawCampfire(time){
+        const s=worldToScreen(campfire.x,campfire.y);
+        drawSoftShadow(s.x,s.y+16,16,10,0.28);
+
+        ctx.fillStyle="#646c76";
+        for (let i=0;i<6;i++){
+          const a=i*(TAU/6);
+          ctx.beginPath();
+          ctx.arc(s.x+Math.cos(a)*18, s.y+Math.sin(a)*12, 5, 0, TAU);
+          ctx.fill();
+        }
+
+        const night=1-light;
+        const flick=1+Math.sin(time*10)*0.18;
+
+        const g=ctx.createRadialGradient(s.x, s.y-6, 6, s.x, s.y, 42);
+        g.addColorStop(0,"rgba(255,220,120,0.95)");
+        g.addColorStop(0.5,"rgba(255,120,60,0.85)");
+        g.addColorStop(1,"rgba(255,60,20,0.10)");
+        ctx.fillStyle=g;
+
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y-34*flick);
+        ctx.quadraticCurveTo(s.x+16, s.y-10, s.x, s.y+14);
+        ctx.quadraticCurveTo(s.x-16, s.y-10, s.x, s.y-34*flick);
+        ctx.fill();
+
+        const gg=ctx.createRadialGradient(s.x,s.y,16,s.x,s.y,140);
+        gg.addColorStop(0, "rgba(255,130,60,"+(0.22+0.26*night)+")");
+        gg.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle=gg;
+        ctx.beginPath(); ctx.arc(s.x,s.y,140,0,TAU); ctx.fill();
+      }
+
+      /* Snow (blue) */
+      let snowflakes=[];
+      function initSnow(count){
+        const n = count || 160;
+        snowflakes=[];
+        for(let i=0;i<n;i++){
+          snowflakes.push({
+            x:Math.random()*innerWidth,
+            y:Math.random()*innerHeight,
+            r:1.2+Math.random()*2.0,
+            speed:26+Math.random()*44,
+            drift:-14+Math.random()*26,
+            a:0.35+Math.random()*0.45
+          });
+        }
+      }
+      function updateSnow(dt){
+        fx.clearRect(0,0,innerWidth,innerHeight);
+        const night=1-light;
+        for (const f of snowflakes){
+          f.y += f.speed*dt;
+          f.x += f.drift*dt;
+          if (f.y > innerHeight+f.r){ f.y=-f.r; f.x=Math.random()*innerWidth; }
+          if (f.x < -20) f.x=innerWidth+20;
+          if (f.x > innerWidth+20) f.x=-20;
+
+          fx.beginPath();
+          fx.fillStyle = "rgba(170,220,255,"+((f.a)*(0.9-0.2*night))+")";
+          fx.shadowBlur=6;
+          fx.shadowColor="rgba(120,180,255,0.25)";
+          fx.arc(f.x,f.y,f.r,0,TAU);
+          fx.fill();
+        }
+        fx.shadowBlur=0;
+      }
+
+      /* Movement + loop */
+      const AXE_SPEED = 7.8;
+      let last = performance.now();
+
+      function update(dt, time){
+        updateDayNight(dt);
+
+        if (isFrozen){
+          updateSnow(dt);
+          return;
+        }
+
+        let mx=0,my=0;
+        if (keys["KeyW"]||keys["ArrowUp"]) my-=1;
+        if (keys["KeyS"]||keys["ArrowDown"]) my+=1;
+        if (keys["KeyA"]||keys["ArrowLeft"]) mx-=1;
+        if (keys["KeyD"]||keys["ArrowRight"]) mx+=1;
+
+        if (Math.abs(touchMoveX)>0.05 || Math.abs(touchMoveY)>0.05){
+          mx += touchMoveX; my += touchMoveY;
+        }
+
+        const len=Math.hypot(mx,my);
+
+        if (!isCoarse && mouseAim){
+          const dx=mouseAim.x - innerWidth/2;
+          const dy=mouseAim.y - innerHeight/2;
+          if (Math.hypot(dx,dy)>6) player.dir = Math.atan2(dy,dx);
+        } else if (len>0.001){
+          player.dir = Math.atan2(my,mx);
+        }
+
+        if (len>0.001){
+          const nx=clamp(player.x + (mx/Math.max(1,len))*AXE_SPEED*dt, -WORLD_HALF+1, WORLD_HALF-1);
+          if (!isBlocked(nx, player.y, player.r)) player.x=nx;
+
+          const ny=clamp(player.y + (my/Math.max(1,len))*AXE_SPEED*dt, -WORLD_HALF+1, WORLD_HALF-1);
+          if (!isBlocked(player.x, ny, player.r)) player.y=ny;
+        }
+
+        if (player.attackCooldown>0) player.attackCooldown -= dt;
+        if (player.attack>0){
+          player.attack += dt*3.2;
+          if (player.attack>=1) player.attack=0;
+        }
+
+        for (const t of trees){
+          if (t.falling && !t.removed){
+            t.fallT += dt;
+            if (t.fallT >= 0.90) t.removed = true;
+          }
+        }
+        trees = trees.filter(t=>!t.removed);
+
+        for (const b of buttons) if (b.flash>0) b.flash -= dt;
+
+        // Heat
+        const d=Math.sqrt(dist2(player.x,player.y,campfire.x,campfire.y));
+        const warmRadius=12, coolRate=0.025, warmRate=2.1;
+        if (d<warmRadius){
+          const factor=1-d/warmRadius;
+          heatValue += warmRate*factor*dt;
+        } else heatValue -= coolRate*dt;
+
+        heatValue = clamp(heatValue,0,heatMax);
+        updateHeat();
+
+        if (!isFrozen && heatValue<=0.01){
+          isFrozen=true;
+          freezeOverlay.style.opacity="1";
+          freezeText.style.opacity="1";
+        }
+
+        camera.x = lerp(camera.x, player.x, 0.12);
+        camera.y = lerp(camera.y, player.y, 0.12);
+
+        for (const rp of remotePlayers.values()){
+          rp.x = lerp(rp.x, rp.tx, 0.22);
+          rp.y = lerp(rp.y, rp.ty, 0.22);
+          let da=(rp.tdir - rp.dir);
+          while (da > Math.PI) da -= TAU;
+          while (da < -Math.PI) da += TAU;
+          rp.dir += da*0.22;
+        }
+
+        updateSnow(dt);
+        maybeSyncGamePlayer();
+      }
+
+      function render(time){
+        ctx.clearRect(0,0,innerWidth,innerHeight);
+        drawBackground();
+
+        for (const t of trees) if (visible(t.x,t.y)) drawTree(t);
+        drawCampfire(time);
+        drawButtons(time);
+
+        for (const rp of remotePlayers.values()){
+          if (!visible(rp.x,rp.y)) continue;
+          drawPlayerBall({ x:rp.x, y:rp.y, dir:rp.dir, attack:0, color:(rp.color==="green"?"green":"blue") }, time);
+        }
+
+        drawPlayerBall({ x:player.x, y:player.y, dir:player.dir, attack:player.attack, color:"blue" }, time);
+
+        const night=1-light;
+        if (night > 0.001){
+          ctx.fillStyle = "rgba(10,20,40,"+(0.06 + 0.46*night)+")";
+          ctx.fillRect(0,0,innerWidth,innerHeight);
+        }
+
+        updateMinimap();
+      }
+
+      function loop(now){
+        const dt=Math.min(0.033, (now-last)/1000);
+        last=now;
+        const time=now/1000;
+        update(dt,time);
+        render(time);
+        requestAnimationFrame(loop);
+      }
+
+      resize();
+      initSnow(isCoarse ? 140 : 170);
       requestAnimationFrame(loop);
+      window.addEventListener("resize", ()=>{ resize(); initSnow(snowflakes.length||160); });
+
+      // маленький “маячок” що точно стартували
+      ctx.fillStyle="#fff";
+      ctx.fillRect(10,10,6,6);
+
+    } catch(err){
+      showErr("BOOT ERROR:\n" + (err && err.stack ? err.stack : String(err)));
     }
-
-    /* Start */
-    resize();
-    initSnow(isCoarse ? 140 : 170);
-    requestAnimationFrame(loop);
-    window.addEventListener("resize", ()=>{ resize(); initSnow(snowflakes.length||160); });
-
   })();
   </script>
 </body>
