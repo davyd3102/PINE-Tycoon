@@ -707,7 +707,25 @@
       ctx.ellipse(x,y,r*1.1,r*0.7,0,0,Math.PI*2);
       ctx.fill();
     }
-    function pRect(ctx,x,y,w,h){ ctx.fillRect((x|0),(y|0),(w|0),(h|0)); }
+    function pDot(ctx, x, y, s=1){ ctx.fillRect((x|0),(y|0),(s|0),(s|0)); }
+
+function shadeColor(hex, amt){
+  // amt: -1..+1 (темніше/світліше)
+  const c = hex.replace("#","").trim();
+  const n = parseInt(c, 16);
+  let r = (n >> 16) & 255;
+  let g = (n >> 8) & 255;
+  let b = n & 255;
+  const k = amt >= 0 ? (1-amt) : (1+amt);
+  r = Math.round(amt >= 0 ? r + (255-r)*amt : r*k);
+  g = Math.round(amt >= 0 ? g + (255-g)*amt : g*k);
+  b = Math.round(amt >= 0 ? b + (255-b)*amt : b*k);
+  r = Math.max(0,Math.min(255,r));
+  g = Math.max(0,Math.min(255,g));
+  b = Math.max(0,Math.min(255,b));
+  return `rgb(${r},${g},${b})`;
+}
+
 
     function drawAxe(ctx,x,y, ang, swing){
       ctx.save();
@@ -767,87 +785,154 @@
       ctx.fillText(rp.name, pos.x, pos.y - 14);
     }
 
-    function drawTree(ctx, t){
-      const pos = worldToScreen(t.x,t.y);
+function drawTree(ctx, t){
+  const pos = worldToScreen(t.x,t.y);
 
-      // падіння дерева плавніше
-      const fallDur = 0.78;
-      const k = t.falling ? clamp(t.fallT/fallDur, 0, 1) : 0;
-      const kk = easeOutQuint(k);
-      const ang = t.falling ? (kk * (Math.PI/2) * t.fallDir) : 0;
+  // падіння дерева
+  const fallDur = 0.78;
+  const k = t.falling ? clamp(t.fallT/fallDur, 0, 1) : 0;
+  const kk = easeOutQuint(k);
+  const ang = t.falling ? (kk * (Math.PI/2) * t.fallDir) : 0;
 
-      const s = t.scale;
-      const trunkH = PPU*(0.95*t.trunk)*s;
+  const s = t.scale;
+  const trunkH = PPU*(1.05*t.trunk)*s;
 
-      drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.72*s);
+  drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.78*s);
 
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      if (t.falling){
-        ctx.translate(kk * PPU*0.65 * t.fallDir, kk * PPU*0.12);
-      }
-      ctx.translate(0, PPU*0.25*s);
-      ctx.rotate(ang);
-      ctx.translate(0, -PPU*0.25*s);
+  ctx.save();
+  ctx.translate(pos.x, pos.y);
 
-      ctx.fillStyle = "#6b4625";
-      pRect(ctx, -2*s, -trunkH*0.15, 4*s, trunkH);
+  if (t.falling){
+    ctx.translate(kk * PPU*0.75 * t.fallDir, kk * PPU*0.14);
+  }
+  ctx.translate(0, PPU*0.25*s);
+  ctx.rotate(ang);
+  ctx.translate(0, -PPU*0.25*s);
 
-      const snowA = t.snowiness;
-      const greenA = 1 - snowA;
+  // ===== ТРУНК (об’ємніший) =====
+  const trunkW = 4*s;
+  ctx.fillStyle = "#6b4625";
+  pRect(ctx, -trunkW/2, -trunkH*0.10, trunkW, trunkH);
 
-      // зелена хвоя + сніжні “підсвітки”
-      const base = `rgba(62,127,75,${0.95*greenA + 0.10})`;
-      const hi   = `rgba(95,178,108,${0.75*greenA + 0.10})`;
-      const snow1 = `rgba(233,241,255,${0.45*snowA})`;
-      const snow2 = `rgba(245,249,255,${0.65*snowA})`;
+  ctx.fillStyle = "rgba(255,255,255,0.10)";
+  pRect(ctx, -trunkW/2 + 1, -trunkH*0.10 + 2, Math.max(1, trunkW*0.35), trunkH-4);
 
-      function coneTri(topY, wY, wX){
-        ctx.fillStyle = base;
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(wX, wY);
-        ctx.lineTo(-wX, wY);
-        ctx.closePath(); ctx.fill();
+  ctx.fillStyle = "rgba(0,0,0,0.14)";
+  pRect(ctx, 0, -trunkH*0.10 + 1, Math.max(1, trunkW*0.40), trunkH-2);
 
-        ctx.fillStyle = hi;
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(0, wY);
-        ctx.lineTo(-wX, wY);
-        ctx.closePath(); ctx.fill();
+  // ===== ХВОЯ (пишніша + деталі) =====
+  const snowA = t.snowiness;         // 0..1
+  const greenA = 1 - snowA;
 
-        ctx.fillStyle = snow2;
-        ctx.beginPath();
-        ctx.moveTo(0, topY + PPU*0.12*s);
-        ctx.lineTo(wX*0.60, wY - PPU*0.10*s);
-        ctx.lineTo(-wX*0.60, wY - PPU*0.10*s);
-        ctx.closePath(); ctx.fill();
+  // базові відтінки (під твою палітру)
+  const baseHex = "#3e7f4b";
+  const hiHex   = "#5fb26c";
+  const deepHex = "#2f6a3b";
 
-        ctx.fillStyle = snow1;
-        ctx.beginPath();
-        ctx.moveTo(0, topY + PPU*0.32*s);
-        ctx.lineTo(wX*0.45, wY - PPU*0.30*s);
-        ctx.lineTo(-wX*0.45, wY - PPU*0.30*s);
-        ctx.closePath(); ctx.fill();
-      }
+  const base = `rgba(62,127,75,${0.92*greenA + 0.10})`;
+  const hi   = `rgba(95,178,108,${0.70*greenA + 0.10})`;
+  const deep = `rgba(47,106,59,${0.80*greenA + 0.10})`;
 
-      if (t.kind === 0){
-        coneTri(-PPU*1.65*s, -PPU*0.10*s, PPU*1.05*s);
-        coneTri(-PPU*1.25*s, -PPU*0.30*s, PPU*0.85*s);
-      } else if (t.kind === 1){
-        coneTri(-PPU*1.55*s, -PPU*0.25*s, PPU*1.20*s);
-        ctx.fillStyle = base;
-        ctx.beginPath(); ctx.arc(0, -PPU*0.75*s, PPU*0.70*s, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = snow1;
-        ctx.beginPath(); ctx.arc(0, -PPU*0.85*s, PPU*0.52*s, 0, Math.PI*2); ctx.fill();
-      } else {
-        coneTri(-PPU*1.80*s, -PPU*0.05*s, PPU*0.95*s);
-        coneTri(-PPU*1.10*s, -PPU*0.25*s, PPU*0.75*s);
-      }
+  const snow1 = `rgba(233,241,255,${0.38*snowA})`;
+  const snow2 = `rgba(245,249,255,${0.58*snowA})`;
 
-      ctx.restore();
+  // “шари” ялинки — дають відчуття густоти
+  // (чим більше шарів, тим пухкіше)
+  const layers = (t.kind === 1) ? 4 : 5;
+
+  // ширина/висота конуса
+  const topY = -PPU*(1.95*s);
+  const step = PPU*(0.42*s);
+
+  for (let i=0;i<layers;i++){
+    const y0 = topY + i*step*1.35;
+    const y1 = y0 + PPU*(0.78*s);
+    const wX = PPU*(0.62*s) + i*PPU*(0.36*s);
+
+    // база конуса
+    ctx.fillStyle = base;
+    ctx.beginPath();
+    ctx.moveTo(0, y0);
+    ctx.lineTo(wX, y1);
+    ctx.lineTo(-wX, y1);
+    ctx.closePath();
+    ctx.fill();
+
+    // тінь знизу (глибина)
+    ctx.fillStyle = deep;
+    ctx.beginPath();
+    ctx.moveTo(0, y0 + PPU*(0.12*s));
+    ctx.lineTo(wX*0.82, y1);
+    ctx.lineTo(-wX*0.20, y1);
+    ctx.closePath();
+    ctx.fill();
+
+    // світло зліва (об’єм)
+    ctx.fillStyle = hi;
+    ctx.beginPath();
+    ctx.moveTo(0, y0);
+    ctx.lineTo(0, y1);
+    ctx.lineTo(-wX, y1);
+    ctx.closePath();
+    ctx.fill();
+
+    // сніжні “шапки” зверху шару
+    if (snowA > 0.05){
+      ctx.fillStyle = snow2;
+      ctx.beginPath();
+      ctx.moveTo(0, y0 + PPU*(0.14*s));
+      ctx.lineTo(wX*0.60, y1 - PPU*(0.10*s));
+      ctx.lineTo(-wX*0.60, y1 - PPU*(0.10*s));
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = snow1;
+      ctx.beginPath();
+      ctx.moveTo(0, y0 + PPU*(0.32*s));
+      ctx.lineTo(wX*0.44, y1 - PPU*(0.30*s));
+      ctx.lineTo(-wX*0.44, y1 - PPU*(0.30*s));
+      ctx.closePath();
+      ctx.fill();
     }
+
+    // “голки” пікселями по краях (щоб не було пусто)
+    // робимо небагато, але видно густоту
+    const spikes = 7 + i*2;
+    for (let sI=0; sI<spikes; sI++){
+      const side = (Math.random()<0.5) ? -1 : 1;
+      const px = side*(wX - rand(1, PPU*0.18*s));
+      const py = lerp(y0+PPU*(0.18*s), y1-PPU*(0.10*s), Math.random());
+
+      ctx.fillStyle = (Math.random()<0.55) ? base : deep;
+      pDot(ctx, px, py, 1);
+
+      if (snowA > 0.35 && Math.random()<0.20){
+        ctx.fillStyle = snow1;
+        pDot(ctx, px + side*1, py-1, 1);
+      }
+    }
+  }
+
+  // Верхівка (маленька “зірочка/шишка” простим пікселем)
+  ctx.fillStyle = (snowA>0.55) ? "rgba(245,249,255,0.75)" : "rgba(95,178,108,0.85)";
+  pDot(ctx, 0, topY - PPU*(0.18*s), 2);
+
+  // Низ: “спідничка” (робить дерево ширшим і не пустим знизу)
+  ctx.fillStyle = `rgba(47,106,59,${0.72*greenA + 0.10})`;
+  ctx.beginPath();
+  ctx.ellipse(0, PPU*(0.10*s), PPU*(1.05*s), PPU*(0.55*s), 0, 0, Math.PI*2);
+  ctx.fill();
+
+  // трішки снігу на “спідничці”
+  if (snowA > 0.10){
+    ctx.fillStyle = `rgba(233,241,255,${0.30*snowA})`;
+    ctx.beginPath();
+    ctx.ellipse(-PPU*(0.18*s), PPU*(0.02*s), PPU*(0.62*s), PPU*(0.30*s), 0, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
 
     function drawLamp(ctx, l, time){
       const pos = worldToScreen(l.x,l.y);
