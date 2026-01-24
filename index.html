@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="uk">
   <head>
+    
     <meta charset="UTF-8" />
     <title>PINE Tycoon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Якщо є додатковий CSS -->
     <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png" type="image/png" />
 
     <style>
       /* --- ТЕМИ (світла/темна) через CSS-змінні --- */
@@ -19,6 +21,50 @@
         --button-text: rgb(56, 56, 55);
         --border-soft: #e1e1e1;
       }
+      /* Лого у верхній панелі */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 3px 12px rgba(0,0,0,0.18);
+}
+
+/* щоб хедер не ламався на малих екранах */
+<header class="fade-down">
+  <a href="index.html" class="brand" aria-label="PINE Tycoon Home">
+    <img
+      src="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
+      alt="PINE Tycoon Logo"
+      class="brand-logo"
+    />
+  </a>
+
+  <nav class="main-nav">
+    <a href="game.html" class="btn">Грати!</a>
+    <a href="#blog" class="btn">Блог</a>
+  </nav>
+
+  <div class="auth-buttons">
+    <a href="login.html" id="loginLink" class="btn">Sign in</a>
+    <a href="signup.html" id="signupLink" class="btn">Sign up</a>
+    <button id="logoutBtn" class="btn" style="display: none">Log out</button>
+  </div>
+</header>
+
 
       body.dark-theme {
         --bg-color: rgb(69, 61, 61);
