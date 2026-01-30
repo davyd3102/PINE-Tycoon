@@ -5,9 +5,8 @@
     <title>PINE Tycoon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Optional external CSS -->
+    <!-- Optional external CSS (safe to keep) -->
     <link rel="stylesheet" href="style.css" />
-
     <link
       rel="icon"
       href="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
@@ -15,547 +14,531 @@
     />
 
     <style>
-      /* ============ THEME VARIABLES ============ */
+      /* =========================
+         THEME TOKENS
+      ========================== */
       :root {
-        --bg-color: #f4f4f4;
-        --text-color: #0f0f10;
-        --muted-text: rgba(0, 0, 0, 0.65);
+        --bg: #f4f6f7;
+        --text: #0f172a;
+        --muted: rgba(15, 23, 42, 0.65);
+        --card: #ffffff;
+        --border: rgba(15, 23, 42, 0.12);
+        --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 
-        --card-bg: #ffffff;
-        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        --accent: #2ec27e;
+        --accent2: #3b82f6;
 
-        --header-bg: rgba(255, 255, 255, 0.7);
-        --footer-bg: #2c2b2b;
+        --btn-bg: #ffffff;
+        --btn-text: #0f172a;
+        --btn-border: rgba(15, 23, 42, 0.22);
 
-        --button-bg: #ffffff;
-        --button-text: rgb(56, 56, 55);
-        --border-soft: #e1e1e1;
-
-        --accent: #2f7df6;
-        --accent-2: #7b61ff;
-        --radius: 16px;
+        --header-bg: rgba(255, 255, 255, 0.72);
+        --glass: blur(10px);
       }
 
       body.dark-theme {
-        --bg-color: #1c1717;
-        --text-color: #ffffff;
-        --muted-text: rgba(255, 255, 255, 0.75);
+        --bg: #0b0f17;
+        --text: #e6edf7;
+        --muted: rgba(230, 237, 247, 0.68);
+        --card: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.14);
+        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 
-        --card-bg: #2a2323;
-        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        --btn-bg: rgba(255, 255, 255, 0.06);
+        --btn-text: #e6edf7;
+        --btn-border: rgba(255, 255, 255, 0.18);
 
-        --header-bg: rgba(35, 28, 28, 0.6);
-        --footer-bg: #120f0f;
-
-        --button-bg: transparent;
-        --button-text: #ffffff;
-        --border-soft: rgba(255, 255, 255, 0.18);
-
-        --accent: #66a3ff;
-        --accent-2: #b08cff;
+        --header-bg: rgba(10, 14, 22, 0.6);
       }
 
-      /* ============ BASE ============ */
       html,
       body {
         height: 100%;
         margin: 0;
-      }
-
-      html {
         scroll-behavior: smooth;
       }
 
       body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         display: flex;
         flex-direction: column;
-        background: radial-gradient(
-            1200px 700px at 15% 10%,
-            rgba(47, 125, 246, 0.12),
-            transparent 60%
-          ),
-          radial-gradient(
-            900px 600px at 85% 15%,
-            rgba(123, 97, 255, 0.12),
-            transparent 60%
-          ),
-          var(--bg-color);
-        color: var(--text-color);
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
+        overflow-x: hidden;
       }
 
-      main {
-        flex: 1;
-        padding: 20px;
+      /* =========================
+         BACKGROUND (non-winter)
+      ========================== */
+      .bg-blobs {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        z-index: -1;
+        overflow: hidden;
       }
 
-      footer {
-        text-align: center;
-        padding: 12px;
-        background: var(--footer-bg);
-        color: #fff;
-      }
-
-      .container {
-        max-width: 980px;
-        margin: 0 auto;
-      }
-
-      /* Accessibility */
-      .skip-link {
+      .blob {
         position: absolute;
-        left: 8px;
-        top: -60px;
-        background: var(--card-bg);
-        color: var(--text-color);
-        padding: 10px 12px;
-        border-radius: 10px;
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border-soft);
-        z-index: 9999;
-        transition: top 0.2s ease;
-      }
-      .skip-link:focus {
-        top: 8px;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        filter: blur(35px);
+        opacity: 0.28;
+        transform: translate3d(0, 0, 0);
+        animation: floaty 10s ease-in-out infinite;
       }
 
-      /* ============ ANIMATIONS ============ */
-      @keyframes fade-down {
-        0% {
-          opacity: 0;
-          transform: translateY(-16px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .blob.a {
+        left: -160px;
+        top: -140px;
+        background: radial-gradient(circle at 30% 30%, var(--accent), transparent 60%);
       }
-
-      @keyframes fade-up {
-        0% {
-          opacity: 0;
-          transform: translateY(16px);
-        }
-        100% {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .blob.b {
+        right: -180px;
+        top: 120px;
+        background: radial-gradient(circle at 30% 30%, var(--accent2), transparent 60%);
+        animation-duration: 12s;
       }
-
-      @keyframes fade-scale {
-        0% {
-          opacity: 0;
-          transform: scale(0.96);
-        }
-        100% {
-          opacity: 1;
-          transform: scale(1);
-        }
+      .blob.c {
+        left: 12%;
+        bottom: -220px;
+        background: radial-gradient(circle at 30% 30%, #f59e0b, transparent 60%);
+        animation-duration: 14s;
       }
 
       @keyframes floaty {
         0% {
-          transform: translateY(0);
+          transform: translate(0, 0) scale(1);
         }
         50% {
-          transform: translateY(-8px);
+          transform: translate(18px, -22px) scale(1.03);
         }
         100% {
-          transform: translateY(0);
+          transform: translate(0, 0) scale(1);
         }
       }
 
-      .fade-down {
-        opacity: 0;
-        animation: fade-down 0.55s ease-out forwards;
-      }
-      .fade-up {
-        opacity: 0;
-        animation: fade-up 0.65s ease-out forwards;
-      }
-      .fade-scale {
-        opacity: 0;
-        animation: fade-scale 0.55s ease-out forwards;
-      }
-      .delay-1 {
-        animation-delay: 0.12s;
-      }
-      .delay-2 {
-        animation-delay: 0.24s;
-      }
-      .delay-3 {
-        animation-delay: 0.36s;
+      /* =========================
+         LAYOUT
+      ========================== */
+      main {
+        flex: 1;
+        padding: 22px;
+        max-width: 1100px;
+        width: 100%;
+        margin: 0 auto;
       }
 
-      /* Scroll reveal */
-      .reveal {
-        opacity: 0;
-        transform: translateY(14px);
-        transition: opacity 0.6s ease, transform 0.6s ease;
-        will-change: opacity, transform;
-      }
-      .reveal.is-visible {
-        opacity: 1;
-        transform: translateY(0);
+      footer {
+        text-align: center;
+        padding: 14px;
+        color: rgba(255, 255, 255, 0.9);
+        background: linear-gradient(90deg, rgba(46, 194, 126, 0.9), rgba(59, 130, 246, 0.9));
       }
 
-      /* Reduced motion */
-      @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
-        }
-        * {
-          animation: none !important;
-          transition: none !important;
-        }
-        .reveal {
-          opacity: 1 !important;
-          transform: none !important;
-        }
-      }
-
-      /* ============ HEADER ============ */
-      header.site-header {
+      /* =========================
+         HEADER
+      ========================== */
+      header {
         position: sticky;
         top: 0;
-        z-index: 1200;
-        padding: 10px 16px;
-        background: var(--header-bg);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid var(--border-soft);
-      }
-
-      .header-inner {
+        z-index: 2000;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 12px;
+        padding: 10px 14px;
+        background: var(--header-bg);
+        backdrop-filter: var(--glass);
+        border-bottom: 1px solid var(--border);
       }
 
-      /* Brand */
       .brand {
         display: flex;
         align-items: center;
         gap: 10px;
         text-decoration: none;
-        color: var(--text-color);
-        min-width: 52px;
+        color: var(--text);
+        min-width: 160px;
       }
 
       .brand-logo {
         height: 42px;
-        width: auto;
-        display: block;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
-        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        width: 42px;
+        border-radius: 14px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+        transform: translateZ(0);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
       }
 
       .brand:hover .brand-logo {
         transform: scale(1.05);
-        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
       }
 
-      .main-nav {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-        justify-content: center;
+      .brand-title {
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        font-size: 14px;
+        line-height: 1.1;
+      }
+      .brand-sub {
+        font-size: 12px;
+        color: var(--muted);
       }
 
+      .main-nav,
       .auth-buttons {
         display: flex;
         align-items: center;
         gap: 8px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
       }
 
-      /* ============ BUTTONS ============ */
+      .burger {
+        display: none;
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid var(--btn-border);
+        background: var(--btn-bg);
+        color: var(--btn-text);
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mobile-panel {
+        display: none;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--border);
+        background: var(--header-bg);
+        backdrop-filter: var(--glass);
+      }
+
+      .mobile-panel.show {
+        display: block;
+      }
+
+      .mobile-panel .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 860px) {
+        .main-nav,
+        .auth-buttons {
+          display: none;
+        }
+        .burger {
+          display: inline-flex;
+        }
+        .brand {
+          min-width: auto;
+        }
+      }
+
+      /* =========================
+         BUTTONS + RIPPLE
+      ========================== */
       .btn {
+        position: relative;
+        overflow: hidden;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
-        padding: 7px 14px;
+
+        padding: 8px 14px;
         font-size: 14px;
         border-radius: 999px;
-        border: 1px solid var(--button-text);
-        background: var(--button-bg);
-        color: var(--button-text);
+        border: 1px solid var(--btn-border);
+        background: var(--btn-bg);
+        color: var(--btn-text);
         text-decoration: none;
         cursor: pointer;
-        transform: translateY(0) scale(1);
-        transition: transform 0.18s ease, box-shadow 0.18s ease,
-          background 0.18s ease, color 0.18s ease, border-color 0.18s ease,
-          filter 0.18s ease;
-        user-select: none;
+
+        transform: translateZ(0);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
       }
 
       .btn:hover {
-        transform: translateY(-1px) scale(1.06);
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
-        filter: brightness(1.02);
-      }
-
-      .btn:active {
-        transform: translateY(0px) scale(1.02);
-        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.14);
+        transform: translateY(-1px) scale(1.03);
+        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+        border-color: rgba(46, 194, 126, 0.55);
       }
 
       .btn.primary {
-        border-color: transparent;
-        background: linear-gradient(135deg, var(--accent), var(--accent-2));
-        color: #fff;
+        background: linear-gradient(90deg, rgba(46, 194, 126, 0.95), rgba(59, 130, 246, 0.95));
+        color: white;
+        border: none;
       }
 
-      /* ============ CARDS / PANELS ============ */
+      .btn.primary:hover {
+        box-shadow: 0 12px 22px rgba(46, 194, 126, 0.22);
+      }
+
+      .ripple {
+        position: absolute;
+        border-radius: 50%;
+        transform: scale(0);
+        animation: ripple 520ms ease-out;
+        background: rgba(255, 255, 255, 0.45);
+        pointer-events: none;
+      }
+
+      body.dark-theme .ripple {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      @keyframes ripple {
+        to {
+          transform: scale(2.8);
+          opacity: 0;
+        }
+      }
+
+      /* =========================
+         REVEAL ANIMATIONS
+      ========================== */
+      .reveal {
+        opacity: 0;
+        transform: translateY(14px);
+        transition: opacity 0.6s ease, transform 0.6s ease;
+      }
+      .reveal.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .fade-down {
+        opacity: 0;
+        transform: translateY(-12px);
+        animation: fadeDown 0.55s ease forwards;
+      }
+      @keyframes fadeDown {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* =========================
+         CARDS / SECTIONS
+      ========================== */
+      .grid {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 920px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-soft);
-        border-radius: var(--radius);
-        box-shadow: var(--card-shadow);
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 14px 16px;
       }
 
-      .lift {
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-      }
-      .lift:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14);
+      .hero {
+        padding: 16px;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: linear-gradient(
+          135deg,
+          rgba(46, 194, 126, 0.13),
+          rgba(59, 130, 246, 0.12)
+        );
       }
 
-      .welcome-text {
+      .hero h1 {
+        margin: 0 0 6px;
+        font-size: 28px;
+        letter-spacing: -0.4px;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .main-logo {
+        width: 100%;
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow);
+        display: block;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
         font-size: 18px;
-        margin: 10px 0 12px;
-        font-weight: 700;
         letter-spacing: 0.2px;
       }
 
+      .small-muted {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      /* =========================
+         USER PANEL
+      ========================== */
       .user-panel {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 14px;
-        margin-bottom: 18px;
-        max-width: 420px;
       }
 
       .user-avatar {
-        width: 48px;
-        height: 48px;
+        width: 54px;
+        height: 54px;
         border-radius: 50%;
         object-fit: cover;
-      }
-
-      .user-avatar-wrapper,
-      .friend-avatar-wrapper {
-        position: relative;
-        display: inline-block;
+        border: 1px solid var(--border);
       }
 
       .user-status-dot {
         position: absolute;
         right: -1px;
         bottom: -1px;
-        width: 10px;
-        height: 10px;
+        width: 11px;
+        height: 11px;
         border-radius: 50%;
-        background-color: #1bb31b;
-        border: 2px solid var(--card-bg);
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+        background-color: #22c55e;
+        border: 2px solid var(--card);
       }
 
-      /* ============ SEARCH + FRIENDS ============ */
-      #userSearchSection {
-        margin-bottom: 22px;
-        max-width: 700px;
-        padding: 14px 16px;
+      .avatar-wrap {
+        position: relative;
+        display: inline-block;
       }
 
-      #userSearchSection h2 {
-        margin: 0 0 10px;
-        font-size: 20px;
+      .user-name {
+        font-weight: 800;
       }
 
+      /* =========================
+         SEARCH + RESULTS
+      ========================== */
       .user-search-box {
         display: flex;
         gap: 8px;
-        margin-bottom: 10px;
-        flex-wrap: wrap;
       }
 
       .user-search-box input {
         flex: 1;
-        min-width: 220px;
-        padding: 8px 12px;
+        padding: 9px 12px;
         border-radius: 999px;
-        border: 1px solid var(--border-soft);
-        font-size: 14px;
-        background: #fff;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
         color: #000;
         outline: none;
-        transition: transform 0.15s ease, box-shadow 0.15s ease,
-          border-color 0.15s ease;
-      }
-
-      .user-search-box input:focus {
-        border-color: rgba(47, 125, 246, 0.8);
-        box-shadow: 0 0 0 4px rgba(47, 125, 246, 0.16);
-        transform: translateY(-1px);
       }
 
       body.dark-theme .user-search-box input {
-        background: #241e1e;
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
       }
 
       .user-search-results {
-        min-height: 20px;
+        margin-top: 10px;
+        min-height: 24px;
       }
 
       .user-result {
-        display: flex;
-        align-items: flex-start;
+        display: grid;
+        grid-template-columns: 46px 1fr auto;
+        align-items: start;
         gap: 10px;
-        padding: 10px 0;
-        border-bottom: 1px solid var(--border-soft);
+        padding: 10px 6px;
+        border-bottom: 1px solid var(--border);
       }
-
       .user-result:last-child {
         border-bottom: none;
       }
 
       .user-result-avatar {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
         object-fit: cover;
-      }
-
-      .user-result-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-        width: 100%;
+        border: 1px solid var(--border);
       }
 
       .user-result-name {
-        font-weight: 700;
-        font-size: 14px;
+        font-weight: 800;
+        cursor: pointer;
       }
 
       .user-result-status {
         font-size: 12px;
-        opacity: 0.9;
-      }
-
-      .user-result-status.online {
-        color: #26c026;
-      }
-
-      .user-result-status.offline {
-        color: #c2a62a;
+        color: var(--muted);
+        margin-top: 1px;
       }
 
       .user-result-last {
-        font-size: 11px;
-        color: var(--muted-text);
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
       }
 
       .user-result-action {
-        margin-top: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
-      .user-result-note {
+      .note {
         font-size: 12px;
-        color: var(--muted-text);
+        color: var(--muted);
+        line-height: 1.2;
+        max-width: 220px;
+        text-align: right;
       }
 
-      #friendsBox,
-      #friendRequestsBox {
-        margin-top: 12px;
-        border-top: 1px solid var(--border-soft);
-        padding-top: 10px;
-      }
-
-      #friendsBox h3,
-      #friendRequestsBox h3 {
-        font-size: 16px;
-        margin: 6px 0 6px;
-      }
-
+      /* =========================
+         FRIENDS
+      ========================== */
       .friends-list .friend-item {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 6px 0;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+      }
+      .friends-list .friend-item:last-child {
+        border-bottom: none;
       }
 
       .friend-avatar {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         object-fit: cover;
+        border: 1px solid var(--border);
       }
 
       .friend-name {
-        font-size: 14px;
-        font-weight: 600;
+        font-weight: 650;
       }
 
-      .friend-requests-title {
-        font-size: 13px;
-        font-weight: 800;
-        margin-top: 6px;
-        margin-bottom: 4px;
-      }
-
-      .friend-requests-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 10px;
-        padding: 6px 0;
-        flex-wrap: wrap;
-      }
-
-      .friend-requests-text {
-        font-size: 14px;
-      }
-
-      .friend-requests-actions {
-        display: flex;
-        gap: 6px;
-        flex-shrink: 0;
-      }
-
-      /* ============ COMMENTS ============ */
-      #commentsSection {
-        margin-top: 18px;
-        max-width: 700px;
-        padding: 14px 16px;
-      }
-
-      #commentsSection h2 {
-        margin: 0 0 10px;
-        font-size: 20px;
-      }
-
-      #commentsList {
-        margin-top: 8px;
-        margin-bottom: 10px;
-        max-height: 320px;
-        overflow-y: auto;
-        padding-right: 6px;
-      }
-
+      /* =========================
+         COMMENTS
+      ========================== */
       .comment {
         padding: 10px 0;
-        border-bottom: 1px solid var(--border-soft);
+        border-bottom: 1px solid var(--border);
       }
       .comment:last-child {
         border-bottom: none;
@@ -567,278 +550,479 @@
       }
 
       .comment-text {
-        font-size: 14px;
-        margin: 4px 0;
-        line-height: 1.35;
+        margin-top: 3px;
+        white-space: pre-wrap;
+        color: var(--text);
       }
 
       .comment-date {
-        font-size: 11px;
-        color: var(--muted-text);
-      }
-
-      .comment-empty {
-        font-size: 14px;
-        color: var(--muted-text);
+        margin-top: 4px;
+        font-size: 12px;
+        color: var(--muted);
       }
 
       #commentForm textarea {
         width: 100%;
         min-height: 70px;
         resize: vertical;
-        padding: 10px 10px;
-        font-size: 14px;
-        border-radius: 12px;
-        border: 1px solid var(--border-soft);
-        box-sizing: border-box;
-        background: #fff;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
         color: #000;
+        box-sizing: border-box;
         outline: none;
-        transition: box-shadow 0.15s ease, border-color 0.15s ease,
-          transform 0.15s ease;
-      }
-
-      #commentForm textarea:focus {
-        border-color: rgba(47, 125, 246, 0.8);
-        box-shadow: 0 0 0 4px rgba(47, 125, 246, 0.16);
-        transform: translateY(-1px);
-      }
-
-      body.dark-theme #commentForm textarea {
-        background: #241e1e;
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.18);
-      }
-
-      #commentForm button {
         margin-top: 8px;
       }
-
-      .comment-info {
-        font-size: 12px;
-        color: var(--muted-text);
-        margin-top: 6px;
+      body.dark-theme #commentForm textarea {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
       }
 
-      /* ============ GAME IMAGE ============ */
-      .main-logo {
-        max-width: min(680px, 92%);
-        border-radius: 22px;
-        display: block;
-        margin: 18px 0;
-        box-shadow: var(--card-shadow);
-        border: 1px solid var(--border-soft);
-        animation: floaty 5.5s ease-in-out infinite;
-      }
-
-      /* ============ BLOG ============ */
-      h1#blog {
-        margin-top: 22px;
-        margin-bottom: 8px;
-        letter-spacing: 0.4px;
-      }
-
-      /* ============ THEME BUTTON ============ */
-      .theme-toggle {
+      /* =========================
+         THEME TOGGLE / TOP
+      ========================== */
+      .floating-actions {
         position: fixed;
         right: 16px;
         bottom: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 3000;
+      }
+
+      .fab {
         width: 46px;
         height: 46px;
         border-radius: 50%;
-        border: 1px solid var(--border-soft);
-        background: var(--card-bg);
-        color: var(--text-color);
+        border: 1px solid var(--btn-border);
+        background: var(--card);
+        color: var(--btn-text);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-        z-index: 1100;
-        font-size: 20px;
-        transition: transform 0.18s ease, box-shadow 0.18s ease,
-          filter 0.18s ease;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        font-size: 18px;
       }
 
-      .theme-toggle:hover {
-        transform: scale(1.1) rotate(6deg);
-        box-shadow: 0 16px 34px rgba(0, 0, 0, 0.28);
-        filter: brightness(1.03);
+      .fab:hover {
+        transform: translateY(-1px) scale(1.05);
+        box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
       }
 
-      /* Override old style.css nav positioning if needed */
-      nav a {
-        position: static;
-        left: auto;
+      /* =========================
+         MODALS (PROFILE)
+      ========================== */
+      .modal {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 5000;
+      }
+      .modal.show {
+        display: block;
       }
 
-      /* ============ ADMIN ============ */
-      #adminSection {
-        max-width: 700px;
+      .modal-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        backdrop-filter: blur(4px);
+      }
+
+      .modal-card {
+        position: relative;
+        max-width: 560px;
+        width: calc(100% - 24px);
+        margin: 78px auto 20px;
         padding: 14px 16px;
-        margin-bottom: 18px;
       }
 
-      #adminSection h2 {
-        margin: 0 0 8px;
+      .modal-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
       }
 
-      #adminDeleteName {
+      .profile-header {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .profile-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1px solid var(--border);
+      }
+
+      .profile-name {
+        font-weight: 900;
+        font-size: 18px;
+        margin-bottom: 2px;
+      }
+
+      .profile-status {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .profile-bio {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.35;
+        white-space: pre-wrap;
+      }
+
+      .avatar-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+        margin-top: 10px;
+      }
+
+      .avatar-option {
+        border: 2px solid transparent;
+        border-radius: 14px;
+        padding: 4px;
+        cursor: pointer;
+        transition: transform 0.15s ease, border-color 0.15s ease;
+      }
+
+      .avatar-option:hover {
+        transform: translateY(-1px) scale(1.03);
+      }
+
+      .avatar-option.selected {
+        border-color: rgba(46, 194, 126, 0.9);
+      }
+
+      .avatar-option img {
         width: 100%;
-        max-width: 340px;
-        padding: 9px 10px;
+        aspect-ratio: 1 / 1;
         border-radius: 12px;
-        border: 1px solid var(--border-soft);
-        margin: 6px 0 10px;
-        box-sizing: border-box;
-        outline: none;
+        object-fit: cover;
+        display: block;
+        border: 1px solid var(--border);
       }
 
-      body.dark-theme #adminDeleteName {
-        background: #241e1e;
-        color: #fff;
-        border-color: rgba(255, 255, 255, 0.18);
+      .profile-edit-row {
+        margin-top: 12px;
+      }
+
+      .profile-edit-row textarea {
+        width: 100%;
+        min-height: 88px;
+        resize: vertical;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.9);
+        color: #000;
+        outline: none;
+        box-sizing: border-box;
+      }
+
+      body.dark-theme .profile-edit-row textarea {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+      }
+
+      .profile-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 10px;
       }
     </style>
   </head>
 
   <body>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <!-- background blobs -->
+    <div class="bg-blobs" aria-hidden="true">
+      <div class="blob a"></div>
+      <div class="blob b"></div>
+      <div class="blob c"></div>
+    </div>
 
-    <!-- Header -->
-    <header class="site-header fade-down">
-      <div class="header-inner container">
-        <a href="index.html" class="brand" aria-label="PINE Tycoon Home">
-          <img
-            src="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
-            alt="PINE Tycoon Logo"
-            class="brand-logo"
-          />
-        </a>
-
-        <nav class="main-nav" aria-label="Main navigation">
-          <a href="game.html" class="btn primary">Play</a>
-          <a href="#blog" class="btn">Blog</a>
-        </nav>
-
-        <div class="auth-buttons" aria-label="Account actions">
-          <a href="login.html" id="loginLink" class="btn">Sign in</a>
-          <a href="signup.html" id="signupLink" class="btn">Sign up</a>
-          <button id="logoutBtn" class="btn" style="display: none">Log out</button>
+    <!-- header -->
+    <header class="fade-down">
+      <a href="index.html" class="brand" aria-label="PINE Tycoon Home">
+        <img
+          src="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
+          alt="PINE Tycoon Logo"
+          class="brand-logo"
+        />
+        <div>
+          <div class="brand-title">PINE Tycoon</div>
+          <div class="brand-sub">Official website</div>
         </div>
+      </a>
+
+      <nav class="main-nav">
+        <a href="game.html" class="btn primary">Play</a>
+        <a href="#blog" class="btn">Blog</a>
+        <a href="#community" class="btn">Community</a>
+      </nav>
+
+      <div class="auth-buttons">
+        <a href="login.html" id="loginLink" class="btn">Sign in</a>
+        <a href="signup.html" id="signupLink" class="btn">Sign up</a>
+        <button id="logoutBtn" class="btn" style="display: none">Log out</button>
       </div>
+
+      <button class="burger" id="burgerBtn" type="button" aria-label="Open menu">☰</button>
     </header>
 
-    <main id="main" class="container">
-      <p class="welcome-text fade-up delay-1" id="welcomeText">Welcome, Guest</p>
+    <!-- mobile nav -->
+    <div class="mobile-panel" id="mobilePanel">
+      <div class="row" style="margin-bottom:10px;">
+        <a href="game.html" class="btn primary">Play</a>
+        <a href="#blog" class="btn">Blog</a>
+        <a href="#community" class="btn">Community</a>
+      </div>
+      <div class="row">
+        <a href="login.html" id="loginLinkMobile" class="btn">Sign in</a>
+        <a href="signup.html" id="signupLinkMobile" class="btn">Sign up</a>
+        <button id="logoutBtnMobile" class="btn" style="display:none;">Log out</button>
+      </div>
+    </div>
 
-      <div class="user-panel card lift fade-scale delay-1 reveal">
-        <div class="user-avatar-wrapper">
+    <main>
+      <!-- HERO + USER SIDE -->
+      <div class="grid">
+        <section class="hero reveal">
+          <h1 id="welcomeText">Welcome, Guest</h1>
+          <p>
+            Build your cozy village, chop wood, upgrade your tools and become the best
+            lumber tycoon.
+          </p>
+
+          <div style="height: 14px"></div>
+
+          <div class="card reveal" style="padding: 14px;">
+            <div class="user-panel">
+              <div class="avatar-wrap">
+                <img
+                  src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png"
+                  alt="Avatar"
+                  class="user-avatar"
+                />
+                <div class="user-status-dot" id="myOnlineDot" style="display:none;"></div>
+              </div>
+
+              <div style="flex:1;">
+                <div class="small-muted">Account</div>
+                <div class="user-name" id="userNameDisplay">Guest</div>
+                <div class="small-muted" id="myBioLine" style="margin-top:4px; display:none;"></div>
+              </div>
+
+              <button id="editProfileBtn" class="btn" type="button" style="display:none;">
+                Edit profile
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="reveal">
           <img
-            src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png"
-            alt="Avatar"
-            class="user-avatar"
+            src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
+            alt="PINE Tycoon"
+            class="main-logo"
           />
-        </div>
-        <div>
-          <div><strong>Account:</strong></div>
-          <div id="userNameDisplay">Guest</div>
-        </div>
+          <div style="height: 10px"></div>
+          <div class="card">
+            <div class="section-title">Quick info</div>
+            <div class="small-muted">
+              Tip: Click any player in Search or Friends to open a mini profile
+              (avatar + bio + status).
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <!-- ADMIN PANEL (only for davyd3102) -->
-      <section id="adminSection" class="card lift reveal" style="display: none">
-        <h2>Admin panel</h2>
-        <p class="comment-info">
-          This panel is available only for <strong>davyd3102</strong>. You can delete a user
-          and all of their comments.
+      <div style="height: 18px"></div>
+
+      <!-- ADMIN (only davyd3102) -->
+      <section id="adminSection" class="card reveal" style="display:none;">
+        <div class="section-title">Admin panel</div>
+        <p class="small-muted" style="margin-top:6px;">
+          Only <strong>davyd3102</strong> can use this panel.
+          It deletes a user document and all comments by that username.
         </p>
-        <label for="adminDeleteName">Username to delete:</label>
-        <input type="text" id="adminDeleteName" placeholder="Example: Grivield" />
-        <button id="adminDeleteBtn" class="btn">Delete user</button>
-        <p id="adminDeleteStatus" class="comment-info"></p>
+
+        <label class="small-muted" for="adminDeleteName">Username to delete</label>
+        <input
+          id="adminDeleteName"
+          type="text"
+          placeholder="Example: Grivield"
+          style="
+            width: 100%;
+            max-width: 320px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.9);
+            box-sizing: border-box;
+            outline: none;
+            margin-top: 6px;
+          "
+        />
+        <div style="height: 8px"></div>
+        <button id="adminDeleteBtn" class="btn" type="button">Delete user</button>
+        <div id="adminDeleteStatus" class="small-muted" style="margin-top:8px;"></div>
       </section>
 
-      <!-- SEARCH + FRIENDS -->
-      <section id="userSearchSection" class="card lift reveal">
-        <h2>Player search</h2>
-        <div class="user-search-box">
-          <input type="text" id="userSearchInput" placeholder="Type a username..." />
-          <button id="userSearchBtn" class="btn">Search</button>
-        </div>
+      <div style="height: 18px"></div>
 
-        <div id="userSearchResults" class="user-search-results">
-          <p class="comment-empty">Type a username to search.</p>
-        </div>
+      <!-- COMMUNITY -->
+      <section id="community" class="card reveal">
+        <div class="section-title">Community</div>
 
-        <div id="friendsBox">
-          <h3>Your friends</h3>
-          <div id="friendsList" class="friends-list">
-            <p class="comment-empty">Sign in to see your friends.</p>
+        <!-- SEARCH -->
+        <div class="card" style="margin-top:10px;">
+          <div class="section-title" style="font-size:16px;">Player search</div>
+
+          <div class="user-search-box">
+            <input type="text" id="userSearchInput" placeholder="Type a username..." />
+            <button id="userSearchBtn" class="btn" type="button">Search</button>
+          </div>
+
+          <div id="userSearchResults" class="user-search-results">
+            <div class="small-muted">Type a username to search players.</div>
           </div>
         </div>
 
-        <div id="friendRequestsBox">
-          <h3>Friend requests</h3>
-          <div id="friendRequestsList">
-            <p class="comment-empty">No requests.</p>
+        <div style="height: 10px"></div>
+
+        <!-- FRIENDS -->
+        <div class="grid" style="grid-template-columns: 1fr 1fr;">
+          <div class="card">
+            <div class="section-title" style="font-size:16px;">Your friends</div>
+            <div id="friendsList" class="friends-list">
+              <div class="small-muted">Sign in to see friends.</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-title" style="font-size:16px;">Friend requests</div>
+            <div id="friendRequestsList">
+              <div class="small-muted">No requests.</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Game image -->
-      <img
-        src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
-        alt="PINE Tycoon"
-        class="main-logo reveal"
-      />
+      <div style="height: 18px"></div>
 
-      <p class="reveal">
-        Welcome to the cozy world of <strong>PINE Tycoon</strong>. In this game you chop wood
-        and build your own little village!
-      </p>
-      <p class="reveal">
-        This version is still in beta, so there may be bugs and changes over time.
-      </p>
+      <!-- BLOG -->
+      <section id="blog" class="card reveal">
+        <div class="section-title">Blog</div>
 
-      <h1 id="blog" class="reveal">BLOG</h1>
-      <p class="reveal">Nothing here yet… but updates are coming soon.</p>
-      <p class="reveal">
-        Update: account system, friends, player search, and comments for the game authors were added.
-      </p>
+        <div class="card" style="margin-top:10px;">
+          <div style="font-weight:800;">Latest update</div>
+          <div class="small-muted" style="margin-top:6px;">
+            Accounts, friends, player search and comments are live. More updates coming soon.
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="font-weight:800;">Next plans</div>
+          <div class="small-muted" style="margin-top:6px;">
+            Better profile system, more UI polish, performance improvements and new gameplay features.
+          </div>
+        </div>
+      </section>
+
+      <div style="height: 18px"></div>
 
       <!-- COMMENTS -->
-      <section id="commentsSection" class="card lift reveal">
-        <h2>Comments</h2>
+      <section id="commentsSection" class="card reveal">
+        <div class="section-title">Developer comments</div>
+
         <div id="commentsList">
-          <p class="comment-empty">Loading comments...</p>
+          <div class="small-muted">Loading comments...</div>
         </div>
 
-        <form id="commentForm" style="display: none">
-          <textarea
-            id="commentText"
-            placeholder="Write an update or your thoughts..."
-          ></textarea>
+        <form id="commentForm" style="display:none;">
+          <textarea id="commentText" placeholder="Write an update or a thought..."></textarea>
+          <div style="height: 8px"></div>
           <button type="submit" class="btn primary">Post comment</button>
         </form>
 
-        <p id="commentInfo" class="comment-info">
-          Sign in as davyd3102 or 3102 to post comments.
-        </p>
+        <div id="commentInfo" class="small-muted" style="margin-top:10px;">
+          Sign in as <strong>davyd3102</strong> or <strong>3102</strong> to post comments.
+        </div>
       </section>
     </main>
 
-    <footer>© 2026 PINE Tycoon — beta version</footer>
+    <footer>© 2026 PINE Tycoon — beta</footer>
 
-    <!-- Theme button -->
-    <button id="themeToggle" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
-      🌙
-    </button>
+    <!-- floating buttons -->
+    <div class="floating-actions">
+      <button id="themeToggle" class="fab" title="Toggle theme" type="button">🌓</button>
+      <button id="toTopBtn" class="fab" title="Back to top" type="button">↑</button>
+    </div>
+
+    <!-- Profile view modal -->
+    <div id="profileModal" class="modal">
+      <div class="modal-overlay" data-close="1"></div>
+      <div class="modal-card card">
+        <button class="btn modal-close" id="profileCloseBtn" type="button">✕</button>
+
+        <div class="profile-header">
+          <img id="profileViewAvatar" class="profile-avatar" alt="Avatar" />
+          <div>
+            <div id="profileViewName" class="profile-name">Player</div>
+            <div id="profileViewStatus" class="profile-status">Offline</div>
+            <div id="profileViewLast" class="profile-status"></div>
+          </div>
+        </div>
+
+        <div id="profileViewBio" class="profile-bio">No bio yet.</div>
+      </div>
+    </div>
+
+    <!-- Profile edit modal -->
+    <div id="editProfileModal" class="modal">
+      <div class="modal-overlay" data-close="1"></div>
+      <div class="modal-card card">
+        <button class="btn modal-close" id="editProfileCloseBtn" type="button">✕</button>
+
+        <div class="section-title" style="margin-bottom:6px;">Edit profile</div>
+        <div class="small-muted">Choose an avatar and write a short bio (max 200 chars).</div>
+
+        <div id="avatarGrid" class="avatar-grid"></div>
+
+        <div class="profile-edit-row">
+          <textarea id="bioInput" maxlength="200" placeholder="Write something about your account..."></textarea>
+          <div class="small-muted" id="bioCount" style="margin-top:6px;">0/200</div>
+        </div>
+
+        <div class="profile-actions">
+          <button class="btn" id="cancelProfileBtn" type="button">Cancel</button>
+          <button class="btn primary" id="saveProfileBtn" type="button">Save</button>
+        </div>
+
+        <div id="saveProfileMsg" class="small-muted" style="margin-top:8px;"></div>
+      </div>
+    </div>
 
     <!-- Firebase + logic -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
       import {
         getFirestore,
         collection,
@@ -852,6 +1036,7 @@
         deleteDoc,
         getDocs,
         where,
+        getDoc,
       } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -868,13 +1053,20 @@
       const auth = getAuth(app);
       const db = getFirestore(app);
 
+      // ---------- UI refs ----------
       const welcomeText = document.getElementById("welcomeText");
       const userNameDisplay = document.getElementById("userNameDisplay");
       const avatarImg = document.querySelector(".user-avatar");
+      const myOnlineDot = document.getElementById("myOnlineDot");
+      const myBioLine = document.getElementById("myBioLine");
 
       const loginLink = document.getElementById("loginLink");
       const signupLink = document.getElementById("signupLink");
       const logoutBtn = document.getElementById("logoutBtn");
+
+      const loginLinkMobile = document.getElementById("loginLinkMobile");
+      const signupLinkMobile = document.getElementById("signupLinkMobile");
+      const logoutBtnMobile = document.getElementById("logoutBtnMobile");
 
       const commentsList = document.getElementById("commentsList");
       const commentForm = document.getElementById("commentForm");
@@ -882,6 +1074,10 @@
       const commentInfo = document.getElementById("commentInfo");
 
       const themeToggleBtn = document.getElementById("themeToggle");
+      const toTopBtn = document.getElementById("toTopBtn");
+
+      const burgerBtn = document.getElementById("burgerBtn");
+      const mobilePanel = document.getElementById("mobilePanel");
 
       const userSearchInput = document.getElementById("userSearchInput");
       const userSearchBtn = document.getElementById("userSearchBtn");
@@ -890,22 +1086,50 @@
       const friendsListDiv = document.getElementById("friendsList");
       const friendRequestsListDiv = document.getElementById("friendRequestsList");
 
-      // admin panel elements
+      // Admin panel
       const adminSection = document.getElementById("adminSection");
       const adminDeleteName = document.getElementById("adminDeleteName");
       const adminDeleteBtn = document.getElementById("adminDeleteBtn");
       const adminDeleteStatus = document.getElementById("adminDeleteStatus");
 
-      const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-      const DAVYD3102_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png";
-      const EXTRA_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png";
-      const GRIVIELD_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png";
+      // Profile modals
+      const profileModal = document.getElementById("profileModal");
+      const profileCloseBtn = document.getElementById("profileCloseBtn");
+      const profileViewAvatar = document.getElementById("profileViewAvatar");
+      const profileViewName = document.getElementById("profileViewName");
+      const profileViewStatus = document.getElementById("profileViewStatus");
+      const profileViewLast = document.getElementById("profileViewLast");
+      const profileViewBio = document.getElementById("profileViewBio");
+
+      const editProfileBtn = document.getElementById("editProfileBtn");
+      const editProfileModal = document.getElementById("editProfileModal");
+      const editProfileCloseBtn = document.getElementById("editProfileCloseBtn");
+      const avatarGrid = document.getElementById("avatarGrid");
+      const bioInput = document.getElementById("bioInput");
+      const bioCount = document.getElementById("bioCount");
+      const cancelProfileBtn = document.getElementById("cancelProfileBtn");
+      const saveProfileBtn = document.getElementById("saveProfileBtn");
+      const saveProfileMsg = document.getElementById("saveProfileMsg");
+
+      // ---------- data ----------
+      const DEFAULT_AVATAR =
+        "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+
+      const AVATAR_OPTIONS = [
+        DEFAULT_AVATAR,
+        "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
+      ];
 
       const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
-      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 min
 
       let currentUserName = null;
       let currentUserUid = null;
+      let currentUserAvatar = DEFAULT_AVATAR;
+      let currentUserBio = "";
 
       let usersCache = [];
       let friendsList = [];
@@ -921,17 +1145,7 @@
       const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
       const friendRequestsCol = collection(db, "friendRequests");
 
-      function getAvatarForName(name) {
-        const map = {
-          davyd3102: DAVYD3102_AVATAR,
-          "3102": EXTRA_AVATAR,
-          "Cool dave": EXTRA_AVATAR,
-          davyd: EXTRA_AVATAR,
-          Grivield: GRIVIELD_AVATAR,
-        };
-        return map[name] || DEFAULT_AVATAR;
-      }
-
+      // ---------- helpers ----------
       function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, (c) => {
           return (
@@ -946,28 +1160,178 @@
         });
       }
 
-      function updateCommentUI() {
-        if (!commentForm || !commentInfo) return;
+      function openModal(modalEl) {
+        if (!modalEl) return;
+        modalEl.classList.add("show");
+      }
+      function closeModal(modalEl) {
+        if (!modalEl) return;
+        modalEl.classList.remove("show");
+      }
 
-        if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
-          commentForm.style.display = "block";
-          commentInfo.textContent = "You can post comments as " + currentUserName + ".";
-        } else {
-          commentForm.style.display = "none";
-          if (currentUserName) {
-            commentInfo.textContent = "Only davyd3102 and 3102 can post comments.";
+      document.addEventListener("click", (e) => {
+        const overlay = e.target?.closest?.(".modal-overlay");
+        if (overlay && overlay.getAttribute("data-close") === "1") {
+          closeModal(profileModal);
+          closeModal(editProfileModal);
+        }
+      });
+
+      if (profileCloseBtn) profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
+      if (editProfileCloseBtn) editProfileCloseBtn.addEventListener("click", () => closeModal(editProfileModal));
+      if (cancelProfileBtn) cancelProfileBtn.addEventListener("click", () => closeModal(editProfileModal));
+
+      function computeOnlineStatus(userObj) {
+        const now = new Date();
+        const last = userObj?.lastActive?.toDate ? userObj.lastActive.toDate() : null;
+        const isOnline = !!(last && now - last < ONLINE_TIMEOUT_MS);
+        return { isOnline, last };
+      }
+
+      function getUserByUid(uid) {
+        return usersCache.find((u) => u.id === uid) || null;
+      }
+
+      function showUserMiniProfile(uid) {
+        const u = getUserByUid(uid);
+        if (!u) return;
+
+        const name = u.name || "Player";
+        const avatar = u.avatar || DEFAULT_AVATAR;
+        const bio = (u.bio || "").trim();
+
+        const { isOnline, last } = computeOnlineStatus(u);
+
+        profileViewAvatar.src = avatar;
+        profileViewName.textContent = name;
+        profileViewStatus.textContent = isOnline ? "Online" : "Offline";
+        profileViewLast.textContent = last ? ("Last active: " + last.toLocaleString("en-US")) : "";
+        profileViewBio.textContent = bio ? bio : "No bio yet.";
+
+        openModal(profileModal);
+      }
+
+      function buildAvatarGrid(selectedUrl) {
+        avatarGrid.innerHTML = "";
+        AVATAR_OPTIONS.forEach((url) => {
+          const wrap = document.createElement("div");
+          wrap.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
+
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "Avatar option";
+          wrap.appendChild(img);
+
+          wrap.addEventListener("click", () => {
+            [...avatarGrid.querySelectorAll(".avatar-option")].forEach((el) =>
+              el.classList.remove("selected")
+            );
+            wrap.classList.add("selected");
+            avatarGrid.dataset.selected = url;
+          });
+
+          avatarGrid.appendChild(wrap);
+        });
+
+        avatarGrid.dataset.selected = selectedUrl;
+      }
+
+      function openEditProfile() {
+        if (!currentUserUid) return;
+
+        saveProfileMsg.textContent = "";
+        bioInput.value = currentUserBio || "";
+        bioCount.textContent = `${bioInput.value.length}/200`;
+
+        buildAvatarGrid(currentUserAvatar || DEFAULT_AVATAR);
+        openModal(editProfileModal);
+      }
+
+      if (editProfileBtn) editProfileBtn.addEventListener("click", openEditProfile);
+
+      if (bioInput) {
+        bioInput.addEventListener("input", () => {
+          bioCount.textContent = `${bioInput.value.length}/200`;
+        });
+      }
+
+      async function loadMyProfile(uid, name) {
+        try {
+          const snap = await getDoc(doc(db, "users", uid));
+          const data = snap.exists() ? snap.data() : null;
+
+          currentUserAvatar = data?.avatar || DEFAULT_AVATAR;
+          currentUserBio = typeof data?.bio === "string" ? data.bio : "";
+
+          avatarImg.src = currentUserAvatar;
+
+          if (currentUserBio.trim()) {
+            myBioLine.style.display = "block";
+            myBioLine.textContent = currentUserBio.trim();
           } else {
-            commentInfo.textContent = "Sign in as davyd3102 or 3102 to post comments.";
+            myBioLine.style.display = "none";
+            myBioLine.textContent = "";
           }
+
+          // show online dot for yourself while logged in
+          myOnlineDot.style.display = "block";
+        } catch (e) {
+          console.error("Failed to load profile:", e);
+          currentUserAvatar = DEFAULT_AVATAR;
+          currentUserBio = "";
+          myBioLine.style.display = "none";
+          myOnlineDot.style.display = "block";
         }
       }
 
+      if (saveProfileBtn) {
+        saveProfileBtn.addEventListener("click", async () => {
+          if (!currentUserUid || !currentUserName) return;
+
+          const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
+          const bio = (bioInput.value || "").trim().slice(0, 200);
+
+          saveProfileMsg.textContent = "Saving...";
+
+          try {
+            await setDoc(
+              doc(db, "users", currentUserUid),
+              { avatar: selected, bio: bio },
+              { merge: true }
+            );
+
+            currentUserAvatar = selected;
+            currentUserBio = bio;
+
+            avatarImg.src = currentUserAvatar;
+
+            if (currentUserBio.trim()) {
+              myBioLine.style.display = "block";
+              myBioLine.textContent = currentUserBio.trim();
+            } else {
+              myBioLine.style.display = "none";
+              myBioLine.textContent = "";
+            }
+
+            saveProfileMsg.textContent = "Saved!";
+            setTimeout(() => closeModal(editProfileModal), 450);
+          } catch (err) {
+            console.error(err);
+            saveProfileMsg.textContent = "Error: " + (err.message || err);
+          }
+        });
+      }
+
+      // Presence: do NOT overwrite custom avatar with name mapping
       async function touchUserPresence(uid, name) {
         try {
-          const avatar = getAvatarForName(name);
           await setDoc(
             doc(db, "users", uid),
-            { name, avatar, lastActive: serverTimestamp() },
+            {
+              name: name,
+              avatar: currentUserAvatar || DEFAULT_AVATAR,
+              lastActive: serverTimestamp(),
+            },
             { merge: true }
           );
         } catch (err) {
@@ -980,7 +1344,9 @@
         if (presenceInterval) clearInterval(presenceInterval);
 
         touchUserPresence(uid, name);
-        presenceInterval = setInterval(() => touchUserPresence(uid, name), 60000);
+        presenceInterval = setInterval(() => {
+          touchUserPresence(uid, name);
+        }, 60000);
       }
 
       function stopPresenceUpdater() {
@@ -990,17 +1356,36 @@
         }
       }
 
+      function updateCommentUI() {
+        if (!commentForm || !commentInfo) return;
+
+        if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
+          commentForm.style.display = "block";
+          commentInfo.textContent = "You can post comments as " + currentUserName + ".";
+        } else {
+          commentForm.style.display = "none";
+          if (currentUserName) {
+            commentInfo.textContent = "Only davyd3102 and 3102 can post comments.";
+          } else {
+            commentInfo.innerHTML =
+              'Sign in as <strong>davyd3102</strong> or <strong>3102</strong> to post comments.';
+          }
+        }
+      }
+
       function renderFriends() {
         if (!friendsListDiv) return;
         friendsListDiv.innerHTML = "";
 
         if (!currentUserUid) {
-          friendsListDiv.innerHTML = '<p class="comment-empty">Sign in to see your friends.</p>';
+          friendsListDiv.innerHTML =
+            '<div class="small-muted">Sign in to see friends.</div>';
           return;
         }
 
         if (!friendsList.length) {
-          friendsListDiv.innerHTML = '<p class="comment-empty">No friends yet.</p>';
+          friendsListDiv.innerHTML =
+            '<div class="small-muted">No friends yet.</div>';
           return;
         }
 
@@ -1012,11 +1397,11 @@
 
           const avatar = document.createElement("img");
           avatar.className = "friend-avatar";
-          avatar.src = f.friendAvatar || getAvatarForName(f.friendName || "");
+          avatar.src = f.friendAvatar || DEFAULT_AVATAR;
 
-          const wrapper = document.createElement("div");
-          wrapper.className = "friend-avatar-wrapper";
-          wrapper.appendChild(avatar);
+          const wrap = document.createElement("div");
+          wrap.className = "avatar-wrap";
+          wrap.appendChild(avatar);
 
           let isOnline = false;
           const userData = usersCache.find((u) => u.id === f.friendUid);
@@ -1028,15 +1413,19 @@
           if (isOnline) {
             const dot = document.createElement("div");
             dot.className = "user-status-dot";
-            wrapper.appendChild(dot);
+            wrap.appendChild(dot);
           }
 
           const nameSpan = document.createElement("span");
           nameSpan.className = "friend-name";
-          nameSpan.textContent = f.friendName || "";
+          nameSpan.textContent = f.friendName || "Friend";
 
-          item.appendChild(wrapper);
+          item.appendChild(wrap);
           item.appendChild(nameSpan);
+
+          // click -> mini profile
+          item.addEventListener("click", () => showUserMiniProfile(f.friendUid));
+
           friendsListDiv.appendChild(item);
         });
       }
@@ -1046,34 +1435,44 @@
         friendRequestsListDiv.innerHTML = "";
 
         if (!currentUserUid) {
-          friendRequestsListDiv.innerHTML = '<p class="comment-empty">Sign in to see requests.</p>';
+          friendRequestsListDiv.innerHTML =
+            '<div class="small-muted">Sign in to view requests.</div>';
           return;
         }
 
         if (!friendRequestsIncoming.length && !friendRequestsOutgoing.length) {
-          friendRequestsListDiv.innerHTML = '<p class="comment-empty">No requests.</p>';
+          friendRequestsListDiv.innerHTML =
+            '<div class="small-muted">No requests.</div>';
           return;
         }
 
         if (friendRequestsIncoming.length) {
           const title = document.createElement("div");
-          title.className = "friend-requests-title";
+          title.className = "small-muted";
+          title.style.fontWeight = "800";
+          title.style.marginBottom = "6px";
           title.textContent = "Incoming:";
           friendRequestsListDiv.appendChild(title);
 
           friendRequestsIncoming.forEach((req) => {
             const row = document.createElement("div");
-            row.className = "friend-requests-row";
+            row.style.display = "flex";
+            row.style.justifyContent = "space-between";
+            row.style.alignItems = "center";
+            row.style.gap = "10px";
+            row.style.padding = "8px 0";
+            row.style.borderBottom = "1px solid var(--border)";
 
             const text = document.createElement("div");
-            text.className = "friend-requests-text";
-            text.textContent = `${req.fromName || "Player"} wants to add you as a friend`;
+            text.className = "small-muted";
+            text.innerHTML = `<strong>${escapeHtml(req.fromName || "Player")}</strong> wants to add you.`;
 
             const actions = document.createElement("div");
-            actions.className = "friend-requests-actions";
+            actions.style.display = "flex";
+            actions.style.gap = "8px";
 
             const acceptBtn = document.createElement("button");
-            acceptBtn.className = "btn";
+            acceptBtn.className = "btn primary";
             acceptBtn.textContent = "Accept";
             acceptBtn.addEventListener("click", () => handleAcceptRequest(req));
 
@@ -1093,19 +1492,18 @@
 
         if (friendRequestsOutgoing.length) {
           const title2 = document.createElement("div");
-          title2.className = "friend-requests-title";
+          title2.className = "small-muted";
+          title2.style.fontWeight = "800";
+          title2.style.marginTop = "10px";
+          title2.style.marginBottom = "6px";
           title2.textContent = "Sent:";
           friendRequestsListDiv.appendChild(title2);
 
           friendRequestsOutgoing.forEach((req) => {
             const row = document.createElement("div");
-            row.className = "friend-requests-row";
-
-            const text = document.createElement("div");
-            text.className = "friend-requests-text";
-            text.textContent = `Request to ${req.toName || "player"} (pending)`;
-
-            row.appendChild(text);
+            row.className = "small-muted";
+            row.style.padding = "6px 0";
+            row.textContent = `Request to ${req.toName || "player"} (pending)`;
             friendRequestsListDiv.appendChild(row);
           });
         }
@@ -1125,14 +1523,18 @@
         friendsUnsub = onSnapshot(
           friendsColRef,
           (snapshot) => {
-            friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+            friendsList = snapshot.docs.map((d) => ({
+              id: d.id,
+              ...d.data(),
+            }));
             renderFriends();
             const term = userSearchInput.value.trim();
             if (term) renderUserResults(term);
           },
           (error) => {
-            console.error("Friends loading error:", error);
-            friendsListDiv.innerHTML = '<p class="comment-empty">Failed to load friends.</p>';
+            console.error("Friends load error:", error);
+            friendsListDiv.innerHTML =
+              '<div class="small-muted">Failed to load friends.</div>';
           }
         );
       }
@@ -1165,7 +1567,9 @@
             const term = userSearchInput.value.trim();
             if (term) renderUserResults(term);
           },
-          (error) => console.error("friendRequests loading error:", error)
+          (error) => {
+            console.error("friendRequests load error:", error);
+          }
         );
       }
 
@@ -1173,31 +1577,38 @@
         if (!currentUserUid || !currentUserName) return;
         try {
           const fromUid = req.fromUid;
-          const fromName = req.fromName || "??";
+          const fromName = req.fromName || "Player";
           const myUid = currentUserUid;
           const myName = currentUserName;
 
           const myFriendRef = doc(db, "users", myUid, "friends", fromUid);
           const theirFriendRef = doc(db, "users", fromUid, "friends", myUid);
 
+          // try to use real avatars from cache if exist
+          const fromUser = getUserByUid(fromUid);
+          const myUser = getUserByUid(myUid);
+
+          const fromAvatar = fromUser?.avatar || DEFAULT_AVATAR;
+          const myAvatar = myUser?.avatar || currentUserAvatar || DEFAULT_AVATAR;
+
           await Promise.all([
             setDoc(myFriendRef, {
               friendUid: fromUid,
               friendName: fromName,
-              friendAvatar: getAvatarForName(fromName),
+              friendAvatar: fromAvatar,
               createdAt: serverTimestamp(),
             }),
             setDoc(theirFriendRef, {
               friendUid: myUid,
               friendName: myName,
-              friendAvatar: getAvatarForName(myName),
+              friendAvatar: myAvatar,
               createdAt: serverTimestamp(),
             }),
             deleteDoc(doc(db, "friendRequests", req.id)),
           ]);
         } catch (err) {
           console.error("Accept request error:", err);
-          alert("Failed to accept the request: " + err.message);
+          alert("Failed to accept: " + err.message);
         }
       }
 
@@ -1206,133 +1617,13 @@
           await deleteDoc(doc(db, "friendRequests", req.id));
         } catch (err) {
           console.error("Decline request error:", err);
-          alert("Failed to decline the request: " + err.message);
+          alert("Failed to decline: " + err.message);
         }
-      }
-
-      function renderUserResults(term) {
-        userSearchResults.innerHTML = "";
-
-        const trimmed = term.trim();
-        if (!trimmed) {
-          userSearchResults.innerHTML = '<p class="comment-empty">Type a username to search.</p>';
-          return;
-        }
-
-        const lower = trimmed.toLowerCase();
-        const filtered = usersCache.filter((u) => u.name && u.name.toLowerCase().includes(lower));
-
-        if (!filtered.length) {
-          userSearchResults.innerHTML = '<p class="comment-empty">No results found.</p>';
-          return;
-        }
-
-        const now = new Date();
-
-        filtered.forEach((u) => {
-          const name = u.name || "No name";
-          const avatarUrl = u.avatar || getAvatarForName(name);
-          const last = u.lastActive?.toDate ? u.lastActive.toDate() : null;
-
-          let status = "Offline";
-          let isOnline = false;
-          if (last && now - last < ONLINE_TIMEOUT_MS) {
-            status = "Online";
-            isOnline = true;
-          }
-
-          let relation = "none";
-          if (!currentUserUid) relation = "guest";
-          else if (u.id === currentUserUid) relation = "self";
-          else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
-          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
-          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
-
-          const item = document.createElement("div");
-          item.className = "user-result";
-
-          const avatarImg2 = document.createElement("img");
-          avatarImg2.className = "user-result-avatar";
-          avatarImg2.src = avatarUrl;
-
-          const avatarWrapper = document.createElement("div");
-          avatarWrapper.className = "user-avatar-wrapper";
-          avatarWrapper.appendChild(avatarImg2);
-
-          if (isOnline) {
-            const dot = document.createElement("div");
-            dot.className = "user-status-dot";
-            avatarWrapper.appendChild(dot);
-          }
-
-          const infoDiv = document.createElement("div");
-          infoDiv.className = "user-result-info";
-
-          const nameDiv = document.createElement("div");
-          nameDiv.className = "user-result-name";
-          nameDiv.textContent = name;
-
-          const statusDiv = document.createElement("div");
-          statusDiv.className = "user-result-status " + (status === "Online" ? "online" : "offline");
-          statusDiv.textContent = status;
-
-          infoDiv.appendChild(nameDiv);
-          infoDiv.appendChild(statusDiv);
-
-          if (last) {
-            const lastDiv = document.createElement("div");
-            lastDiv.className = "user-result-last";
-            lastDiv.textContent = "Last active: " + last.toLocaleString("en-US");
-            infoDiv.appendChild(lastDiv);
-          }
-
-          const actionDiv = document.createElement("div");
-          actionDiv.className = "user-result-action";
-
-          if (relation === "guest") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
-            note.textContent = "Sign in to add friends.";
-            actionDiv.appendChild(note);
-          } else if (relation === "self") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
-            note.textContent = "That’s you :)";
-            actionDiv.appendChild(note);
-          } else if (relation === "friend") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
-            note.textContent = "Already friends";
-            actionDiv.appendChild(note);
-          } else if (relation === "outgoing") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
-            note.textContent = "Request sent";
-            actionDiv.appendChild(note);
-          } else if (relation === "incoming") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
-            note.textContent = 'Incoming request (check "Friend requests").';
-            actionDiv.appendChild(note);
-          } else if (relation === "none") {
-            const btn = document.createElement("button");
-            btn.className = "btn";
-            btn.textContent = "Add friend";
-            btn.addEventListener("click", () => sendFriendRequest(u));
-            actionDiv.appendChild(btn);
-          }
-
-          infoDiv.appendChild(actionDiv);
-
-          item.appendChild(avatarWrapper);
-          item.appendChild(infoDiv);
-          userSearchResults.appendChild(item);
-        });
       }
 
       async function sendFriendRequest(targetUser) {
         if (!currentUserUid || !currentUserName) {
-          alert("Please sign in first to add friends.");
+          alert("Sign in first to add friends.");
           return;
         }
         if (!targetUser || !targetUser.id) return;
@@ -1355,17 +1646,155 @@
             fromUid: currentUserUid,
             fromName: currentUserName,
             toUid: targetUser.id,
-            toName,
+            toName: toName,
             status: "pending",
             createdAt: serverTimestamp(),
           });
         } catch (err) {
-          console.error("Send friend request error:", err);
+          console.error("Send request error:", err);
           alert("Failed to send request: " + err.message);
         }
       }
 
-      onAuthStateChanged(auth, (user) => {
+      function renderUserResults(term) {
+        userSearchResults.innerHTML = "";
+
+        const trimmed = term.trim();
+        if (!trimmed) {
+          userSearchResults.innerHTML =
+            '<div class="small-muted">Type a username to search players.</div>';
+          return;
+        }
+
+        const lower = trimmed.toLowerCase();
+        const filtered = usersCache.filter(
+          (u) => u.name && u.name.toLowerCase().includes(lower)
+        );
+
+        if (!filtered.length) {
+          userSearchResults.innerHTML =
+            '<div class="small-muted">No results.</div>';
+          return;
+        }
+
+        filtered.forEach((u) => {
+          const name = u.name || "Player";
+          const avatarUrl = u.avatar || DEFAULT_AVATAR;
+          const { isOnline, last } = computeOnlineStatus(u);
+
+          let relation = "none";
+          if (!currentUserUid) relation = "guest";
+          else if (u.id === currentUserUid) relation = "self";
+          else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
+          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
+          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
+
+          const item = document.createElement("div");
+          item.className = "user-result";
+
+          const avatarWrap = document.createElement("div");
+          avatarWrap.className = "avatar-wrap";
+          const avatarImg2 = document.createElement("img");
+          avatarImg2.className = "user-result-avatar";
+          avatarImg2.src = avatarUrl;
+          avatarWrap.appendChild(avatarImg2);
+
+          if (isOnline) {
+            const dot = document.createElement("div");
+            dot.className = "user-status-dot";
+            avatarWrap.appendChild(dot);
+          }
+
+          // avatar click -> open mini profile
+          avatarWrap.style.cursor = "pointer";
+          avatarWrap.addEventListener("click", () => showUserMiniProfile(u.id));
+
+          const infoDiv = document.createElement("div");
+
+          const nameDiv = document.createElement("div");
+          nameDiv.className = "user-result-name";
+          nameDiv.textContent = name;
+          nameDiv.addEventListener("click", () => showUserMiniProfile(u.id));
+
+          const statusDiv = document.createElement("div");
+          statusDiv.className = "user-result-status";
+          statusDiv.textContent = isOnline ? "Online" : "Offline";
+
+          infoDiv.appendChild(nameDiv);
+          infoDiv.appendChild(statusDiv);
+
+          if (last) {
+            const lastDiv = document.createElement("div");
+            lastDiv.className = "user-result-last";
+            lastDiv.textContent = "Last active: " + last.toLocaleString("en-US");
+            infoDiv.appendChild(lastDiv);
+          }
+
+          const actionDiv = document.createElement("div");
+          actionDiv.className = "user-result-action";
+
+          if (relation === "guest") {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "Sign in to add friends.";
+            actionDiv.appendChild(note);
+          } else if (relation === "self") {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "This is you 🙂";
+            actionDiv.appendChild(note);
+          } else if (relation === "friend") {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "Already friends";
+            actionDiv.appendChild(note);
+          } else if (relation === "outgoing") {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "Request sent";
+            actionDiv.appendChild(note);
+          } else if (relation === "incoming") {
+            const note = document.createElement("div");
+            note.className = "note";
+            note.textContent = "Incoming request (see Friend requests)";
+            actionDiv.appendChild(note);
+          } else {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.textContent = "Add friend";
+            btn.addEventListener("click", () => sendFriendRequest(u));
+            actionDiv.appendChild(btn);
+          }
+
+          item.appendChild(avatarWrap);
+          item.appendChild(infoDiv);
+          item.appendChild(actionDiv);
+          userSearchResults.appendChild(item);
+        });
+      }
+
+      // ---------- auth UI ----------
+      function setAuthButtons(isLoggedIn) {
+        if (isLoggedIn) {
+          loginLink.style.display = "none";
+          signupLink.style.display = "none";
+          logoutBtn.style.display = "inline-flex";
+
+          loginLinkMobile.style.display = "none";
+          signupLinkMobile.style.display = "none";
+          logoutBtnMobile.style.display = "inline-flex";
+        } else {
+          loginLink.style.display = "inline-flex";
+          signupLink.style.display = "inline-flex";
+          logoutBtn.style.display = "none";
+
+          loginLinkMobile.style.display = "inline-flex";
+          signupLinkMobile.style.display = "inline-flex";
+          logoutBtnMobile.style.display = "none";
+        }
+      }
+
+      onAuthStateChanged(auth, async (user) => {
         if (user && user.displayName) {
           const name = user.displayName;
           currentUserName = name;
@@ -1373,19 +1802,16 @@
 
           welcomeText.textContent = "Welcome, " + name;
           userNameDisplay.textContent = name;
-          avatarImg.src = getAvatarForName(name);
 
-          // FIX: hide sign in/up when logged in
-          loginLink.style.display = "none";
-          signupLink.style.display = "none";
-          logoutBtn.style.display = "inline-flex";
+          setAuthButtons(true);
 
-          // admin panel only for davyd3102
-          if (name === "davyd3102") {
-            if (adminSection) adminSection.style.display = "block";
-          } else {
-            if (adminSection) adminSection.style.display = "none";
-          }
+          // show admin panel only for davyd3102
+          if (adminSection) adminSection.style.display = (name === "davyd3102") ? "block" : "none";
+
+          // load profile (avatar + bio) and then start presence
+          await loadMyProfile(user.uid, name);
+
+          if (editProfileBtn) editProfileBtn.style.display = "inline-flex";
 
           startPresenceUpdater(user.uid, name);
           subscribeFriendsFor(user.uid);
@@ -1393,16 +1819,21 @@
         } else {
           currentUserName = null;
           currentUserUid = null;
+          currentUserAvatar = DEFAULT_AVATAR;
+          currentUserBio = "";
 
           welcomeText.textContent = "Welcome, Guest";
           userNameDisplay.textContent = "Guest";
           avatarImg.src = DEFAULT_AVATAR;
 
-          loginLink.style.display = "inline-flex";
-          signupLink.style.display = "inline-flex";
-          logoutBtn.style.display = "none";
+          myOnlineDot.style.display = "none";
+          myBioLine.style.display = "none";
+          myBioLine.textContent = "";
+
+          setAuthButtons(false);
 
           if (adminSection) adminSection.style.display = "none";
+          if (editProfileBtn) editProfileBtn.style.display = "none";
 
           stopPresenceUpdater();
           subscribeFriendsFor(null);
@@ -1412,35 +1843,44 @@
         updateCommentUI();
       });
 
-      logoutBtn.addEventListener("click", async () => {
+      async function doLogout() {
         try {
           await signOut(auth);
         } catch (err) {
           console.error(err);
           alert("Failed to log out: " + err.message);
         }
-      });
+      }
 
-      // Users (for search + online status)
+      logoutBtn.addEventListener("click", doLogout);
+      logoutBtnMobile.addEventListener("click", doLogout);
+
+      // ---------- users cache ----------
       onSnapshot(
         usersCol,
         (snapshot) => {
-          usersCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          usersCache = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data(),
+          }));
+
           const term = userSearchInput.value.trim();
           if (term) renderUserResults(term);
           renderFriends();
         },
-        (error) => console.error("Users loading error:", error)
+        (error) => {
+          console.error("Users load error:", error);
+        }
       );
 
-      // Comments
+      // ---------- comments ----------
       onSnapshot(
         commentsQ,
         (snapshot) => {
           commentsList.innerHTML = "";
 
           if (snapshot.empty) {
-            commentsList.innerHTML = '<p class="comment-empty">No comments yet.</p>';
+            commentsList.innerHTML = '<div class="small-muted">No comments yet.</div>';
             return;
           }
 
@@ -1450,22 +1890,22 @@
             const author = data.author || "??";
             const time = data.createdAt?.toDate ? data.createdAt.toDate() : null;
 
-            let timeStr = "";
-            if (time) timeStr = time.toLocaleString("en-US");
+            const timeStr = time ? time.toLocaleString("en-US") : "";
 
             const div = document.createElement("div");
             div.className = "comment";
             div.innerHTML = `
               <div class="comment-author">${escapeHtml(author)}</div>
               <div class="comment-text">${escapeHtml(text)}</div>
-              <div class="comment-date">${timeStr}</div>
+              <div class="comment-date">${escapeHtml(timeStr)}</div>
             `;
             commentsList.appendChild(div);
           });
         },
         (error) => {
           console.error(error);
-          commentsList.innerHTML = '<p class="comment-empty">Failed to load comments.</p>';
+          commentsList.innerHTML =
+            '<div class="small-muted">Failed to load comments.</div>';
         }
       );
 
@@ -1484,7 +1924,7 @@
           try {
             await addDoc(commentsCol, {
               author: currentUserName,
-              text,
+              text: text,
               createdAt: serverTimestamp(),
             });
             commentText.value = "";
@@ -1495,80 +1935,95 @@
         });
       }
 
-      if (userSearchBtn && userSearchInput) {
-        userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
-        userSearchInput.addEventListener("keydown", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            renderUserResults(userSearchInput.value);
-          }
-        });
-      }
+      // ---------- search handlers ----------
+      userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
+      userSearchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          renderUserResults(userSearchInput.value);
+        }
+      });
 
-      // Theme
-      function setThemeIcon() {
-        const isDark = document.body.classList.contains("dark-theme");
-        themeToggleBtn.textContent = isDark ? "☀️" : "🌙";
-        themeToggleBtn.title = isDark ? "Switch to light theme" : "Switch to dark theme";
-      }
-
+      // ---------- theme ----------
       function applyTheme(theme) {
         if (theme === "dark") document.body.classList.add("dark-theme");
         else document.body.classList.remove("dark-theme");
-        setThemeIcon();
       }
 
       const savedTheme = localStorage.getItem("pineTheme") || "light";
       applyTheme(savedTheme);
 
-      if (themeToggleBtn) {
-        themeToggleBtn.addEventListener("click", () => {
-          const isDark = document.body.classList.contains("dark-theme");
-          const newTheme = isDark ? "light" : "dark";
-          applyTheme(newTheme);
-          localStorage.setItem("pineTheme", newTheme);
-        });
-      }
+      themeToggleBtn.addEventListener("click", () => {
+        const isDark = document.body.classList.contains("dark-theme");
+        const newTheme = isDark ? "light" : "dark";
+        applyTheme(newTheme);
+        localStorage.setItem("pineTheme", newTheme);
+      });
 
-      // Scroll reveal (IntersectionObserver)
-      const revealEls = document.querySelectorAll(".reveal");
+      // ---------- to top ----------
+      toTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+
+      // ---------- burger ----------
+      burgerBtn.addEventListener("click", () => {
+        mobilePanel.classList.toggle("show");
+      });
+
+      // ---------- reveal on scroll ----------
       const io = new IntersectionObserver(
         (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("is-visible");
-              io.unobserve(entry.target);
-            }
+          entries.forEach((en) => {
+            if (en.isIntersecting) en.target.classList.add("show");
           });
         },
         { threshold: 0.12 }
       );
-      revealEls.forEach((el) => io.observe(el));
+      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 
-      // ---- ADMIN DELETE USER ----
+      // ---------- ripple for buttons ----------
+      document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".btn");
+        if (!btn) return;
+
+        const rect = btn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+        ripple.style.width = ripple.style.height = size + "px";
+        ripple.style.left = x + "px";
+        ripple.style.top = y + "px";
+        btn.appendChild(ripple);
+
+        ripple.addEventListener("animationend", () => ripple.remove());
+      });
+
+      // ---------- admin delete ----------
       if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
         adminDeleteBtn.addEventListener("click", async () => {
           const name = adminDeleteName.value.trim();
           adminDeleteStatus.textContent = "";
 
           if (!currentUserName || currentUserName !== "davyd3102") {
-            adminDeleteStatus.textContent = "Only davyd3102 can use this panel.";
+            adminDeleteStatus.textContent =
+              "Only davyd3102 can use this panel.";
             return;
           }
 
           if (!name) {
-            adminDeleteStatus.textContent = "Please type a username.";
+            adminDeleteStatus.textContent = "Type a username.";
             return;
           }
 
           adminDeleteStatus.textContent = `Searching users with name "${name}"...`;
 
           try {
-            // 1) delete users in users collection with matching name (from cache)
             const targets = usersCache.filter((u) => u.name === name);
 
             if (!targets.length) {
-              adminDeleteStatus.textContent = `No user with name "${name}" found in users collection.`;
+              adminDeleteStatus.textContent =
+                `User "${name}" not found in users collection. Deleting comments anyway...`;
             } else {
               let deletedUsers = 0;
               for (const u of targets) {
@@ -1576,12 +2031,10 @@
                 deletedUsers++;
               }
               adminDeleteStatus.textContent =
-                `Deleted users with name "${name}": ${deletedUsers}. Deleting related comments...`;
+                `Deleted users named "${name}": ${deletedUsers}. Deleting related comments...`;
             }
 
-            // 2) delete all comments by author name
-            const commentsRef = collection(db, "comments");
-            const qComm = query(commentsRef, where("author", "==", name));
+            const qComm = query(collection(db, "comments"), where("author", "==", name));
             const commSnap = await getDocs(qComm);
 
             let deletedComments = 0;
