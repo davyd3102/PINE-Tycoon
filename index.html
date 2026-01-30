@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <title>PINE Tycoon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Optional external CSS (safe to keep) -->
     <link rel="stylesheet" href="style.css" />
     <link
       rel="icon"
@@ -14,762 +13,553 @@
     />
 
     <style>
-      /* =========================
-         THEME TOKENS
-      ========================== */
+      /* --- ТЕМИ (світла/темна) через CSS-змінні --- */
       :root {
-        --bg: #f4f6f7;
-        --text: #0f172a;
-        --muted: rgba(15, 23, 42, 0.65);
-        --card: #ffffff;
-        --border: rgba(15, 23, 42, 0.12);
-        --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-
-        --accent: #2ec27e;
-        --accent2: #3b82f6;
-
-        --btn-bg: #ffffff;
-        --btn-text: #0f172a;
-        --btn-border: rgba(15, 23, 42, 0.22);
-
-        --header-bg: rgba(255, 255, 255, 0.72);
-        --glass: blur(10px);
+        --bg-color: #f4f4f4;
+        --text-color: #000000;
+        --card-bg: #ffffff;
+        --footer-bg: #383837;
+        --button-bg: #ffffff;
+        --button-text: rgb(56, 56, 55);
+        --border-soft: #e1e1e1;
       }
 
       body.dark-theme {
-        --bg: #0b0f17;
-        --text: #e6edf7;
-        --muted: rgba(230, 237, 247, 0.68);
-        --card: rgba(255, 255, 255, 0.06);
-        --border: rgba(255, 255, 255, 0.14);
-        --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-
-        --btn-bg: rgba(255, 255, 255, 0.06);
-        --btn-text: #e6edf7;
-        --btn-border: rgba(255, 255, 255, 0.18);
-
-        --header-bg: rgba(10, 14, 22, 0.6);
+        --bg-color: rgb(69, 61, 61);
+        --text-color: #ffffff;
+        --card-bg: #4f4747;
+        --footer-bg: #201c1c;
+        --button-bg: transparent;
+        --button-text: #ffffff;
+        --border-soft: rgba(255, 255, 255, 0.18);
       }
 
       html,
       body {
         height: 100%;
         margin: 0;
+      }
+
+      html {
         scroll-behavior: smooth;
       }
 
       body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
         display: flex;
         flex-direction: column;
-        overflow-x: hidden;
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
       }
 
-      /* =========================
-         BACKGROUND (non-winter)
-      ========================== */
-      .bg-blobs {
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        z-index: -1;
-        overflow: hidden;
+      header {
+        position: relative;
+        min-height: 56px;
+        padding: 8px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
       }
 
-      .blob {
-        position: absolute;
-        width: 420px;
-        height: 420px;
-        border-radius: 50%;
-        filter: blur(35px);
-        opacity: 0.28;
-        transform: translate3d(0, 0, 0);
-        animation: floaty 10s ease-in-out infinite;
-      }
-
-      .blob.a {
-        left: -160px;
-        top: -140px;
-        background: radial-gradient(circle at 30% 30%, var(--accent), transparent 60%);
-      }
-      .blob.b {
-        right: -180px;
-        top: 120px;
-        background: radial-gradient(circle at 30% 30%, var(--accent2), transparent 60%);
-        animation-duration: 12s;
-      }
-      .blob.c {
-        left: 12%;
-        bottom: -220px;
-        background: radial-gradient(circle at 30% 30%, #f59e0b, transparent 60%);
-        animation-duration: 14s;
-      }
-
-      @keyframes floaty {
-        0% {
-          transform: translate(0, 0) scale(1);
-        }
-        50% {
-          transform: translate(18px, -22px) scale(1.03);
-        }
-        100% {
-          transform: translate(0, 0) scale(1);
-        }
-      }
-
-      /* =========================
-         LAYOUT
-      ========================== */
       main {
         flex: 1;
-        padding: 22px;
-        max-width: 1100px;
-        width: 100%;
-        margin: 0 auto;
+        padding: 20px;
       }
 
       footer {
         text-align: center;
-        padding: 14px;
-        color: rgba(255, 255, 255, 0.9);
-        background: linear-gradient(90deg, rgba(46, 194, 126, 0.9), rgba(59, 130, 246, 0.9));
+        padding: 10px;
+        background: var(--footer-bg);
+        color: #fff;
       }
 
-      /* =========================
-         HEADER
-      ========================== */
-      header {
-        position: sticky;
-        top: 0;
-        z-index: 2000;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 10px 14px;
-        background: var(--header-bg);
-        backdrop-filter: var(--glass);
-        border-bottom: 1px solid var(--border);
+      /* --- Анімації входу на сайт --- */
+      @keyframes fade-down {
+        0% { opacity: 0; transform: translateY(-16px); }
+        100% { opacity: 1; transform: translateY(0); }
       }
 
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        text-decoration: none;
-        color: var(--text);
-        min-width: 160px;
+      @keyframes fade-up {
+        0% { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
       }
 
-      .brand-logo {
-        height: 42px;
-        width: 42px;
-        border-radius: 14px;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
-        transform: translateZ(0);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      @keyframes fade-scale {
+        0% { opacity: 0; transform: scale(0.95); }
+        100% { opacity: 1; transform: scale(1); }
       }
 
-      .brand:hover .brand-logo {
-        transform: scale(1.05);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-      }
+      .fade-down { opacity: 0; animation: fade-down 0.5s ease-out forwards; }
+      .fade-up { opacity: 0; animation: fade-up 0.6s ease-out forwards; }
+      .fade-scale { opacity: 0; animation: fade-scale 0.5s ease-out forwards; }
 
-      .brand-title {
-        font-weight: 800;
-        letter-spacing: 0.2px;
+      .delay-1 { animation-delay: 0.15s; }
+      .delay-2 { animation-delay: 0.3s; }
+      .delay-3 { animation-delay: 0.45s; }
+
+      /* --- КНОПКИ --- */
+      .btn {
+        display: inline-block;
+        padding: 6px 14px;
         font-size: 14px;
-        line-height: 1.1;
-      }
-      .brand-sub {
-        font-size: 12px;
-        color: var(--muted);
+        border-radius: 999px;
+        border: 1px solid var(--button-text);
+        background: var(--button-bg);
+        color: var(--button-text);
+        text-decoration: none;
+        cursor: pointer;
+        transform: scale(1);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
       }
 
-      .main-nav,
+      .btn:hover {
+        transform: scale(1.07);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+      }
+
+      .main-nav {
+        display: flex;
+        gap: 8px;
+      }
+
       .auth-buttons {
         display: flex;
         align-items: center;
         gap: 8px;
       }
 
-      .burger {
-        display: none;
-        width: 42px;
-        height: 42px;
-        border-radius: 999px;
-        border: 1px solid var(--btn-border);
-        background: var(--btn-bg);
-        color: var(--btn-text);
-        cursor: pointer;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .mobile-panel {
-        display: none;
-        padding: 10px 14px;
-        border-bottom: 1px solid var(--border);
-        background: var(--header-bg);
-        backdrop-filter: var(--glass);
-      }
-
-      .mobile-panel.show {
-        display: block;
-      }
-
-      .mobile-panel .row {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      @media (max-width: 860px) {
-        .main-nav,
-        .auth-buttons {
-          display: none;
-        }
-        .burger {
-          display: inline-flex;
-        }
-        .brand {
-          min-width: auto;
-        }
-      }
-
-      /* =========================
-         BUTTONS + RIPPLE
-      ========================== */
-      .btn {
-        position: relative;
-        overflow: hidden;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-
-        padding: 8px 14px;
-        font-size: 14px;
-        border-radius: 999px;
-        border: 1px solid var(--btn-border);
-        background: var(--btn-bg);
-        color: var(--btn-text);
-        text-decoration: none;
-        cursor: pointer;
-
-        transform: translateZ(0);
-        transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-      }
-
-      .btn:hover {
-        transform: translateY(-1px) scale(1.03);
-        box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
-        border-color: rgba(46, 194, 126, 0.55);
-      }
-
-      .btn.primary {
-        background: linear-gradient(90deg, rgba(46, 194, 126, 0.95), rgba(59, 130, 246, 0.95));
-        color: white;
-        border: none;
-      }
-
-      .btn.primary:hover {
-        box-shadow: 0 12px 22px rgba(46, 194, 126, 0.22);
-      }
-
-      .ripple {
-        position: absolute;
-        border-radius: 50%;
-        transform: scale(0);
-        animation: ripple 520ms ease-out;
-        background: rgba(255, 255, 255, 0.45);
-        pointer-events: none;
-      }
-
-      body.dark-theme .ripple {
-        background: rgba(255, 255, 255, 0.25);
-      }
-
-      @keyframes ripple {
-        to {
-          transform: scale(2.8);
-          opacity: 0;
-        }
-      }
-
-      /* =========================
-         REVEAL ANIMATIONS
-      ========================== */
-      .reveal {
-        opacity: 0;
-        transform: translateY(14px);
-        transition: opacity 0.6s ease, transform 0.6s ease;
-      }
-      .reveal.show {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .fade-down {
-        opacity: 0;
-        transform: translateY(-12px);
-        animation: fadeDown 0.55s ease forwards;
-      }
-      @keyframes fadeDown {
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* =========================
-         CARDS / SECTIONS
-      ========================== */
-      .grid {
-        display: grid;
-        grid-template-columns: 1.2fr 0.8fr;
-        gap: 16px;
-        align-items: start;
-      }
-      @media (max-width: 920px) {
-        .grid {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      .card {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        box-shadow: var(--shadow);
-        padding: 14px 16px;
-      }
-
-      .hero {
-        padding: 16px;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        background: linear-gradient(
-          135deg,
-          rgba(46, 194, 126, 0.13),
-          rgba(59, 130, 246, 0.12)
-        );
-      }
-
-      .hero h1 {
-        margin: 0 0 6px;
-        font-size: 28px;
-        letter-spacing: -0.4px;
-      }
-
-      .hero p {
-        margin: 0;
-        color: var(--muted);
-        line-height: 1.35;
-      }
-
-      .main-logo {
-        width: 100%;
-        border-radius: 18px;
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-        display: block;
-      }
-
-      .section-title {
-        margin: 0 0 10px;
+      .welcome-text {
         font-size: 18px;
-        letter-spacing: 0.2px;
+        margin-bottom: 10px;
+        font-weight: 600;
       }
 
-      .small-muted {
-        color: var(--muted);
-        font-size: 13px;
-        line-height: 1.35;
-      }
-
-      /* =========================
-         USER PANEL
-      ========================== */
       .user-panel {
         display: flex;
         align-items: center;
         gap: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: var(--card-bg);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        max-width: 520px; /* трішки ширше, щоб влізла біо */
       }
 
       .user-avatar {
-        width: 54px;
-        height: 54px;
+        width: 48px;
+        height: 48px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid var(--border);
+      }
+
+      .user-avatar-wrapper,
+      .friend-avatar-wrapper {
+        position: relative;
+        display: inline-block;
       }
 
       .user-status-dot {
         position: absolute;
         right: -1px;
         bottom: -1px;
-        width: 11px;
-        height: 11px;
+        width: 10px;
+        height: 10px;
         border-radius: 50%;
-        background-color: #22c55e;
-        border: 2px solid var(--card);
+        background-color: #1bb31b;
+        border: 2px solid var(--card-bg);
       }
 
-      .avatar-wrap {
-        position: relative;
-        display: inline-block;
+      /* --- ПОШУК КОРИСТУВАЧІВ + ДРУЗІ --- */
+      #userSearchSection {
+        margin-bottom: 24px;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       }
 
-      .user-name {
-        font-weight: 800;
-      }
+      #userSearchSection h2 { margin-top: 0; font-size: 20px; }
 
-      /* =========================
-         SEARCH + RESULTS
-      ========================== */
-      .user-search-box {
-        display: flex;
-        gap: 8px;
-      }
+      .user-search-box { display: flex; gap: 8px; margin-bottom: 10px; }
 
       .user-search-box input {
         flex: 1;
-        padding: 9px 12px;
+        padding: 6px 10px;
         border-radius: 999px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--border-soft);
+        font-size: 14px;
+        background: #fff;
         color: #000;
-        outline: none;
       }
 
       body.dark-theme .user-search-box input {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
+        background: #3c3636;
+        color: #fff;
+        border-color: #777;
       }
 
-      .user-search-results {
-        margin-top: 10px;
-        min-height: 24px;
-      }
+      .user-search-results { min-height: 20px; }
 
       .user-result {
-        display: grid;
-        grid-template-columns: 46px 1fr auto;
-        align-items: start;
+        display: flex;
+        align-items: flex-start;
         gap: 10px;
-        padding: 10px 6px;
-        border-bottom: 1px solid var(--border);
-      }
-      .user-result:last-child {
-        border-bottom: none;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--border-soft);
       }
 
+      .user-result:last-child { border-bottom: none; }
+
       .user-result-avatar {
-        width: 44px;
-        height: 44px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid var(--border);
+      }
+
+      .user-result-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
 
       .user-result-name {
-        font-weight: 800;
-        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer; /* клікабельне */
       }
 
-      .user-result-status {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 1px;
+      .user-result-status { font-size: 12px; }
+      .user-result-status.online { color: #1bb31b; }
+      .user-result-status.offline { color: #b39b1b; }
+
+      .user-result-last { font-size: 11px; color: #777; }
+      body.dark-theme .user-result-last { color: #ddd; }
+
+      .user-result-action { margin-top: 4px; }
+
+      .user-result-note { font-size: 12px; color: #666; }
+      body.dark-theme .user-result-note { color: #ddd; }
+
+      #friendsBox,
+      #friendRequestsBox {
+        margin-top: 10px;
+        border-top: 1px solid var(--border-soft);
+        padding-top: 8px;
       }
 
-      .user-result-last {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 4px;
-      }
+      #friendsBox h3,
+      #friendRequestsBox h3 { font-size: 16px; margin: 4px 0 4px; }
 
-      .user-result-action {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .note {
-        font-size: 12px;
-        color: var(--muted);
-        line-height: 1.2;
-        max-width: 220px;
-        text-align: right;
-      }
-
-      /* =========================
-         FRIENDS
-      ========================== */
       .friends-list .friend-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 8px 0;
-        border-bottom: 1px solid var(--border);
-        cursor: pointer;
-      }
-      .friends-list .friend-item:last-child {
-        border-bottom: none;
+        gap: 8px;
+        padding: 4px 0;
+        cursor: pointer; /* клікабельне */
       }
 
       .friend-avatar {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid var(--border);
       }
 
-      .friend-name {
-        font-weight: 650;
+      .friend-name { font-size: 14px; font-weight: 500; }
+
+      .friend-requests-title { font-size: 13px; font-weight: 600; margin-top: 4px; margin-bottom: 2px; }
+
+      .friend-requests-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
       }
 
-      /* =========================
-         COMMENTS
-      ========================== */
-      .comment {
-        padding: 10px 0;
-        border-bottom: 1px solid var(--border);
-      }
-      .comment:last-child {
-        border-bottom: none;
+      .friend-requests-text { font-size: 14px; }
+
+      .friend-requests-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
       }
 
-      .comment-author {
-        font-weight: 800;
-        font-size: 14px;
+      /* --- КОМЕНТАРІ --- */
+      #commentsSection {
+        margin-top: 20px;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       }
 
-      .comment-text {
-        margin-top: 3px;
-        white-space: pre-wrap;
-        color: var(--text);
-      }
+      #commentsSection h2 { margin-top: 0; font-size: 20px; }
 
-      .comment-date {
-        margin-top: 4px;
-        font-size: 12px;
-        color: var(--muted);
-      }
+      #commentsList { margin-top: 8px; margin-bottom: 10px; max-height: 300px; overflow-y: auto; }
+
+      .comment { padding: 6px 0; border-bottom: 1px solid var(--border-soft); }
+      .comment:last-child { border-bottom: none; }
+
+      .comment-author { font-weight: 600; font-size: 14px; }
+      .comment-text { font-size: 14px; margin: 2px 0; }
+      .comment-date { font-size: 11px; color: #777; }
+      body.dark-theme .comment-date { color: #ccc; }
+
+      .comment-empty { font-size: 14px; color: #666; }
+      body.dark-theme .comment-empty { color: #ddd; }
 
       #commentForm textarea {
         width: 100%;
-        min-height: 70px;
+        min-height: 60px;
         resize: vertical;
-        padding: 10px 12px;
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.9);
-        color: #000;
+        padding: 6px 8px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
         box-sizing: border-box;
-        outline: none;
-        margin-top: 8px;
-      }
-      body.dark-theme #commentForm textarea {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
+        background: #fff;
+        color: #000;
       }
 
-      /* =========================
-         THEME TOGGLE / TOP
-      ========================== */
-      .floating-actions {
+      body.dark-theme #commentForm textarea {
+        background: #3c3636;
+        color: #fff;
+        border-color: #777;
+      }
+
+      #commentForm button { margin-top: 6px; }
+
+      .comment-info { font-size: 12px; color: #555; margin-top: 4px; }
+      body.dark-theme .comment-info { color: #ddd; }
+
+      /* --- КАРТИНКА ГРИ --- */
+      .main-logo { max-width: 60%; border-radius: 20px; display: block; margin-bottom: 20px; }
+
+      /* --- КНОПКА ТЕМИ --- */
+      .theme-toggle {
         position: fixed;
         right: 16px;
         bottom: 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        z-index: 3000;
-      }
-
-      .fab {
-        width: 46px;
-        height: 46px;
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        border: 1px solid var(--btn-border);
-        background: var(--card);
-        color: var(--btn-text);
+        border: 1px solid var(--button-text);
+        background: var(--card-bg);
+        color: var(--button-text);
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: var(--shadow);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-        font-size: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        z-index: 1100;
+        font-size: 20px;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease,
+          background 0.15s ease,
+          color 0.15s ease,
+          border-color 0.15s ease;
       }
 
-      .fab:hover {
-        transform: translateY(-1px) scale(1.05);
-        box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+      .theme-toggle:hover {
+        transform: scale(1.08);
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+      }
+
+      /* --- Перекриваємо старі стилі nav a з style.css, якщо були */
+      nav a {
+        position: static;
+        left: auto;
+      }
+
+      /* --- АДМІН-ПАНЕЛЬ --- */
+      #adminSection {
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+      }
+
+      #adminSection h2 { margin-top: 0; }
+
+      #adminDeleteName {
+        width: 100%;
+        max-width: 300px;
+        padding: 6px 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        margin: 4px 0 6px;
+        box-sizing: border-box;
+      }
+
+      body.dark-theme #adminDeleteName {
+        background: #3c3636;
+        color: #fff;
+        border-color: #777;
       }
 
       /* =========================
-         MODALS (PROFILE)
-      ========================== */
+         NEW: MINI PROFILE MODAL
+      ========================= */
       .modal {
         position: fixed;
         inset: 0;
         display: none;
         z-index: 5000;
       }
-      .modal.show {
-        display: block;
-      }
+      .modal.show { display: block; }
 
       .modal-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0, 0, 0, 0.45);
-        backdrop-filter: blur(4px);
+        background: rgba(0,0,0,0.45);
       }
 
       .modal-card {
         position: relative;
-        max-width: 560px;
-        width: calc(100% - 24px);
-        margin: 78px auto 20px;
+        max-width: 520px;
+        width: calc(100% - 20px);
+        margin: 80px auto 20px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         padding: 14px 16px;
       }
 
       .modal-close {
         position: absolute;
-        top: 10px;
         right: 10px;
+        top: 10px;
       }
 
-      .profile-header {
+      .profile-row {
         display: flex;
         gap: 12px;
         align-items: center;
       }
 
       .profile-avatar {
-        width: 72px;
-        height: 72px;
+        width: 70px;
+        height: 70px;
         border-radius: 50%;
         object-fit: cover;
-        border: 1px solid var(--border);
+        border: 2px solid var(--border-soft);
       }
 
       .profile-name {
-        font-weight: 900;
+        font-weight: 700;
         font-size: 18px;
-        margin-bottom: 2px;
       }
 
       .profile-status {
         font-size: 12px;
-        color: var(--muted);
+        margin-top: 2px;
       }
 
       .profile-bio {
-        margin-top: 12px;
+        margin-top: 10px;
         font-size: 14px;
-        color: var(--muted);
-        line-height: 1.35;
+        color: #666;
         white-space: pre-wrap;
+      }
+      body.dark-theme .profile-bio { color: #ddd; }
+
+      /* =========================
+         NEW: EDIT PROFILE (bio + avatar)
+      ========================= */
+      #editProfileBox {
+        margin-bottom: 20px;
+        max-width: 600px;
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        display: none;
+      }
+
+      #editProfileBox h2 { margin-top: 0; font-size: 20px; }
+
+      #bioInput {
+        width: 100%;
+        min-height: 60px;
+        resize: vertical;
+        padding: 6px 8px;
+        font-size: 14px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        box-sizing: border-box;
+        background: #fff;
+        color: #000;
+      }
+      body.dark-theme #bioInput {
+        background: #3c3636;
+        color: #fff;
+        border-color: #777;
       }
 
       .avatar-grid {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 8px;
-        margin-top: 10px;
+        margin-top: 8px;
+        margin-bottom: 8px;
       }
 
       .avatar-option {
         border: 2px solid transparent;
-        border-radius: 14px;
+        border-radius: 10px;
         padding: 4px;
         cursor: pointer;
         transition: transform 0.15s ease, border-color 0.15s ease;
       }
 
-      .avatar-option:hover {
-        transform: translateY(-1px) scale(1.03);
-      }
-
-      .avatar-option.selected {
-        border-color: rgba(46, 194, 126, 0.9);
-      }
+      .avatar-option:hover { transform: scale(1.03); }
+      .avatar-option.selected { border-color: #1bb31b; }
 
       .avatar-option img {
         width: 100%;
         aspect-ratio: 1 / 1;
-        border-radius: 12px;
+        border-radius: 8px;
         object-fit: cover;
         display: block;
-        border: 1px solid var(--border);
       }
 
-      .profile-edit-row {
-        margin-top: 12px;
+      .tiny {
+        font-size: 12px;
+        color: #777;
       }
+      body.dark-theme .tiny { color: #ddd; }
 
-      .profile-edit-row textarea {
-        width: 100%;
-        min-height: 88px;
-        resize: vertical;
-        padding: 10px 12px;
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        background: rgba(255, 255, 255, 0.9);
-        color: #000;
-        outline: none;
-        box-sizing: border-box;
-      }
-
-      body.dark-theme .profile-edit-row textarea {
-        background: rgba(255, 255, 255, 0.06);
-        color: var(--text);
-      }
-
-      .profile-actions {
+      .row-actions {
         display: flex;
         gap: 8px;
-        justify-content: flex-end;
+        align-items: center;
         flex-wrap: wrap;
-        margin-top: 10px;
+        margin-top: 8px;
       }
     </style>
   </head>
 
   <body>
-    <!-- background blobs -->
-    <div class="bg-blobs" aria-hidden="true">
-      <div class="blob a"></div>
-      <div class="blob b"></div>
-      <div class="blob c"></div>
-    </div>
-
-    <!-- header -->
+    <!-- header з анімацією зверху -->
     <header class="fade-down">
-      <a href="index.html" class="brand" aria-label="PINE Tycoon Home">
-        <img
-          src="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
-          alt="PINE Tycoon Logo"
-          class="brand-logo"
-        />
-        <div>
-          <div class="brand-title">PINE Tycoon</div>
-          <div class="brand-sub">Official website</div>
-        </div>
-      </a>
-
       <nav class="main-nav">
-        <a href="game.html" class="btn primary">Play</a>
-        <a href="#blog" class="btn">Blog</a>
-        <a href="#community" class="btn">Community</a>
+        <a href="game.html" class="btn">Грати!</a>
+        <a href="#blog" class="btn">Блог</a>
       </nav>
 
       <div class="auth-buttons">
@@ -777,245 +567,153 @@
         <a href="signup.html" id="signupLink" class="btn">Sign up</a>
         <button id="logoutBtn" class="btn" style="display: none">Log out</button>
       </div>
-
-      <button class="burger" id="burgerBtn" type="button" aria-label="Open menu">☰</button>
     </header>
 
-    <!-- mobile nav -->
-    <div class="mobile-panel" id="mobilePanel">
-      <div class="row" style="margin-bottom:10px;">
-        <a href="game.html" class="btn primary">Play</a>
-        <a href="#blog" class="btn">Blog</a>
-        <a href="#community" class="btn">Community</a>
-      </div>
-      <div class="row">
-        <a href="login.html" id="loginLinkMobile" class="btn">Sign in</a>
-        <a href="signup.html" id="signupLinkMobile" class="btn">Sign up</a>
-        <button id="logoutBtnMobile" class="btn" style="display:none;">Log out</button>
-      </div>
-    </div>
-
     <main>
-      <!-- HERO + USER SIDE -->
-      <div class="grid">
-        <section class="hero reveal">
-          <h1 id="welcomeText">Welcome, Guest</h1>
-          <p>
-            Build your cozy village, chop wood, upgrade your tools and become the best
-            lumber tycoon.
-          </p>
+      <p class="welcome-text fade-up delay-1" id="welcomeText">
+        Welcome Guest
+      </p>
 
-          <div style="height: 14px"></div>
-
-          <div class="card reveal" style="padding: 14px;">
-            <div class="user-panel">
-              <div class="avatar-wrap">
-                <img
-                  src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png"
-                  alt="Avatar"
-                  class="user-avatar"
-                />
-                <div class="user-status-dot" id="myOnlineDot" style="display:none;"></div>
-              </div>
-
-              <div style="flex:1;">
-                <div class="small-muted">Account</div>
-                <div class="user-name" id="userNameDisplay">Guest</div>
-                <div class="small-muted" id="myBioLine" style="margin-top:4px; display:none;"></div>
-              </div>
-
-              <button id="editProfileBtn" class="btn" type="button" style="display:none;">
-                Edit profile
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <aside class="reveal">
+      <div class="user-panel fade-scale delay-1">
+        <div class="user-avatar-wrapper">
           <img
-            src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
-            alt="PINE Tycoon"
-            class="main-logo"
+            src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png"
+            alt="Avatar"
+            class="user-avatar"
           />
-          <div style="height: 10px"></div>
-          <div class="card">
-            <div class="section-title">Quick info</div>
-            <div class="small-muted">
-              Tip: Click any player in Search or Friends to open a mini profile
-              (avatar + bio + status).
-            </div>
-          </div>
-        </aside>
+        </div>
+        <div style="flex:1;">
+          <div><strong>Account:</strong></div>
+          <div id="userNameDisplay">Guest</div>
+          <div id="myBioLine" class="tiny" style="margin-top:4px; display:none;"></div>
+        </div>
+        <button id="openEditProfile" class="btn" style="display:none;">Edit profile</button>
       </div>
 
-      <div style="height: 18px"></div>
+      <!-- NEW: edit profile box -->
+      <section id="editProfileBox" class="fade-up delay-2">
+        <h2>Edit profile</h2>
+        <p class="tiny">Choose an avatar and write a short bio (max 200 chars).</p>
 
-      <!-- ADMIN (only davyd3102) -->
-      <section id="adminSection" class="card reveal" style="display:none;">
-        <div class="section-title">Admin panel</div>
-        <p class="small-muted" style="margin-top:6px;">
-          Only <strong>davyd3102</strong> can use this panel.
-          It deletes a user document and all comments by that username.
+        <div id="avatarGrid" class="avatar-grid"></div>
+
+        <label class="tiny" for="bioInput">Bio</label>
+        <textarea id="bioInput" maxlength="200" placeholder="Write something about your account..."></textarea>
+        <div class="tiny" id="bioCount">0/200</div>
+
+        <div class="row-actions">
+          <button id="saveProfileBtn" class="btn">Save</button>
+          <button id="closeEditProfileBtn" class="btn">Close</button>
+          <span id="saveProfileMsg" class="tiny"></span>
+        </div>
+      </section>
+
+      <!-- АДМІН-ПАНЕЛЬ (тільки для davyd3102) -->
+      <section id="adminSection" class="fade-up delay-2" style="display: none">
+        <h2>Admin panel</h2>
+        <p class="comment-info">
+          Only <strong>davyd3102</strong> can use this panel. Delete a user and all their comments.
         </p>
-
-        <label class="small-muted" for="adminDeleteName">Username to delete</label>
-        <input
-          id="adminDeleteName"
-          type="text"
-          placeholder="Example: Grivield"
-          style="
-            width: 100%;
-            max-width: 320px;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-            background: rgba(255,255,255,0.9);
-            box-sizing: border-box;
-            outline: none;
-            margin-top: 6px;
-          "
-        />
-        <div style="height: 8px"></div>
-        <button id="adminDeleteBtn" class="btn" type="button">Delete user</button>
-        <div id="adminDeleteStatus" class="small-muted" style="margin-top:8px;"></div>
+        <label for="adminDeleteName">Username to delete:</label>
+        <input type="text" id="adminDeleteName" placeholder="Example: Grivield" />
+        <button id="adminDeleteBtn" class="btn">Delete user</button>
+        <p id="adminDeleteStatus" class="comment-info"></p>
       </section>
 
-      <div style="height: 18px"></div>
+      <!-- ПОШУК + ДРУЗІ -->
+      <section id="userSearchSection" class="fade-up delay-2">
+        <h2>Player search</h2>
+        <div class="user-search-box">
+          <input type="text" id="userSearchInput" placeholder="Type username..." />
+          <button id="userSearchBtn" class="btn">Search</button>
+        </div>
+        <div id="userSearchResults" class="user-search-results">
+          <p class="comment-empty">Type a name to search players.</p>
+        </div>
 
-      <!-- COMMUNITY -->
-      <section id="community" class="card reveal">
-        <div class="section-title">Community</div>
-
-        <!-- SEARCH -->
-        <div class="card" style="margin-top:10px;">
-          <div class="section-title" style="font-size:16px;">Player search</div>
-
-          <div class="user-search-box">
-            <input type="text" id="userSearchInput" placeholder="Type a username..." />
-            <button id="userSearchBtn" class="btn" type="button">Search</button>
-          </div>
-
-          <div id="userSearchResults" class="user-search-results">
-            <div class="small-muted">Type a username to search players.</div>
+        <div id="friendsBox">
+          <h3>Your friends</h3>
+          <div id="friendsList" class="friends-list">
+            <p class="comment-empty">Sign in to view friends.</p>
           </div>
         </div>
 
-        <div style="height: 10px"></div>
-
-        <!-- FRIENDS -->
-        <div class="grid" style="grid-template-columns: 1fr 1fr;">
-          <div class="card">
-            <div class="section-title" style="font-size:16px;">Your friends</div>
-            <div id="friendsList" class="friends-list">
-              <div class="small-muted">Sign in to see friends.</div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="section-title" style="font-size:16px;">Friend requests</div>
-            <div id="friendRequestsList">
-              <div class="small-muted">No requests.</div>
-            </div>
+        <div id="friendRequestsBox">
+          <h3>Friend requests</h3>
+          <div id="friendRequestsList">
+            <p class="comment-empty">No requests.</p>
           </div>
         </div>
       </section>
 
-      <div style="height: 18px"></div>
+      <!-- Картинка гри -->
+      <img
+        src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
+        alt="PINE Tycoon"
+        class="main-logo fade-up delay-2"
+      />
 
-      <!-- BLOG -->
-      <section id="blog" class="card reveal">
-        <div class="section-title">Blog</div>
+      <p class="fade-up delay-2">
+        Welcome to the cozy world of "PINE Tycoon". In this game you will chop wood and build your own village!
+      </p>
+      <p class="fade-up delay-2">
+        This version is still in beta, so bugs may happen and things can change over time.
+      </p>
 
-        <div class="card" style="margin-top:10px;">
-          <div style="font-weight:800;">Latest update</div>
-          <div class="small-muted" style="margin-top:6px;">
-            Accounts, friends, player search and comments are live. More updates coming soon.
-          </div>
-        </div>
+      <h1 id="blog" class="fade-up delay-2">BLOG</h1>
+      <p class="fade-up delay-2">
+        It's empty for now... but new updates are coming soon!
+      </p>
+      <p class="fade-up delay-2">
+        Update: accounts, friends, player search and developer comments are live.
+      </p>
 
-        <div class="card" style="margin-top:10px;">
-          <div style="font-weight:800;">Next plans</div>
-          <div class="small-muted" style="margin-top:6px;">
-            Better profile system, more UI polish, performance improvements and new gameplay features.
-          </div>
-        </div>
-      </section>
-
-      <div style="height: 18px"></div>
-
-      <!-- COMMENTS -->
-      <section id="commentsSection" class="card reveal">
-        <div class="section-title">Developer comments</div>
-
+      <!-- КОМЕНТАРІ -->
+      <section id="commentsSection" class="fade-up delay-3">
+        <h2>Developer comments</h2>
         <div id="commentsList">
-          <div class="small-muted">Loading comments...</div>
+          <p class="comment-empty">Loading comments...</p>
         </div>
 
-        <form id="commentForm" style="display:none;">
-          <textarea id="commentText" placeholder="Write an update or a thought..."></textarea>
-          <div style="height: 8px"></div>
-          <button type="submit" class="btn primary">Post comment</button>
+        <form id="commentForm" style="display: none">
+          <textarea
+            id="commentText"
+            placeholder="Write an update about the game or your thoughts..."
+          ></textarea>
+          <button type="submit" class="btn">Post comment</button>
         </form>
 
-        <div id="commentInfo" class="small-muted" style="margin-top:10px;">
-          Sign in as <strong>davyd3102</strong> or <strong>3102</strong> to post comments.
-        </div>
+        <p id="commentInfo" class="comment-info">
+          Sign in as davyd3102 or 3102 to post comments.
+        </p>
       </section>
     </main>
 
     <footer>© 2026 PINE Tycoon — beta</footer>
 
-    <!-- floating buttons -->
-    <div class="floating-actions">
-      <button id="themeToggle" class="fab" title="Toggle theme" type="button">🌓</button>
-      <button id="toTopBtn" class="fab" title="Back to top" type="button">↑</button>
-    </div>
+    <!-- Кнопка теми -->
+    <button id="themeToggle" class="theme-toggle" title="Toggle theme">⚙</button>
 
-    <!-- Profile view modal -->
+    <!-- NEW: Mini profile modal -->
     <div id="profileModal" class="modal">
-      <div class="modal-overlay" data-close="1"></div>
-      <div class="modal-card card">
-        <button class="btn modal-close" id="profileCloseBtn" type="button">✕</button>
+      <div class="modal-overlay" id="profileOverlay"></div>
+      <div class="modal-card">
+        <button class="btn modal-close" id="profileCloseBtn">✕</button>
 
-        <div class="profile-header">
-          <img id="profileViewAvatar" class="profile-avatar" alt="Avatar" />
+        <div class="profile-row">
+          <img id="profileAvatar" class="profile-avatar" alt="Avatar" />
           <div>
-            <div id="profileViewName" class="profile-name">Player</div>
-            <div id="profileViewStatus" class="profile-status">Offline</div>
-            <div id="profileViewLast" class="profile-status"></div>
+            <div id="profileName" class="profile-name">Player</div>
+            <div id="profileStatus" class="profile-status">Offline</div>
+            <div id="profileLast" class="tiny"></div>
           </div>
         </div>
 
-        <div id="profileViewBio" class="profile-bio">No bio yet.</div>
+        <div id="profileBio" class="profile-bio">No bio yet.</div>
       </div>
     </div>
 
-    <!-- Profile edit modal -->
-    <div id="editProfileModal" class="modal">
-      <div class="modal-overlay" data-close="1"></div>
-      <div class="modal-card card">
-        <button class="btn modal-close" id="editProfileCloseBtn" type="button">✕</button>
-
-        <div class="section-title" style="margin-bottom:6px;">Edit profile</div>
-        <div class="small-muted">Choose an avatar and write a short bio (max 200 chars).</div>
-
-        <div id="avatarGrid" class="avatar-grid"></div>
-
-        <div class="profile-edit-row">
-          <textarea id="bioInput" maxlength="200" placeholder="Write something about your account..."></textarea>
-          <div class="small-muted" id="bioCount" style="margin-top:6px;">0/200</div>
-        </div>
-
-        <div class="profile-actions">
-          <button class="btn" id="cancelProfileBtn" type="button">Cancel</button>
-          <button class="btn primary" id="saveProfileBtn" type="button">Save</button>
-        </div>
-
-        <div id="saveProfileMsg" class="small-muted" style="margin-top:8px;"></div>
-      </div>
-    </div>
-
-    <!-- Firebase + logic -->
+    <!-- Firebase + логіка -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
       import {
@@ -1036,7 +734,7 @@
         deleteDoc,
         getDocs,
         where,
-        getDoc,
+        getDoc
       } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -1053,20 +751,14 @@
       const auth = getAuth(app);
       const db = getFirestore(app);
 
-      // ---------- UI refs ----------
       const welcomeText = document.getElementById("welcomeText");
       const userNameDisplay = document.getElementById("userNameDisplay");
       const avatarImg = document.querySelector(".user-avatar");
-      const myOnlineDot = document.getElementById("myOnlineDot");
       const myBioLine = document.getElementById("myBioLine");
 
       const loginLink = document.getElementById("loginLink");
       const signupLink = document.getElementById("signupLink");
       const logoutBtn = document.getElementById("logoutBtn");
-
-      const loginLinkMobile = document.getElementById("loginLinkMobile");
-      const signupLinkMobile = document.getElementById("signupLinkMobile");
-      const logoutBtnMobile = document.getElementById("logoutBtnMobile");
 
       const commentsList = document.getElementById("commentsList");
       const commentForm = document.getElementById("commentForm");
@@ -1074,10 +766,6 @@
       const commentInfo = document.getElementById("commentInfo");
 
       const themeToggleBtn = document.getElementById("themeToggle");
-      const toTopBtn = document.getElementById("toTopBtn");
-
-      const burgerBtn = document.getElementById("burgerBtn");
-      const mobilePanel = document.getElementById("mobilePanel");
 
       const userSearchInput = document.getElementById("userSearchInput");
       const userSearchBtn = document.getElementById("userSearchBtn");
@@ -1086,35 +774,36 @@
       const friendsListDiv = document.getElementById("friendsList");
       const friendRequestsListDiv = document.getElementById("friendRequestsList");
 
-      // Admin panel
+      // admin
       const adminSection = document.getElementById("adminSection");
       const adminDeleteName = document.getElementById("adminDeleteName");
       const adminDeleteBtn = document.getElementById("adminDeleteBtn");
       const adminDeleteStatus = document.getElementById("adminDeleteStatus");
 
-      // Profile modals
-      const profileModal = document.getElementById("profileModal");
-      const profileCloseBtn = document.getElementById("profileCloseBtn");
-      const profileViewAvatar = document.getElementById("profileViewAvatar");
-      const profileViewName = document.getElementById("profileViewName");
-      const profileViewStatus = document.getElementById("profileViewStatus");
-      const profileViewLast = document.getElementById("profileViewLast");
-      const profileViewBio = document.getElementById("profileViewBio");
-
-      const editProfileBtn = document.getElementById("editProfileBtn");
-      const editProfileModal = document.getElementById("editProfileModal");
-      const editProfileCloseBtn = document.getElementById("editProfileCloseBtn");
+      // NEW: edit profile UI
+      const openEditProfileBtn = document.getElementById("openEditProfile");
+      const editProfileBox = document.getElementById("editProfileBox");
       const avatarGrid = document.getElementById("avatarGrid");
       const bioInput = document.getElementById("bioInput");
       const bioCount = document.getElementById("bioCount");
-      const cancelProfileBtn = document.getElementById("cancelProfileBtn");
       const saveProfileBtn = document.getElementById("saveProfileBtn");
+      const closeEditProfileBtn = document.getElementById("closeEditProfileBtn");
       const saveProfileMsg = document.getElementById("saveProfileMsg");
 
-      // ---------- data ----------
+      // NEW: mini profile modal UI
+      const profileModal = document.getElementById("profileModal");
+      const profileOverlay = document.getElementById("profileOverlay");
+      const profileCloseBtn = document.getElementById("profileCloseBtn");
+      const profileAvatar = document.getElementById("profileAvatar");
+      const profileName = document.getElementById("profileName");
+      const profileStatus = document.getElementById("profileStatus");
+      const profileLast = document.getElementById("profileLast");
+      const profileBio = document.getElementById("profileBio");
+
       const DEFAULT_AVATAR =
         "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
 
+      // 5 options (1 default + 4 твої)
       const AVATAR_OPTIONS = [
         DEFAULT_AVATAR,
         "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
@@ -1124,7 +813,7 @@
       ];
 
       const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
-      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 min
+      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 хвилини
 
       let currentUserName = null;
       let currentUserUid = null;
@@ -1145,7 +834,6 @@
       const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
       const friendRequestsCol = collection(db, "friendRequests");
 
-      // ---------- helpers ----------
       function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, (c) => {
           return (
@@ -1160,99 +848,53 @@
         });
       }
 
-      function openModal(modalEl) {
-        if (!modalEl) return;
-        modalEl.classList.add("show");
-      }
-      function closeModal(modalEl) {
-        if (!modalEl) return;
-        modalEl.classList.remove("show");
-      }
-
-      document.addEventListener("click", (e) => {
-        const overlay = e.target?.closest?.(".modal-overlay");
-        if (overlay && overlay.getAttribute("data-close") === "1") {
-          closeModal(profileModal);
-          closeModal(editProfileModal);
-        }
-      });
-
-      if (profileCloseBtn) profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
-      if (editProfileCloseBtn) editProfileCloseBtn.addEventListener("click", () => closeModal(editProfileModal));
-      if (cancelProfileBtn) cancelProfileBtn.addEventListener("click", () => closeModal(editProfileModal));
-
-      function computeOnlineStatus(userObj) {
+      function computeOnline(u) {
         const now = new Date();
-        const last = userObj?.lastActive?.toDate ? userObj.lastActive.toDate() : null;
+        const last = u?.lastActive?.toDate ? u.lastActive.toDate() : null;
         const isOnline = !!(last && now - last < ONLINE_TIMEOUT_MS);
         return { isOnline, last };
       }
 
-      function getUserByUid(uid) {
-        return usersCache.find((u) => u.id === uid) || null;
+      function openModal() {
+        profileModal.classList.add("show");
+      }
+      function closeModal() {
+        profileModal.classList.remove("show");
       }
 
-      function showUserMiniProfile(uid) {
-        const u = getUserByUid(uid);
+      profileOverlay.addEventListener("click", closeModal);
+      profileCloseBtn.addEventListener("click", closeModal);
+
+      function showMiniProfile(uid) {
+        const u = usersCache.find((x) => x.id === uid);
         if (!u) return;
 
-        const name = u.name || "Player";
-        const avatar = u.avatar || DEFAULT_AVATAR;
-        const bio = (u.bio || "").trim();
+        const { isOnline, last } = computeOnline(u);
 
-        const { isOnline, last } = computeOnlineStatus(u);
+        profileAvatar.src = u.avatar || DEFAULT_AVATAR;
+        profileName.textContent = u.name || "Player";
+        profileStatus.textContent = isOnline ? "Online" : "Offline";
+        profileStatus.className = "profile-status " + (isOnline ? "online" : "offline");
+        profileLast.textContent = last ? ("Last active: " + last.toLocaleString("en-US")) : "";
+        profileBio.textContent = (u.bio && u.bio.trim()) ? u.bio.trim() : "No bio yet.";
 
-        profileViewAvatar.src = avatar;
-        profileViewName.textContent = name;
-        profileViewStatus.textContent = isOnline ? "Online" : "Offline";
-        profileViewLast.textContent = last ? ("Last active: " + last.toLocaleString("en-US")) : "";
-        profileViewBio.textContent = bio ? bio : "No bio yet.";
-
-        openModal(profileModal);
+        openModal();
       }
 
-      function buildAvatarGrid(selectedUrl) {
-        avatarGrid.innerHTML = "";
-        AVATAR_OPTIONS.forEach((url) => {
-          const wrap = document.createElement("div");
-          wrap.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
+      function updateCommentUI() {
+        if (!commentForm || !commentInfo) return;
 
-          const img = document.createElement("img");
-          img.src = url;
-          img.alt = "Avatar option";
-          wrap.appendChild(img);
-
-          wrap.addEventListener("click", () => {
-            [...avatarGrid.querySelectorAll(".avatar-option")].forEach((el) =>
-              el.classList.remove("selected")
-            );
-            wrap.classList.add("selected");
-            avatarGrid.dataset.selected = url;
-          });
-
-          avatarGrid.appendChild(wrap);
-        });
-
-        avatarGrid.dataset.selected = selectedUrl;
-      }
-
-      function openEditProfile() {
-        if (!currentUserUid) return;
-
-        saveProfileMsg.textContent = "";
-        bioInput.value = currentUserBio || "";
-        bioCount.textContent = `${bioInput.value.length}/200`;
-
-        buildAvatarGrid(currentUserAvatar || DEFAULT_AVATAR);
-        openModal(editProfileModal);
-      }
-
-      if (editProfileBtn) editProfileBtn.addEventListener("click", openEditProfile);
-
-      if (bioInput) {
-        bioInput.addEventListener("input", () => {
-          bioCount.textContent = `${bioInput.value.length}/200`;
-        });
+        if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
+          commentForm.style.display = "block";
+          commentInfo.textContent = "You can post comments as " + currentUserName + ".";
+        } else {
+          commentForm.style.display = "none";
+          if (currentUserName) {
+            commentInfo.textContent = "Only davyd3102 and 3102 can post comments.";
+          } else {
+            commentInfo.textContent = "Sign in as davyd3102 or 3102 to post comments.";
+          }
+        }
       }
 
       async function loadMyProfile(uid, name) {
@@ -1272,57 +914,13 @@
             myBioLine.style.display = "none";
             myBioLine.textContent = "";
           }
-
-          // show online dot for yourself while logged in
-          myOnlineDot.style.display = "block";
         } catch (e) {
-          console.error("Failed to load profile:", e);
+          console.error("Load profile error:", e);
           currentUserAvatar = DEFAULT_AVATAR;
           currentUserBio = "";
-          myBioLine.style.display = "none";
-          myOnlineDot.style.display = "block";
         }
       }
 
-      if (saveProfileBtn) {
-        saveProfileBtn.addEventListener("click", async () => {
-          if (!currentUserUid || !currentUserName) return;
-
-          const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
-          const bio = (bioInput.value || "").trim().slice(0, 200);
-
-          saveProfileMsg.textContent = "Saving...";
-
-          try {
-            await setDoc(
-              doc(db, "users", currentUserUid),
-              { avatar: selected, bio: bio },
-              { merge: true }
-            );
-
-            currentUserAvatar = selected;
-            currentUserBio = bio;
-
-            avatarImg.src = currentUserAvatar;
-
-            if (currentUserBio.trim()) {
-              myBioLine.style.display = "block";
-              myBioLine.textContent = currentUserBio.trim();
-            } else {
-              myBioLine.style.display = "none";
-              myBioLine.textContent = "";
-            }
-
-            saveProfileMsg.textContent = "Saved!";
-            setTimeout(() => closeModal(editProfileModal), 450);
-          } catch (err) {
-            console.error(err);
-            saveProfileMsg.textContent = "Error: " + (err.message || err);
-          }
-        });
-      }
-
-      // Presence: do NOT overwrite custom avatar with name mapping
       async function touchUserPresence(uid, name) {
         try {
           await setDoc(
@@ -1330,6 +928,7 @@
             {
               name: name,
               avatar: currentUserAvatar || DEFAULT_AVATAR,
+              bio: currentUserBio || "",
               lastActive: serverTimestamp(),
             },
             { merge: true }
@@ -1356,36 +955,19 @@
         }
       }
 
-      function updateCommentUI() {
-        if (!commentForm || !commentInfo) return;
-
-        if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
-          commentForm.style.display = "block";
-          commentInfo.textContent = "You can post comments as " + currentUserName + ".";
-        } else {
-          commentForm.style.display = "none";
-          if (currentUserName) {
-            commentInfo.textContent = "Only davyd3102 and 3102 can post comments.";
-          } else {
-            commentInfo.innerHTML =
-              'Sign in as <strong>davyd3102</strong> or <strong>3102</strong> to post comments.';
-          }
-        }
-      }
-
       function renderFriends() {
         if (!friendsListDiv) return;
         friendsListDiv.innerHTML = "";
 
         if (!currentUserUid) {
           friendsListDiv.innerHTML =
-            '<div class="small-muted">Sign in to see friends.</div>';
+            '<p class="comment-empty">Sign in to view friends.</p>';
           return;
         }
 
         if (!friendsList.length) {
           friendsListDiv.innerHTML =
-            '<div class="small-muted">No friends yet.</div>';
+            '<p class="comment-empty">No friends yet.</p>';
           return;
         }
 
@@ -1399,9 +981,9 @@
           avatar.className = "friend-avatar";
           avatar.src = f.friendAvatar || DEFAULT_AVATAR;
 
-          const wrap = document.createElement("div");
-          wrap.className = "avatar-wrap";
-          wrap.appendChild(avatar);
+          const wrapper = document.createElement("div");
+          wrapper.className = "friend-avatar-wrapper";
+          wrapper.appendChild(avatar);
 
           let isOnline = false;
           const userData = usersCache.find((u) => u.id === f.friendUid);
@@ -1413,18 +995,18 @@
           if (isOnline) {
             const dot = document.createElement("div");
             dot.className = "user-status-dot";
-            wrap.appendChild(dot);
+            wrapper.appendChild(dot);
           }
 
           const nameSpan = document.createElement("span");
           nameSpan.className = "friend-name";
-          nameSpan.textContent = f.friendName || "Friend";
+          nameSpan.textContent = f.friendName || "";
 
-          item.appendChild(wrap);
+          item.appendChild(wrapper);
           item.appendChild(nameSpan);
 
-          // click -> mini profile
-          item.addEventListener("click", () => showUserMiniProfile(f.friendUid));
+          // NEW: click friend -> mini profile
+          item.addEventListener("click", () => showMiniProfile(f.friendUid));
 
           friendsListDiv.appendChild(item);
         });
@@ -1436,43 +1018,35 @@
 
         if (!currentUserUid) {
           friendRequestsListDiv.innerHTML =
-            '<div class="small-muted">Sign in to view requests.</div>';
+            '<p class="comment-empty">Sign in to view requests.</p>';
           return;
         }
 
         if (!friendRequestsIncoming.length && !friendRequestsOutgoing.length) {
           friendRequestsListDiv.innerHTML =
-            '<div class="small-muted">No requests.</div>';
+            '<p class="comment-empty">No requests.</p>';
           return;
         }
 
         if (friendRequestsIncoming.length) {
           const title = document.createElement("div");
-          title.className = "small-muted";
-          title.style.fontWeight = "800";
-          title.style.marginBottom = "6px";
+          title.className = "friend-requests-title";
           title.textContent = "Incoming:";
           friendRequestsListDiv.appendChild(title);
 
           friendRequestsIncoming.forEach((req) => {
             const row = document.createElement("div");
-            row.style.display = "flex";
-            row.style.justifyContent = "space-between";
-            row.style.alignItems = "center";
-            row.style.gap = "10px";
-            row.style.padding = "8px 0";
-            row.style.borderBottom = "1px solid var(--border)";
+            row.className = "friend-requests-row";
 
             const text = document.createElement("div");
-            text.className = "small-muted";
-            text.innerHTML = `<strong>${escapeHtml(req.fromName || "Player")}</strong> wants to add you.`;
+            text.className = "friend-requests-text";
+            text.textContent = `${req.fromName || "Player"} wants to add you`;
 
             const actions = document.createElement("div");
-            actions.style.display = "flex";
-            actions.style.gap = "8px";
+            actions.className = "friend-requests-actions";
 
             const acceptBtn = document.createElement("button");
-            acceptBtn.className = "btn primary";
+            acceptBtn.className = "btn";
             acceptBtn.textContent = "Accept";
             acceptBtn.addEventListener("click", () => handleAcceptRequest(req));
 
@@ -1492,18 +1066,19 @@
 
         if (friendRequestsOutgoing.length) {
           const title2 = document.createElement("div");
-          title2.className = "small-muted";
-          title2.style.fontWeight = "800";
-          title2.style.marginTop = "10px";
-          title2.style.marginBottom = "6px";
+          title2.className = "friend-requests-title";
           title2.textContent = "Sent:";
           friendRequestsListDiv.appendChild(title2);
 
           friendRequestsOutgoing.forEach((req) => {
             const row = document.createElement("div");
-            row.className = "small-muted";
-            row.style.padding = "6px 0";
-            row.textContent = `Request to ${req.toName || "player"} (pending)`;
+            row.className = "friend-requests-row";
+
+            const text = document.createElement("div");
+            text.className = "friend-requests-text";
+            text.textContent = `Request to ${req.toName || "player"} (pending)`;
+
+            row.appendChild(text);
             friendRequestsListDiv.appendChild(row);
           });
         }
@@ -1534,7 +1109,7 @@
           (error) => {
             console.error("Friends load error:", error);
             friendsListDiv.innerHTML =
-              '<div class="small-muted">Failed to load friends.</div>';
+              '<p class="comment-empty">Failed to load friends.</p>';
           }
         );
       }
@@ -1559,8 +1134,12 @@
             snapshot.forEach((docSnap) => {
               const data = docSnap.data();
               if (!data || data.status !== "pending") return;
-              if (data.toUid === uid) friendRequestsIncoming.push({ id: docSnap.id, ...data });
-              if (data.fromUid === uid) friendRequestsOutgoing.push({ id: docSnap.id, ...data });
+              if (data.toUid === uid) {
+                friendRequestsIncoming.push({ id: docSnap.id, ...data });
+              }
+              if (data.fromUid === uid) {
+                friendRequestsOutgoing.push({ id: docSnap.id, ...data });
+              }
             });
 
             renderFriendRequests();
@@ -1577,19 +1156,19 @@
         if (!currentUserUid || !currentUserName) return;
         try {
           const fromUid = req.fromUid;
-          const fromName = req.fromName || "Player";
+          const fromName = req.fromName || "??";
           const myUid = currentUserUid;
           const myName = currentUserName;
 
-          const myFriendRef = doc(db, "users", myUid, "friends", fromUid);
-          const theirFriendRef = doc(db, "users", fromUid, "friends", myUid);
-
-          // try to use real avatars from cache if exist
-          const fromUser = getUserByUid(fromUid);
-          const myUser = getUserByUid(myUid);
+          // try to use real avatar from cache
+          const fromUser = usersCache.find((u) => u.id === fromUid);
+          const myUser = usersCache.find((u) => u.id === myUid);
 
           const fromAvatar = fromUser?.avatar || DEFAULT_AVATAR;
           const myAvatar = myUser?.avatar || currentUserAvatar || DEFAULT_AVATAR;
+
+          const myFriendRef = doc(db, "users", myUid, "friends", fromUid);
+          const theirFriendRef = doc(db, "users", fromUid, "friends", myUid);
 
           await Promise.all([
             setDoc(myFriendRef, {
@@ -1608,7 +1187,7 @@
           ]);
         } catch (err) {
           console.error("Accept request error:", err);
-          alert("Failed to accept: " + err.message);
+          alert("Failed to accept request: " + err.message);
         }
       }
 
@@ -1617,8 +1196,131 @@
           await deleteDoc(doc(db, "friendRequests", req.id));
         } catch (err) {
           console.error("Decline request error:", err);
-          alert("Failed to decline: " + err.message);
+          alert("Failed to decline request: " + err.message);
         }
+      }
+
+      function renderUserResults(term) {
+        userSearchResults.innerHTML = "";
+
+        const trimmed = term.trim();
+        if (!trimmed) {
+          userSearchResults.innerHTML =
+            '<p class="comment-empty">Type a name to search players.</p>';
+          return;
+        }
+
+        const lower = trimmed.toLowerCase();
+        const filtered = usersCache.filter(
+          (u) => u.name && u.name.toLowerCase().includes(lower)
+        );
+
+        if (!filtered.length) {
+          userSearchResults.innerHTML =
+            '<p class="comment-empty">No results.</p>';
+          return;
+        }
+
+        const now = new Date();
+
+        filtered.forEach((u) => {
+          const name = u.name || "Player";
+          const avatarUrl = u.avatar || DEFAULT_AVATAR;
+          const last = u.lastActive?.toDate ? u.lastActive.toDate() : null;
+
+          let status = "Offline";
+          let isOnline = false;
+          if (last && now - last < ONLINE_TIMEOUT_MS) {
+            status = "Online";
+            isOnline = true;
+          }
+
+          let relation = "none";
+          if (!currentUserUid) relation = "guest";
+          else if (u.id === currentUserUid) relation = "self";
+          else if (friendsList.some((f) => f.friendUid === u.id))
+            relation = "friend";
+          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id))
+            relation = "outgoing";
+          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id))
+            relation = "incoming";
+
+          const item = document.createElement("div");
+          item.className = "user-result";
+
+          const avatarImg2 = document.createElement("img");
+          avatarImg2.className = "user-result-avatar";
+          avatarImg2.src = avatarUrl;
+          avatarImg2.style.cursor = "pointer";
+          avatarImg2.title = "Open profile";
+          avatarImg2.addEventListener("click", () => showMiniProfile(u.id));
+
+          const infoDiv = document.createElement("div");
+          infoDiv.className = "user-result-info";
+
+          const nameDiv = document.createElement("div");
+          nameDiv.className = "user-result-name";
+          nameDiv.textContent = name;
+          nameDiv.title = "Open profile";
+          nameDiv.addEventListener("click", () => showMiniProfile(u.id));
+
+          const statusDiv = document.createElement("div");
+          statusDiv.className =
+            "user-result-status " + (isOnline ? "online" : "offline");
+          statusDiv.textContent = status;
+
+          infoDiv.appendChild(nameDiv);
+          infoDiv.appendChild(statusDiv);
+
+          if (last) {
+            const lastDiv = document.createElement("div");
+            lastDiv.className = "user-result-last";
+            lastDiv.textContent =
+              "Last active: " + last.toLocaleString("en-US");
+            infoDiv.appendChild(lastDiv);
+          }
+
+          const actionDiv = document.createElement("div");
+          actionDiv.className = "user-result-action";
+
+          if (relation === "guest") {
+            const note = document.createElement("div");
+            note.className = "user-result-note";
+            note.textContent = "Sign in to add friends.";
+            actionDiv.appendChild(note);
+          } else if (relation === "self") {
+            const note = document.createElement("div");
+            note.className = "user-result-note";
+            note.textContent = "This is you :)";
+            actionDiv.appendChild(note);
+          } else if (relation === "friend") {
+            const note = document.createElement("div");
+            note.className = "user-result-note";
+            note.textContent = "Already friends";
+            actionDiv.appendChild(note);
+          } else if (relation === "outgoing") {
+            const note = document.createElement("div");
+            note.className = "user-result-note";
+            note.textContent = "Request sent";
+            actionDiv.appendChild(note);
+          } else if (relation === "incoming") {
+            const note = document.createElement("div");
+            note.className = "user-result-note";
+            note.textContent = 'Incoming request (see "Friend requests")';
+            actionDiv.appendChild(note);
+          } else {
+            const btn = document.createElement("button");
+            btn.className = "btn";
+            btn.textContent = "Add friend";
+            btn.addEventListener("click", () => sendFriendRequest(u));
+            actionDiv.appendChild(btn);
+          }
+
+          item.appendChild(avatarImg2);
+          item.appendChild(infoDiv);
+          item.appendChild(actionDiv);
+          userSearchResults.appendChild(item);
+        });
       }
 
       async function sendFriendRequest(targetUser) {
@@ -1656,143 +1358,88 @@
         }
       }
 
-      function renderUserResults(term) {
-        userSearchResults.innerHTML = "";
+      // ---- Edit profile (bio + avatar) ----
+      function buildAvatarGrid(selectedUrl) {
+        avatarGrid.innerHTML = "";
+        AVATAR_OPTIONS.forEach((url) => {
+          const cell = document.createElement("div");
+          cell.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
 
-        const trimmed = term.trim();
-        if (!trimmed) {
-          userSearchResults.innerHTML =
-            '<div class="small-muted">Type a username to search players.</div>';
-          return;
-        }
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = "Avatar";
+          cell.appendChild(img);
 
-        const lower = trimmed.toLowerCase();
-        const filtered = usersCache.filter(
-          (u) => u.name && u.name.toLowerCase().includes(lower)
-        );
+          cell.addEventListener("click", () => {
+            [...avatarGrid.querySelectorAll(".avatar-option")].forEach((x) =>
+              x.classList.remove("selected")
+            );
+            cell.classList.add("selected");
+            avatarGrid.dataset.selected = url;
+          });
 
-        if (!filtered.length) {
-          userSearchResults.innerHTML =
-            '<div class="small-muted">No results.</div>';
-          return;
-        }
-
-        filtered.forEach((u) => {
-          const name = u.name || "Player";
-          const avatarUrl = u.avatar || DEFAULT_AVATAR;
-          const { isOnline, last } = computeOnlineStatus(u);
-
-          let relation = "none";
-          if (!currentUserUid) relation = "guest";
-          else if (u.id === currentUserUid) relation = "self";
-          else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
-          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
-          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
-
-          const item = document.createElement("div");
-          item.className = "user-result";
-
-          const avatarWrap = document.createElement("div");
-          avatarWrap.className = "avatar-wrap";
-          const avatarImg2 = document.createElement("img");
-          avatarImg2.className = "user-result-avatar";
-          avatarImg2.src = avatarUrl;
-          avatarWrap.appendChild(avatarImg2);
-
-          if (isOnline) {
-            const dot = document.createElement("div");
-            dot.className = "user-status-dot";
-            avatarWrap.appendChild(dot);
-          }
-
-          // avatar click -> open mini profile
-          avatarWrap.style.cursor = "pointer";
-          avatarWrap.addEventListener("click", () => showUserMiniProfile(u.id));
-
-          const infoDiv = document.createElement("div");
-
-          const nameDiv = document.createElement("div");
-          nameDiv.className = "user-result-name";
-          nameDiv.textContent = name;
-          nameDiv.addEventListener("click", () => showUserMiniProfile(u.id));
-
-          const statusDiv = document.createElement("div");
-          statusDiv.className = "user-result-status";
-          statusDiv.textContent = isOnline ? "Online" : "Offline";
-
-          infoDiv.appendChild(nameDiv);
-          infoDiv.appendChild(statusDiv);
-
-          if (last) {
-            const lastDiv = document.createElement("div");
-            lastDiv.className = "user-result-last";
-            lastDiv.textContent = "Last active: " + last.toLocaleString("en-US");
-            infoDiv.appendChild(lastDiv);
-          }
-
-          const actionDiv = document.createElement("div");
-          actionDiv.className = "user-result-action";
-
-          if (relation === "guest") {
-            const note = document.createElement("div");
-            note.className = "note";
-            note.textContent = "Sign in to add friends.";
-            actionDiv.appendChild(note);
-          } else if (relation === "self") {
-            const note = document.createElement("div");
-            note.className = "note";
-            note.textContent = "This is you 🙂";
-            actionDiv.appendChild(note);
-          } else if (relation === "friend") {
-            const note = document.createElement("div");
-            note.className = "note";
-            note.textContent = "Already friends";
-            actionDiv.appendChild(note);
-          } else if (relation === "outgoing") {
-            const note = document.createElement("div");
-            note.className = "note";
-            note.textContent = "Request sent";
-            actionDiv.appendChild(note);
-          } else if (relation === "incoming") {
-            const note = document.createElement("div");
-            note.className = "note";
-            note.textContent = "Incoming request (see Friend requests)";
-            actionDiv.appendChild(note);
-          } else {
-            const btn = document.createElement("button");
-            btn.className = "btn";
-            btn.textContent = "Add friend";
-            btn.addEventListener("click", () => sendFriendRequest(u));
-            actionDiv.appendChild(btn);
-          }
-
-          item.appendChild(avatarWrap);
-          item.appendChild(infoDiv);
-          item.appendChild(actionDiv);
-          userSearchResults.appendChild(item);
+          avatarGrid.appendChild(cell);
         });
+        avatarGrid.dataset.selected = selectedUrl;
       }
 
-      // ---------- auth UI ----------
-      function setAuthButtons(isLoggedIn) {
-        if (isLoggedIn) {
-          loginLink.style.display = "none";
-          signupLink.style.display = "none";
-          logoutBtn.style.display = "inline-flex";
+      function openEditProfile() {
+        editProfileBox.style.display = "block";
+        saveProfileMsg.textContent = "";
+        bioInput.value = currentUserBio || "";
+        bioCount.textContent = `${bioInput.value.length}/200`;
+        buildAvatarGrid(currentUserAvatar || DEFAULT_AVATAR);
+        editProfileBox.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
-          loginLinkMobile.style.display = "none";
-          signupLinkMobile.style.display = "none";
-          logoutBtnMobile.style.display = "inline-flex";
-        } else {
-          loginLink.style.display = "inline-flex";
-          signupLink.style.display = "inline-flex";
-          logoutBtn.style.display = "none";
+      function closeEditProfile() {
+        editProfileBox.style.display = "none";
+      }
 
-          loginLinkMobile.style.display = "inline-flex";
-          signupLinkMobile.style.display = "inline-flex";
-          logoutBtnMobile.style.display = "none";
+      bioInput.addEventListener("input", () => {
+        bioCount.textContent = `${bioInput.value.length}/200`;
+      });
+
+      openEditProfileBtn.addEventListener("click", openEditProfile);
+      closeEditProfileBtn.addEventListener("click", closeEditProfile);
+
+      saveProfileBtn.addEventListener("click", async () => {
+        if (!currentUserUid || !currentUserName) return;
+
+        const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
+        const bio = (bioInput.value || "").trim().slice(0, 200);
+
+        saveProfileMsg.textContent = "Saving...";
+
+        try {
+          await setDoc(
+            doc(db, "users", currentUserUid),
+            { avatar: selected, bio: bio },
+            { merge: true }
+          );
+
+          currentUserAvatar = selected;
+          currentUserBio = bio;
+
+          avatarImg.src = currentUserAvatar;
+
+          if (currentUserBio.trim()) {
+            myBioLine.style.display = "block";
+            myBioLine.textContent = currentUserBio.trim();
+          } else {
+            myBioLine.style.display = "none";
+            myBioLine.textContent = "";
+          }
+
+          saveProfileMsg.textContent = "Saved!";
+          setTimeout(() => {
+            saveProfileMsg.textContent = "";
+          }, 1200);
+        } catch (err) {
+          console.error(err);
+          saveProfileMsg.textContent = "Error: " + (err.message || err);
         }
-      }
+      });
 
       onAuthStateChanged(auth, async (user) => {
         if (user && user.displayName) {
@@ -1800,18 +1447,26 @@
           currentUserName = name;
           currentUserUid = user.uid;
 
-          welcomeText.textContent = "Welcome, " + name;
+          welcomeText.textContent = "Welcome " + name;
           userNameDisplay.textContent = name;
 
-          setAuthButtons(true);
+          // show correct auth buttons
+          loginLink.style.display = "none";
+          signupLink.style.display = "none";
+          logoutBtn.style.display = "inline-block";
 
-          // show admin panel only for davyd3102
-          if (adminSection) adminSection.style.display = (name === "davyd3102") ? "block" : "none";
-
-          // load profile (avatar + bio) and then start presence
+          // load bio + avatar first
           await loadMyProfile(user.uid, name);
 
-          if (editProfileBtn) editProfileBtn.style.display = "inline-flex";
+          // show edit profile button
+          openEditProfileBtn.style.display = "inline-block";
+
+          // admin panel only for davyd3102
+          if (name === "davyd3102") {
+            if (adminSection) adminSection.style.display = "block";
+          } else {
+            if (adminSection) adminSection.style.display = "none";
+          }
 
           startPresenceUpdater(user.uid, name);
           subscribeFriendsFor(user.uid);
@@ -1822,18 +1477,21 @@
           currentUserAvatar = DEFAULT_AVATAR;
           currentUserBio = "";
 
-          welcomeText.textContent = "Welcome, Guest";
+          welcomeText.textContent = "Welcome Guest";
           userNameDisplay.textContent = "Guest";
           avatarImg.src = DEFAULT_AVATAR;
 
-          myOnlineDot.style.display = "none";
           myBioLine.style.display = "none";
           myBioLine.textContent = "";
 
-          setAuthButtons(false);
+          loginLink.style.display = "inline-block";
+          signupLink.style.display = "inline-block";
+          logoutBtn.style.display = "none";
 
           if (adminSection) adminSection.style.display = "none";
-          if (editProfileBtn) editProfileBtn.style.display = "none";
+
+          openEditProfileBtn.style.display = "none";
+          editProfileBox.style.display = "none";
 
           stopPresenceUpdater();
           subscribeFriendsFor(null);
@@ -1843,19 +1501,16 @@
         updateCommentUI();
       });
 
-      async function doLogout() {
+      logoutBtn.addEventListener("click", async () => {
         try {
           await signOut(auth);
         } catch (err) {
           console.error(err);
           alert("Failed to log out: " + err.message);
         }
-      }
+      });
 
-      logoutBtn.addEventListener("click", doLogout);
-      logoutBtnMobile.addEventListener("click", doLogout);
-
-      // ---------- users cache ----------
+      // users cache for search + online status + mini profiles
       onSnapshot(
         usersCol,
         (snapshot) => {
@@ -1863,7 +1518,6 @@
             id: d.id,
             ...d.data(),
           }));
-
           const term = userSearchInput.value.trim();
           if (term) renderUserResults(term);
           renderFriends();
@@ -1873,14 +1527,15 @@
         }
       );
 
-      // ---------- comments ----------
+      // comments
       onSnapshot(
         commentsQ,
         (snapshot) => {
           commentsList.innerHTML = "";
 
           if (snapshot.empty) {
-            commentsList.innerHTML = '<div class="small-muted">No comments yet.</div>';
+            commentsList.innerHTML =
+              '<p class="comment-empty">No comments yet.</p>';
             return;
           }
 
@@ -1890,7 +1545,8 @@
             const author = data.author || "??";
             const time = data.createdAt?.toDate ? data.createdAt.toDate() : null;
 
-            const timeStr = time ? time.toLocaleString("en-US") : "";
+            let timeStr = "";
+            if (time) timeStr = time.toLocaleString("en-US");
 
             const div = document.createElement("div");
             div.className = "comment";
@@ -1905,7 +1561,7 @@
         (error) => {
           console.error(error);
           commentsList.innerHTML =
-            '<div class="small-muted">Failed to load comments.</div>';
+            '<p class="comment-empty">Failed to load comments.</p>';
         }
       );
 
@@ -1935,8 +1591,11 @@
         });
       }
 
-      // ---------- search handlers ----------
-      userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
+      // search UI events
+      userSearchBtn.addEventListener("click", () => {
+        renderUserResults(userSearchInput.value);
+      });
+
       userSearchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1944,7 +1603,7 @@
         }
       });
 
-      // ---------- theme ----------
+      // theme
       function applyTheme(theme) {
         if (theme === "dark") document.body.classList.add("dark-theme");
         else document.body.classList.remove("dark-theme");
@@ -1960,46 +1619,7 @@
         localStorage.setItem("pineTheme", newTheme);
       });
 
-      // ---------- to top ----------
-      toTopBtn.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-
-      // ---------- burger ----------
-      burgerBtn.addEventListener("click", () => {
-        mobilePanel.classList.toggle("show");
-      });
-
-      // ---------- reveal on scroll ----------
-      const io = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((en) => {
-            if (en.isIntersecting) en.target.classList.add("show");
-          });
-        },
-        { threshold: 0.12 }
-      );
-      document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-
-      // ---------- ripple for buttons ----------
-      document.addEventListener("click", (e) => {
-        const btn = e.target.closest(".btn");
-        if (!btn) return;
-
-        const rect = btn.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-
-        const ripple = document.createElement("span");
-        ripple.className = "ripple";
-        ripple.style.width = ripple.style.height = size + "px";
-        ripple.style.left = x + "px";
-        ripple.style.top = y + "px";
-        btn.appendChild(ripple);
-
-        ripple.addEventListener("animationend", () => ripple.remove());
-      });
-
-      // ---------- admin delete ----------
+      // ---- ADMIN DELETE ----
       if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
         adminDeleteBtn.addEventListener("click", async () => {
           const name = adminDeleteName.value.trim();
@@ -2016,14 +1636,15 @@
             return;
           }
 
-          adminDeleteStatus.textContent = `Searching users with name "${name}"...`;
+          adminDeleteStatus.textContent =
+            'Searching users named "' + name + '"...';
 
           try {
             const targets = usersCache.filter((u) => u.name === name);
 
             if (!targets.length) {
               adminDeleteStatus.textContent =
-                `User "${name}" not found in users collection. Deleting comments anyway...`;
+                'User "' + name + '" not found in users collection.';
             } else {
               let deletedUsers = 0;
               for (const u of targets) {
@@ -2031,23 +1652,29 @@
                 deletedUsers++;
               }
               adminDeleteStatus.textContent =
-                `Deleted users named "${name}": ${deletedUsers}. Deleting related comments...`;
+                'Deleted users named "' +
+                name +
+                '": ' +
+                deletedUsers +
+                ". Deleting related comments...";
             }
 
-            const qComm = query(collection(db, "comments"), where("author", "==", name));
+            const commentsRef = collection(db, "comments");
+            const qComm = query(commentsRef, where("author", "==", name));
             const commSnap = await getDocs(qComm);
-
             let deletedComments = 0;
             for (const cDoc of commSnap.docs) {
               await deleteDoc(cDoc.ref);
               deletedComments++;
             }
 
-            adminDeleteStatus.textContent += ` Deleted comments: ${deletedComments}.`;
+            adminDeleteStatus.textContent +=
+              " Deleted comments: " + deletedComments + ".";
             adminDeleteName.value = "";
           } catch (err) {
             console.error("Admin delete error:", err);
-            adminDeleteStatus.textContent = "Error: " + (err.message || err);
+            adminDeleteStatus.textContent =
+              "Error: " + (err.message || err);
           }
         });
       }
