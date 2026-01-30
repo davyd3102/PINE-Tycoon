@@ -178,4 +178,100 @@
           fail: (m) => "Sign up error: " + m,
         },
         ua: {
-          title:
+          title: "Реєстрація",
+          name: "Нікнейм",
+          pass: "Пароль",
+          pass2: "Повтор паролю",
+          submit: "Створити акаунт",
+          links: `Вже маєш акаунт? <a href="login.html">Sign in</a><br /><a href="index.html">← Повернутися на головну</a>`,
+          errNoName: "Введіть нік.",
+          errSpaces: "Нік не повинен містити пробілів.",
+          errPassLen: "Пароль має бути хоча б 4 символи.",
+          errPassMatch: "Паролі не співпадають.",
+          ok: "Акаунт створено! Переходимо на головну...",
+          taken: "Такий нік уже зайнятий.",
+          fail: (m) => "Помилка реєстрації: " + m,
+        },
+      };
+
+      let lang = localStorage.getItem("pineLang") || "en";
+
+      function setLang(newLang) {
+        lang = newLang;
+        localStorage.setItem("pineLang", lang);
+
+        btnEN.classList.toggle("active", lang === "en");
+        btnUA.classList.toggle("active", lang === "ua");
+
+        const t = TEXT[lang];
+        UI.title.textContent = t.title;
+        UI.lblName.textContent = t.name;
+        UI.lblPass.textContent = t.pass;
+        UI.lblPass2.textContent = t.pass2;
+        UI.btnSubmit.textContent = t.submit;
+        UI.backLinks.innerHTML = t.links;
+
+        document.documentElement.lang = lang === "ua" ? "uk" : "en";
+      }
+
+      btnEN.addEventListener("click", () => setLang("en"));
+      btnUA.addEventListener("click", () => setLang("ua"));
+      setLang(lang);
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        msgEl.textContent = "";
+        msgEl.className = "msg";
+
+        const t = TEXT[lang];
+
+        const name = nameInput.value.trim();
+        const pass = passInput.value;
+        const pass2 = pass2Input.value;
+
+        if (!name) {
+          msgEl.textContent = t.errNoName;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        if (name.includes(" ")) {
+          msgEl.textContent = t.errSpaces;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        if (pass.length < 4) {
+          msgEl.textContent = t.errPassLen;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        if (pass !== pass2) {
+          msgEl.textContent = t.errPassMatch;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        const email = name + "@pine.local";
+
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, email, pass);
+          await updateProfile(cred.user, { displayName: name });
+
+          msgEl.textContent = t.ok;
+          msgEl.classList.add("success");
+
+          setTimeout(() => (window.location.href = "index.html"), 800);
+        } catch (err) {
+          console.error(err);
+          msgEl.classList.add("error");
+
+          if (err.code === "auth/email-already-in-use") msgEl.textContent = t.taken;
+          else msgEl.textContent = t.fail(err.message);
+        }
+      });
+    </script>
+  </body>
+</html>
