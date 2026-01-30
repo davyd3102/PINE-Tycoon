@@ -13,7 +13,6 @@
     />
 
     <style>
-      /* --- ТЕМИ (світла/темна) через CSS-змінні --- */
       :root {
         --bg-color: #f4f4f4;
         --text-color: #000000;
@@ -74,7 +73,6 @@
         color: #fff;
       }
 
-      /* --- Анімації входу на сайт --- */
       @keyframes fade-down {
         0% { opacity: 0; transform: translateY(-16px); }
         100% { opacity: 1; transform: translateY(0); }
@@ -98,7 +96,6 @@
       .delay-2 { animation-delay: 0.3s; }
       .delay-3 { animation-delay: 0.45s; }
 
-      /* --- КНОПКИ --- */
       .btn {
         display: inline-block;
         padding: 6px 14px;
@@ -149,7 +146,7 @@
         background: var(--card-bg);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
         margin-bottom: 20px;
-        max-width: 520px; /* трішки ширше, щоб влізла біо */
+        max-width: 520px;
       }
 
       .user-avatar {
@@ -176,7 +173,6 @@
         border: 2px solid var(--card-bg);
       }
 
-      /* --- ПОШУК КОРИСТУВАЧІВ + ДРУЗІ --- */
       #userSearchSection {
         margin-bottom: 24px;
         max-width: 600px;
@@ -229,12 +225,13 @@
         display: flex;
         flex-direction: column;
         gap: 2px;
+        flex: 1;
       }
 
       .user-result-name {
         font-weight: 600;
         font-size: 14px;
-        cursor: pointer; /* клікабельне */
+        cursor: pointer;
       }
 
       .user-result-status { font-size: 12px; }
@@ -264,7 +261,7 @@
         align-items: center;
         gap: 8px;
         padding: 4px 0;
-        cursor: pointer; /* клікабельне */
+        cursor: pointer;
       }
 
       .friend-avatar {
@@ -294,7 +291,6 @@
         flex-shrink: 0;
       }
 
-      /* --- КОМЕНТАРІ --- */
       #commentsSection {
         margin-top: 20px;
         max-width: 600px;
@@ -343,10 +339,8 @@
       .comment-info { font-size: 12px; color: #555; margin-top: 4px; }
       body.dark-theme .comment-info { color: #ddd; }
 
-      /* --- КАРТИНКА ГРИ --- */
       .main-logo { max-width: 60%; border-radius: 20px; display: block; margin-bottom: 20px; }
 
-      /* --- КНОПКА ТЕМИ --- */
       .theme-toggle {
         position: fixed;
         right: 16px;
@@ -377,13 +371,11 @@
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
       }
 
-      /* --- Перекриваємо старі стилі nav a з style.css, якщо були */
       nav a {
         position: static;
         left: auto;
       }
 
-      /* --- АДМІН-ПАНЕЛЬ --- */
       #adminSection {
         max-width: 600px;
         background: var(--card-bg);
@@ -411,9 +403,7 @@
         border-color: #777;
       }
 
-      /* =========================
-         NEW: MINI PROFILE MODAL
-      ========================= */
+      /* ===== Mini profile modal ===== */
       .modal {
         position: fixed;
         inset: 0;
@@ -478,9 +468,7 @@
       }
       body.dark-theme .profile-bio { color: #ddd; }
 
-      /* =========================
-         NEW: EDIT PROFILE (bio + avatar)
-      ========================= */
+      /* ===== Edit profile box ===== */
       #editProfileBox {
         margin-bottom: 20px;
         max-width: 600px;
@@ -555,7 +543,6 @@
   </head>
 
   <body>
-    <!-- header з анімацією зверху -->
     <header class="fade-down">
       <nav class="main-nav">
         <a href="game.html" class="btn">Грати!</a>
@@ -570,9 +557,7 @@
     </header>
 
     <main>
-      <p class="welcome-text fade-up delay-1" id="welcomeText">
-        Welcome Guest
-      </p>
+      <p class="welcome-text fade-up delay-1" id="welcomeText">Welcome Guest</p>
 
       <div class="user-panel fade-scale delay-1">
         <div class="user-avatar-wrapper">
@@ -590,10 +575,9 @@
         <button id="openEditProfile" class="btn" style="display:none;">Edit profile</button>
       </div>
 
-      <!-- NEW: edit profile box -->
       <section id="editProfileBox" class="fade-up delay-2">
         <h2>Edit profile</h2>
-        <p class="tiny">Choose an avatar and write a short bio (max 200 chars).</p>
+        <p class="tiny" id="avatarHint">Choose an avatar and write a short bio (max 200 chars).</p>
 
         <div id="avatarGrid" class="avatar-grid"></div>
 
@@ -608,19 +592,17 @@
         </div>
       </section>
 
-      <!-- АДМІН-ПАНЕЛЬ (тільки для davyd3102) -->
       <section id="adminSection" class="fade-up delay-2" style="display: none">
         <h2>Admin panel</h2>
         <p class="comment-info">
           Only <strong>davyd3102</strong> can use this panel. Delete a user and all their comments.
         </p>
         <label for="adminDeleteName">Username to delete:</label>
-        <input type="text" id="adminDeleteName" placeholder="Example: Grivield" />
+        <input type="text" id="adminDeleteName" placeholder="Username" />
         <button id="adminDeleteBtn" class="btn">Delete user</button>
         <p id="adminDeleteStatus" class="comment-info"></p>
       </section>
 
-      <!-- ПОШУК + ДРУЗІ -->
       <section id="userSearchSection" class="fade-up delay-2">
         <h2>Player search</h2>
         <div class="user-search-box">
@@ -646,7 +628,6 @@
         </div>
       </section>
 
-      <!-- Картинка гри -->
       <img
         src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
         alt="PINE Tycoon"
@@ -654,21 +635,20 @@
       />
 
       <p class="fade-up delay-2">
-        Welcome to the cozy world of "PINE Tycoon". In this game you will chop wood and build your own village!
+        Welcome to the world of PINE Tycoon. Chop wood and build your village.
       </p>
       <p class="fade-up delay-2">
-        This version is still in beta, so bugs may happen and things can change over time.
+        This version is in beta. Bugs may occur and content may change.
       </p>
 
       <h1 id="blog" class="fade-up delay-2">BLOG</h1>
       <p class="fade-up delay-2">
-        It's empty for now... but new updates are coming soon!
+        Updates will appear here.
       </p>
       <p class="fade-up delay-2">
-        Update: accounts, friends, player search and developer comments are live.
+        Accounts, friends, player search and developer comments are live.
       </p>
 
-      <!-- КОМЕНТАРІ -->
       <section id="commentsSection" class="fade-up delay-3">
         <h2>Developer comments</h2>
         <div id="commentsList">
@@ -691,10 +671,8 @@
 
     <footer>© 2026 PINE Tycoon — beta</footer>
 
-    <!-- Кнопка теми -->
     <button id="themeToggle" class="theme-toggle" title="Toggle theme">⚙</button>
 
-    <!-- NEW: Mini profile modal -->
     <div id="profileModal" class="modal">
       <div class="modal-overlay" id="profileOverlay"></div>
       <div class="modal-card">
@@ -713,14 +691,9 @@
       </div>
     </div>
 
-    <!-- Firebase + логіка -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-        signOut,
-      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
       import {
         getFirestore,
         collection,
@@ -774,13 +747,11 @@
       const friendsListDiv = document.getElementById("friendsList");
       const friendRequestsListDiv = document.getElementById("friendRequestsList");
 
-      // admin
       const adminSection = document.getElementById("adminSection");
       const adminDeleteName = document.getElementById("adminDeleteName");
       const adminDeleteBtn = document.getElementById("adminDeleteBtn");
       const adminDeleteStatus = document.getElementById("adminDeleteStatus");
 
-      // NEW: edit profile UI
       const openEditProfileBtn = document.getElementById("openEditProfile");
       const editProfileBox = document.getElementById("editProfileBox");
       const avatarGrid = document.getElementById("avatarGrid");
@@ -789,8 +760,8 @@
       const saveProfileBtn = document.getElementById("saveProfileBtn");
       const closeEditProfileBtn = document.getElementById("closeEditProfileBtn");
       const saveProfileMsg = document.getElementById("saveProfileMsg");
+      const avatarHint = document.getElementById("avatarHint");
 
-      // NEW: mini profile modal UI
       const profileModal = document.getElementById("profileModal");
       const profileOverlay = document.getElementById("profileOverlay");
       const profileCloseBtn = document.getElementById("profileCloseBtn");
@@ -800,11 +771,10 @@
       const profileLast = document.getElementById("profileLast");
       const profileBio = document.getElementById("profileBio");
 
-      const DEFAULT_AVATAR =
-        "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+      const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
 
-      // 5 options (1 default + 4 твої)
-      const AVATAR_OPTIONS = [
+      // 5 standard avatars (1 default + 4 public)
+      const BASE_AVATARS = [
         DEFAULT_AVATAR,
         "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
         "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
@@ -812,8 +782,22 @@
         "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
       ];
 
+      // Exclusive avatars (visible only to specific users in editor)
+      const EXCLUSIVE_AVATARS = [
+        // твої нові ексклюзивні
+        "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
+        // ексклюзиви, які часто були в старому коді (якщо ти їх використовуєш)
+        "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
+        "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
+      ];
+
       const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
-      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000; // 2 хвилини
+      const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
+
+      const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
 
       let currentUserName = null;
       let currentUserUid = null;
@@ -834,16 +818,26 @@
       const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
       const friendRequestsCol = collection(db, "friendRequests");
 
+      function normalizeName(name) {
+        return String(name || "").trim().toLowerCase().replace(/\s+/g, "_");
+      }
+
+      function isSpecialUser(name) {
+        return SPECIAL_USERS.has(normalizeName(name));
+      }
+
+      function getAllowedAvatarsFor(name) {
+        const set = new Set(BASE_AVATARS);
+        if (isSpecialUser(name)) {
+          EXCLUSIVE_AVATARS.forEach((u) => set.add(u));
+        }
+        return [...set];
+      }
+
       function escapeHtml(str) {
         return String(str).replace(/[&<>"']/g, (c) => {
           return (
-            {
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            }[c] || c
+            { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c
           );
         });
       }
@@ -855,12 +849,8 @@
         return { isOnline, last };
       }
 
-      function openModal() {
-        profileModal.classList.add("show");
-      }
-      function closeModal() {
-        profileModal.classList.remove("show");
-      }
+      function openModal() { profileModal.classList.add("show"); }
+      function closeModal() { profileModal.classList.remove("show"); }
 
       profileOverlay.addEventListener("click", closeModal);
       profileCloseBtn.addEventListener("click", closeModal);
@@ -874,7 +864,6 @@
         profileAvatar.src = u.avatar || DEFAULT_AVATAR;
         profileName.textContent = u.name || "Player";
         profileStatus.textContent = isOnline ? "Online" : "Offline";
-        profileStatus.className = "profile-status " + (isOnline ? "online" : "offline");
         profileLast.textContent = last ? ("Last active: " + last.toLocaleString("en-US")) : "";
         profileBio.textContent = (u.bio && u.bio.trim()) ? u.bio.trim() : "No bio yet.";
 
@@ -889,15 +878,13 @@
           commentInfo.textContent = "You can post comments as " + currentUserName + ".";
         } else {
           commentForm.style.display = "none";
-          if (currentUserName) {
-            commentInfo.textContent = "Only davyd3102 and 3102 can post comments.";
-          } else {
-            commentInfo.textContent = "Sign in as davyd3102 or 3102 to post comments.";
-          }
+          commentInfo.textContent = currentUserName
+            ? "Only davyd3102 and 3102 can post comments."
+            : "Sign in as davyd3102 or 3102 to post comments.";
         }
       }
 
-      async function loadMyProfile(uid, name) {
+      async function loadMyProfile(uid) {
         try {
           const snap = await getDoc(doc(db, "users", uid));
           const data = snap.exists() ? snap.data() : null;
@@ -943,9 +930,7 @@
         if (presenceInterval) clearInterval(presenceInterval);
 
         touchUserPresence(uid, name);
-        presenceInterval = setInterval(() => {
-          touchUserPresence(uid, name);
-        }, 60000);
+        presenceInterval = setInterval(() => touchUserPresence(uid, name), 60000);
       }
 
       function stopPresenceUpdater() {
@@ -956,18 +941,15 @@
       }
 
       function renderFriends() {
-        if (!friendsListDiv) return;
         friendsListDiv.innerHTML = "";
 
         if (!currentUserUid) {
-          friendsListDiv.innerHTML =
-            '<p class="comment-empty">Sign in to view friends.</p>';
+          friendsListDiv.innerHTML = '<p class="comment-empty">Sign in to view friends.</p>';
           return;
         }
 
         if (!friendsList.length) {
-          friendsListDiv.innerHTML =
-            '<p class="comment-empty">No friends yet.</p>';
+          friendsListDiv.innerHTML = '<p class="comment-empty">No friends yet.</p>';
           return;
         }
 
@@ -1005,26 +987,21 @@
           item.appendChild(wrapper);
           item.appendChild(nameSpan);
 
-          // NEW: click friend -> mini profile
           item.addEventListener("click", () => showMiniProfile(f.friendUid));
-
           friendsListDiv.appendChild(item);
         });
       }
 
       function renderFriendRequests() {
-        if (!friendRequestsListDiv) return;
         friendRequestsListDiv.innerHTML = "";
 
         if (!currentUserUid) {
-          friendRequestsListDiv.innerHTML =
-            '<p class="comment-empty">Sign in to view requests.</p>';
+          friendRequestsListDiv.innerHTML = '<p class="comment-empty">Sign in to view requests.</p>';
           return;
         }
 
         if (!friendRequestsIncoming.length && !friendRequestsOutgoing.length) {
-          friendRequestsListDiv.innerHTML =
-            '<p class="comment-empty">No requests.</p>';
+          friendRequestsListDiv.innerHTML = '<p class="comment-empty">No requests.</p>';
           return;
         }
 
@@ -1085,10 +1062,7 @@
       }
 
       function subscribeFriendsFor(uid) {
-        if (friendsUnsub) {
-          friendsUnsub();
-          friendsUnsub = null;
-        }
+        if (friendsUnsub) { friendsUnsub(); friendsUnsub = null; }
         friendsList = [];
         renderFriends();
 
@@ -1098,27 +1072,20 @@
         friendsUnsub = onSnapshot(
           friendsColRef,
           (snapshot) => {
-            friendsList = snapshot.docs.map((d) => ({
-              id: d.id,
-              ...d.data(),
-            }));
+            friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
             renderFriends();
             const term = userSearchInput.value.trim();
             if (term) renderUserResults(term);
           },
           (error) => {
             console.error("Friends load error:", error);
-            friendsListDiv.innerHTML =
-              '<p class="comment-empty">Failed to load friends.</p>';
+            friendsListDiv.innerHTML = '<p class="comment-empty">Failed to load friends.</p>';
           }
         );
       }
 
       function subscribeFriendRequestsFor(uid) {
-        if (friendReqUnsub) {
-          friendReqUnsub();
-          friendReqUnsub = null;
-        }
+        if (friendReqUnsub) { friendReqUnsub(); friendReqUnsub = null; }
         friendRequestsIncoming = [];
         friendRequestsOutgoing = [];
         renderFriendRequests();
@@ -1134,21 +1101,15 @@
             snapshot.forEach((docSnap) => {
               const data = docSnap.data();
               if (!data || data.status !== "pending") return;
-              if (data.toUid === uid) {
-                friendRequestsIncoming.push({ id: docSnap.id, ...data });
-              }
-              if (data.fromUid === uid) {
-                friendRequestsOutgoing.push({ id: docSnap.id, ...data });
-              }
+              if (data.toUid === uid) friendRequestsIncoming.push({ id: docSnap.id, ...data });
+              if (data.fromUid === uid) friendRequestsOutgoing.push({ id: docSnap.id, ...data });
             });
 
             renderFriendRequests();
             const term = userSearchInput.value.trim();
             if (term) renderUserResults(term);
           },
-          (error) => {
-            console.error("friendRequests load error:", error);
-          }
+          (error) => console.error("friendRequests load error:", error)
         );
       }
 
@@ -1160,7 +1121,6 @@
           const myUid = currentUserUid;
           const myName = currentUserName;
 
-          // try to use real avatar from cache
           const fromUser = usersCache.find((u) => u.id === fromUid);
           const myUser = usersCache.find((u) => u.id === myUid);
 
@@ -1205,19 +1165,15 @@
 
         const trimmed = term.trim();
         if (!trimmed) {
-          userSearchResults.innerHTML =
-            '<p class="comment-empty">Type a name to search players.</p>';
+          userSearchResults.innerHTML = '<p class="comment-empty">Type a name to search players.</p>';
           return;
         }
 
         const lower = trimmed.toLowerCase();
-        const filtered = usersCache.filter(
-          (u) => u.name && u.name.toLowerCase().includes(lower)
-        );
+        const filtered = usersCache.filter((u) => u.name && u.name.toLowerCase().includes(lower));
 
         if (!filtered.length) {
-          userSearchResults.innerHTML =
-            '<p class="comment-empty">No results.</p>';
+          userSearchResults.innerHTML = '<p class="comment-empty">No results.</p>';
           return;
         }
 
@@ -1230,20 +1186,14 @@
 
           let status = "Offline";
           let isOnline = false;
-          if (last && now - last < ONLINE_TIMEOUT_MS) {
-            status = "Online";
-            isOnline = true;
-          }
+          if (last && now - last < ONLINE_TIMEOUT_MS) { status = "Online"; isOnline = true; }
 
           let relation = "none";
           if (!currentUserUid) relation = "guest";
           else if (u.id === currentUserUid) relation = "self";
-          else if (friendsList.some((f) => f.friendUid === u.id))
-            relation = "friend";
-          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id))
-            relation = "outgoing";
-          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id))
-            relation = "incoming";
+          else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
+          else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
+          else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
 
           const item = document.createElement("div");
           item.className = "user-result";
@@ -1265,8 +1215,7 @@
           nameDiv.addEventListener("click", () => showMiniProfile(u.id));
 
           const statusDiv = document.createElement("div");
-          statusDiv.className =
-            "user-result-status " + (isOnline ? "online" : "offline");
+          statusDiv.className = "user-result-status " + (isOnline ? "online" : "offline");
           statusDiv.textContent = status;
 
           infoDiv.appendChild(nameDiv);
@@ -1275,8 +1224,7 @@
           if (last) {
             const lastDiv = document.createElement("div");
             lastDiv.className = "user-result-last";
-            lastDiv.textContent =
-              "Last active: " + last.toLocaleString("en-US");
+            lastDiv.textContent = "Last active: " + last.toLocaleString("en-US");
             infoDiv.appendChild(lastDiv);
           }
 
@@ -1291,7 +1239,7 @@
           } else if (relation === "self") {
             const note = document.createElement("div");
             note.className = "user-result-note";
-            note.textContent = "This is you :)";
+            note.textContent = "This is your account.";
             actionDiv.appendChild(note);
           } else if (relation === "friend") {
             const note = document.createElement("div");
@@ -1358,10 +1306,17 @@
         }
       }
 
-      // ---- Edit profile (bio + avatar) ----
+      // ===== Edit profile (bio + avatar) =====
       function buildAvatarGrid(selectedUrl) {
         avatarGrid.innerHTML = "";
-        AVATAR_OPTIONS.forEach((url) => {
+
+        const allowed = getAllowedAvatarsFor(currentUserName);
+        // серйозний хінт (і пояснення про ексклюзив)
+        avatarHint.textContent = isSpecialUser(currentUserName)
+          ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
+          : "Choose an avatar and write a short bio (max 200 chars).";
+
+        allowed.forEach((url) => {
           const cell = document.createElement("div");
           cell.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
 
@@ -1371,15 +1326,14 @@
           cell.appendChild(img);
 
           cell.addEventListener("click", () => {
-            [...avatarGrid.querySelectorAll(".avatar-option")].forEach((x) =>
-              x.classList.remove("selected")
-            );
+            [...avatarGrid.querySelectorAll(".avatar-option")].forEach((x) => x.classList.remove("selected"));
             cell.classList.add("selected");
             avatarGrid.dataset.selected = url;
           });
 
           avatarGrid.appendChild(cell);
         });
+
         avatarGrid.dataset.selected = selectedUrl;
       }
 
@@ -1406,19 +1360,17 @@
       saveProfileBtn.addEventListener("click", async () => {
         if (!currentUserUid || !currentUserName) return;
 
+        const allowed = new Set(getAllowedAvatarsFor(currentUserName));
         const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
+        const safeSelected = allowed.has(selected) ? selected : DEFAULT_AVATAR;
         const bio = (bioInput.value || "").trim().slice(0, 200);
 
         saveProfileMsg.textContent = "Saving...";
 
         try {
-          await setDoc(
-            doc(db, "users", currentUserUid),
-            { avatar: selected, bio: bio },
-            { merge: true }
-          );
+          await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio: bio }, { merge: true });
 
-          currentUserAvatar = selected;
+          currentUserAvatar = safeSelected;
           currentUserBio = bio;
 
           avatarImg.src = currentUserAvatar;
@@ -1431,10 +1383,8 @@
             myBioLine.textContent = "";
           }
 
-          saveProfileMsg.textContent = "Saved!";
-          setTimeout(() => {
-            saveProfileMsg.textContent = "";
-          }, 1200);
+          saveProfileMsg.textContent = "Saved.";
+          setTimeout(() => (saveProfileMsg.textContent = ""), 1200);
         } catch (err) {
           console.error(err);
           saveProfileMsg.textContent = "Error: " + (err.message || err);
@@ -1450,23 +1400,16 @@
           welcomeText.textContent = "Welcome " + name;
           userNameDisplay.textContent = name;
 
-          // show correct auth buttons
           loginLink.style.display = "none";
           signupLink.style.display = "none";
           logoutBtn.style.display = "inline-block";
 
-          // load bio + avatar first
-          await loadMyProfile(user.uid, name);
+          await loadMyProfile(user.uid);
 
-          // show edit profile button
           openEditProfileBtn.style.display = "inline-block";
 
-          // admin panel only for davyd3102
-          if (name === "davyd3102") {
-            if (adminSection) adminSection.style.display = "block";
-          } else {
-            if (adminSection) adminSection.style.display = "none";
-          }
+          if (name === "davyd3102") adminSection.style.display = "block";
+          else adminSection.style.display = "none";
 
           startPresenceUpdater(user.uid, name);
           subscribeFriendsFor(user.uid);
@@ -1488,8 +1431,7 @@
           signupLink.style.display = "inline-block";
           logoutBtn.style.display = "none";
 
-          if (adminSection) adminSection.style.display = "none";
-
+          adminSection.style.display = "none";
           openEditProfileBtn.style.display = "none";
           editProfileBox.style.display = "none";
 
@@ -1510,32 +1452,24 @@
         }
       });
 
-      // users cache for search + online status + mini profiles
       onSnapshot(
         usersCol,
         (snapshot) => {
-          usersCache = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          }));
+          usersCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
           const term = userSearchInput.value.trim();
           if (term) renderUserResults(term);
           renderFriends();
         },
-        (error) => {
-          console.error("Users load error:", error);
-        }
+        (error) => console.error("Users load error:", error)
       );
 
-      // comments
       onSnapshot(
         commentsQ,
         (snapshot) => {
           commentsList.innerHTML = "";
 
           if (snapshot.empty) {
-            commentsList.innerHTML =
-              '<p class="comment-empty">No comments yet.</p>';
+            commentsList.innerHTML = '<p class="comment-empty">No comments yet.</p>';
             return;
           }
 
@@ -1544,9 +1478,7 @@
             const text = data.text || "";
             const author = data.author || "??";
             const time = data.createdAt?.toDate ? data.createdAt.toDate() : null;
-
-            let timeStr = "";
-            if (time) timeStr = time.toLocaleString("en-US");
+            const timeStr = time ? time.toLocaleString("en-US") : "";
 
             const div = document.createElement("div");
             div.className = "comment";
@@ -1560,8 +1492,7 @@
         },
         (error) => {
           console.error(error);
-          commentsList.innerHTML =
-            '<p class="comment-empty">Failed to load comments.</p>';
+          commentsList.innerHTML = '<p class="comment-empty">Failed to load comments.</p>';
         }
       );
 
@@ -1591,11 +1522,7 @@
         });
       }
 
-      // search UI events
-      userSearchBtn.addEventListener("click", () => {
-        renderUserResults(userSearchInput.value);
-      });
-
+      userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
       userSearchInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -1603,14 +1530,12 @@
         }
       });
 
-      // theme
       function applyTheme(theme) {
         if (theme === "dark") document.body.classList.add("dark-theme");
         else document.body.classList.remove("dark-theme");
       }
 
-      const savedTheme = localStorage.getItem("pineTheme") || "light";
-      applyTheme(savedTheme);
+      applyTheme(localStorage.getItem("pineTheme") || "light");
 
       themeToggleBtn.addEventListener("click", () => {
         const isDark = document.body.classList.contains("dark-theme");
@@ -1619,62 +1544,51 @@
         localStorage.setItem("pineTheme", newTheme);
       });
 
-      // ---- ADMIN DELETE ----
       if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
         adminDeleteBtn.addEventListener("click", async () => {
           const name = adminDeleteName.value.trim();
           adminDeleteStatus.textContent = "";
 
           if (!currentUserName || currentUserName !== "davyd3102") {
-            adminDeleteStatus.textContent =
-              "Only davyd3102 can use this panel.";
+            adminDeleteStatus.textContent = "Only davyd3102 can use this panel.";
             return;
           }
-
           if (!name) {
             adminDeleteStatus.textContent = "Type a username.";
             return;
           }
 
-          adminDeleteStatus.textContent =
-            'Searching users named "' + name + '"...';
+          adminDeleteStatus.textContent = "Searching user...";
 
           try {
             const targets = usersCache.filter((u) => u.name === name);
 
             if (!targets.length) {
-              adminDeleteStatus.textContent =
-                'User "' + name + '" not found in users collection.';
+              adminDeleteStatus.textContent = "User not found in users collection.";
             } else {
               let deletedUsers = 0;
               for (const u of targets) {
                 await deleteDoc(doc(db, "users", u.id));
                 deletedUsers++;
               }
-              adminDeleteStatus.textContent =
-                'Deleted users named "' +
-                name +
-                '": ' +
-                deletedUsers +
-                ". Deleting related comments...";
+              adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleting comments...`;
             }
 
             const commentsRef = collection(db, "comments");
             const qComm = query(commentsRef, where("author", "==", name));
             const commSnap = await getDocs(qComm);
+
             let deletedComments = 0;
             for (const cDoc of commSnap.docs) {
               await deleteDoc(cDoc.ref);
               deletedComments++;
             }
 
-            adminDeleteStatus.textContent +=
-              " Deleted comments: " + deletedComments + ".";
+            adminDeleteStatus.textContent += ` Deleted comments: ${deletedComments}.`;
             adminDeleteName.value = "";
           } catch (err) {
             console.error("Admin delete error:", err);
-            adminDeleteStatus.textContent =
-              "Error: " + (err.message || err);
+            adminDeleteStatus.textContent = "Error: " + (err.message || err);
           }
         });
       }
