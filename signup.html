@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <title>Sign up — PINE Tycoon</title>
@@ -17,37 +17,43 @@
       }
 
       .card {
-        position: relative;
         background: #ffffff;
         padding: 20px 24px;
         border-radius: 12px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         max-width: 380px;
         width: 100%;
+        position: relative;
       }
 
-      .lang-btn {
+      h1 { margin-top: 0; text-align: center; }
+
+      .lang {
         position: absolute;
-        top: 12px;
         right: 12px;
+        top: 12px;
+        display: flex;
+        gap: 6px;
+      }
+
+      .lang button {
+        width: auto;
+        padding: 6px 10px;
+        border-radius: 999px;
         border: 1px solid #ccc;
         background: #fff;
-        border-radius: 999px;
-        padding: 6px 10px;
-        cursor: pointer;
+        color: #333;
         font-size: 12px;
+        cursor: pointer;
       }
 
-      h1 {
-        margin-top: 0;
-        text-align: center;
+      .lang button.active {
+        border-color: #383837;
+        background: #383837;
+        color: #fff;
       }
 
-      label {
-        display: block;
-        margin-top: 10px;
-        font-size: 14px;
-      }
+      label { display: block; margin-top: 10px; font-size: 14px; }
 
       input {
         width: 100%;
@@ -70,78 +76,58 @@
         cursor: pointer;
       }
 
-      button:hover { opacity: 0.9; }
+      button[type="submit"]:hover { opacity: 0.9; }
 
-      .msg {
-        margin-top: 10px;
-        font-size: 13px;
-        min-height: 18px;
-      }
-
+      .msg { margin-top: 10px; font-size: 13px; min-height: 18px; }
       .msg.error { color: #c00; }
       .msg.success { color: #008800; }
 
-      .back-link {
-        margin-top: 10px;
-        font-size: 13px;
-        text-align: center;
-      }
+      .back-link { margin-top: 10px; font-size: 13px; text-align: center; }
 
-      .back-link a {
-        color: #333;
-        text-decoration: none;
-      }
-
+      .back-link a { color: #333; text-decoration: none; }
       .back-link a:hover { text-decoration: underline; }
     </style>
   </head>
 
   <body>
     <div class="card">
-      <button class="lang-btn" id="langBtn" type="button">EN</button>
+      <div class="lang">
+        <button id="btnEN" type="button">EN</button>
+        <button id="btnUA" type="button">UA</button>
+      </div>
 
-      <h1 id="titleH1">Реєстрація</h1>
+      <h1 id="title">Create account</h1>
 
       <form id="signupForm">
-        <label id="labelName">
-          Нікнейм
-          <input type="text" id="signupName" required placeholder="Наприклад: davyd3102" />
+        <label>
+          <span id="lblName">Username</span>
+          <input type="text" id="signupName" required />
         </label>
 
-        <label id="labelPass">
-          Пароль
+        <label>
+          <span id="lblPass">Password</span>
           <input type="password" id="signupPassword" required />
         </label>
 
-        <label id="labelPass2">
-          Повтор паролю
+        <label>
+          <span id="lblPass2">Confirm password</span>
           <input type="password" id="signupPassword2" required />
         </label>
 
-        <button type="submit" id="submitBtn">Створити акаунт</button>
+        <button type="submit" id="btnSubmit">Sign up</button>
       </form>
 
       <div id="signupMsg" class="msg"></div>
 
-      <div class="back-link">
-        <span id="haveAccText">Вже маєш акаунт?</span> <a href="login.html" id="signinLink">Sign in</a><br />
-        <a href="index.html" id="backHomeLink">← Повернутися на головну</a>
+      <div class="back-link" id="backLinks">
+        Already have an account? <a href="login.html">Sign in</a><br />
+        <a href="index.html">← Back to home</a>
       </div>
     </div>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-      import {
-        getAuth,
-        createUserWithEmailAndPassword,
-        updateProfile
-      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        setDoc,
-        serverTimestamp
-      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+      import { getAuth, createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
@@ -150,19 +136,11 @@
         storageBucket: "pine-tycoon.firebasestorage.app",
         messagingSenderId: "949986190236",
         appId: "1:949986190236:web:4f5d50078326f5c1981e59",
-        measurementId: "G-2DY6KSY4G7"
+        measurementId: "G-2DY6KSY4G7",
       };
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      // 5 avatar options (1 default + 4 твої)
-      const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-      const AVATAR_2 = "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png";
-      const AVATAR_3 = "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png";
-      const AVATAR_4 = "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png";
-      const AVATAR_5 = "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png";
 
       const form = document.getElementById("signupForm");
       const nameInput = document.getElementById("signupName");
@@ -171,161 +149,33 @@
       const msgEl = document.getElementById("signupMsg");
 
       // i18n
-      const T = {
-        uk: {
-          h1: "Реєстрація",
-          name: "Нікнейм",
-          pass: "Пароль",
-          pass2: "Повтор паролю",
-          submit: "Створити акаунт",
-          haveAcc: "Вже маєш акаунт?",
-          backHome: "← Повернутися на головну",
-          phName: "Наприклад: davyd3102",
+      const btnEN = document.getElementById("btnEN");
+      const btnUA = document.getElementById("btnUA");
 
-          errName: "Введи нік.",
-          errSpace: "Нік не повинен містити пробілів.",
-          errChars: "Нік може містити лише літери/цифри та символи . _ -",
-          errPassLen: "Пароль має бути хоча б 4 символи.",
-          errPassMatch: "Паролі не співпадають.",
-          ok: "Акаунт створено! Переходимо на головну...",
-          taken: "Такий нік уже зайнятий.",
-          fail: (m) => "Помилка реєстрації: " + m,
-        },
+      const UI = {
+        title: document.getElementById("title"),
+        lblName: document.getElementById("lblName"),
+        lblPass: document.getElementById("lblPass"),
+        lblPass2: document.getElementById("lblPass2"),
+        btnSubmit: document.getElementById("btnSubmit"),
+        backLinks: document.getElementById("backLinks"),
+      };
+
+      const TEXT = {
         en: {
-          h1: "Sign up",
+          title: "Create account",
           name: "Username",
           pass: "Password",
           pass2: "Confirm password",
-          submit: "Create account",
-          haveAcc: "Already have an account?",
-          backHome: "← Back to home",
-          phName: "Example: davyd3102",
-
-          errName: "Please type a username.",
-          errSpace: "Username must not contain spaces.",
-          errChars: "Username can only contain letters/numbers and . _ -",
+          submit: "Sign up",
+          links: `Already have an account? <a href="login.html">Sign in</a><br /><a href="index.html">← Back to home</a>`,
+          errNoName: "Enter a username.",
+          errSpaces: "Username must not contain spaces.",
           errPassLen: "Password must be at least 4 characters.",
           errPassMatch: "Passwords do not match.",
-          ok: "Account created! Redirecting to home...",
-          taken: "That username is already taken.",
+          ok: "Account created. Redirecting...",
+          taken: "This username is already taken.",
           fail: (m) => "Sign up error: " + m,
-        }
-      };
-
-      function getLang() {
-        return localStorage.getItem("pineLang") || "uk";
-      }
-
-      function setLang(lang) {
-        localStorage.setItem("pineLang", lang);
-        document.documentElement.lang = lang;
-
-        const t = T[lang];
-        document.getElementById("titleH1").textContent = t.h1;
-
-        // labels
-        document.getElementById("labelName").childNodes[0].textContent = t.name + " ";
-        document.getElementById("labelPass").childNodes[0].textContent = t.pass + " ";
-        document.getElementById("labelPass2").childNodes[0].textContent = t.pass2 + " ";
-
-        document.getElementById("submitBtn").textContent = t.submit;
-        document.getElementById("haveAccText").textContent = t.haveAcc;
-        document.getElementById("backHomeLink").textContent = t.backHome;
-
-        nameInput.placeholder = t.phName;
-
-        // button shows the OTHER language
-        document.getElementById("langBtn").textContent = (lang === "uk") ? "EN" : "UK";
-      }
-
-      document.getElementById("langBtn").addEventListener("click", () => {
-        const cur = getLang();
-        setLang(cur === "uk" ? "en" : "uk");
-      });
-
-      setLang(getLang());
-
-      function isValidUsername(name) {
-        // дозволяємо: a-z A-Z 0-9 . _ -
-        return /^[A-Za-z0-9._-]+$/.test(name);
-      }
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        msgEl.textContent = "";
-        msgEl.className = "msg";
-
-        const lang = getLang();
-        const t = T[lang];
-
-        const name = nameInput.value.trim();
-        const pass = passInput.value;
-        const pass2 = pass2Input.value;
-
-        if (!name) {
-          msgEl.textContent = t.errName;
-          msgEl.classList.add("error");
-          return;
-        }
-
-        if (name.includes(" ")) {
-          msgEl.textContent = t.errSpace;
-          msgEl.classList.add("error");
-          return;
-        }
-
-        if (!isValidUsername(name)) {
-          msgEl.textContent = t.errChars;
-          msgEl.classList.add("error");
-          return;
-        }
-
-        if (pass.length < 4) {
-          msgEl.textContent = t.errPassLen;
-          msgEl.classList.add("error");
-          return;
-        }
-
-        if (pass !== pass2) {
-          msgEl.textContent = t.errPassMatch;
-          msgEl.classList.add("error");
-          return;
-        }
-
-        const email = name.toLowerCase() + "@pine.local";
-
-        try {
-          const cred = await createUserWithEmailAndPassword(auth, email, pass);
-          await updateProfile(cred.user, { displayName: name });
-
-          // створимо users/{uid} одразу, щоб був аватар+bio
-          await setDoc(
-            doc(db, "users", cred.user.uid),
-            {
-              name: name,
-              avatar: DEFAULT_AVATAR,
-              bio: "",
-              lastActive: serverTimestamp(),
-            },
-            { merge: true }
-          );
-
-          msgEl.textContent = t.ok;
-          msgEl.classList.add("success");
-
-          setTimeout(() => (window.location.href = "index.html"), 800);
-        } catch (err) {
-          console.error(err);
-          msgEl.classList.add("error");
-
-          if (err.code === "auth/email-already-in-use") {
-            msgEl.textContent = t.taken;
-          } else {
-            msgEl.textContent = t.fail(err.message);
-          }
-        }
-      });
-    </script>
-  </body>
-</html>
+        },
+        ua: {
+          title:
