@@ -1,14 +1,14 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
-  <title>Village – 2D Snow Survival (Pixel)</title>
+  <title>2D Survival – Procedural World</title>
   <style>
-    html, body {
+    html, body{
       margin:0; padding:0; height:100%; overflow:hidden;
       background:#000;
-      font-family: "Segoe UI", Arial, sans-serif;
+      font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
       touch-action:none;
     }
     #game{
@@ -20,1635 +20,2046 @@
       position:fixed; inset:0; width:100%; height:100%;
       pointer-events:none; z-index:8;
     }
-    #info{
-      position:fixed; top:10px; left:10px; z-index:20;
-      padding:8px 12px; background:rgba(0,0,0,0.55);
-      color:#fff; font-size:13px; border-radius:12px;
-      max-width:min(640px, calc(100vw - 20px));
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-    }
-    #stats{
-      position:fixed; top:78px; left:10px; z-index:20;
-      padding:6px 10px; background:rgba(0,0,0,0.55);
-      color:#fff; font-size:13px; border-radius:12px;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-    }
-    #heatBar{
-      position:fixed; bottom:18px; left:50%;
-      transform:translateX(-50%);
-      z-index:20; padding:6px 10px;
-      background:rgba(0,0,0,0.55);
-      color:#fff; font-size:18px;
-      border-radius:14px; letter-spacing:2px;
-      user-select:none;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-    }
-    #minimap{
-      position:fixed; right:14px; top:14px;
-      width:170px; height:170px; z-index:22;
-      border-radius:16px; overflow:hidden;
-      border:3px solid rgba(255,255,255,0.75);
-      background:#0f260f;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-    }
-    #minimapCanvas{
-      width:100%; height:100%;
-      image-rendering:pixelated;
-    }
-    #mpToggle{
-      position:fixed; right:14px; top:194px; z-index:23;
-      border:none; border-radius:14px; padding:10px 12px;
-      background:rgba(0,0,0,0.60); color:#fff;
-      cursor:pointer;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-      font-size:14px; font-weight:800;
-    }
-    #mpPanel{
-      position:fixed; right:14px; top:240px;
-      width:220px; max-height:260px; overflow:auto;
-      background:rgba(0,0,0,0.62); color:#fff;
-      padding:10px; font-size:12px;
-      border-radius:14px; z-index:22;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-      border:1px solid rgba(255,255,255,0.08);
-    }
-    #mpStatus{ font-weight:900; margin-bottom:8px; }
-    #mpList .playerRow{
-      margin-bottom:8px;
-      border-bottom:1px solid rgba(255,255,255,0.15);
-      padding-bottom:8px;
-    }
-    #mpList .playerRow:last-child{ border-bottom:none; }
-    #mpList button{
-      width:100%; margin-top:6px;
-      border:none; padding:8px 10px;
-      border-radius:12px;
-      background:#3498db; color:#fff;
-      cursor:pointer; font-size:12px; font-weight:800;
-    }
-
-    #freezeOverlay{
-      position:fixed; inset:0; background:#000;
-      opacity:0; pointer-events:none; z-index:50;
-      transition:opacity 1s;
-    }
-    #freezeText{
-      position:fixed; inset:0;
-      display:grid; place-items:center;
-      z-index:51; pointer-events:none;
-      opacity:0; transition:opacity 1s;
-      color:#fff; text-align:center; padding:24px;
-      font-weight:900;
-    }
-    #freezeText .card{
-      background:rgba(0,0,0,0.55);
-      border:1px solid rgba(255,255,255,0.12);
-      border-radius:16px;
-      padding:14px 16px; max-width:520px;
-      box-shadow:0 10px 25px rgba(0,0,0,0.35);
-    }
-
     #errBox{
       position:fixed; left:10px; right:10px; bottom:10px; z-index:99;
       background:rgba(120,0,0,0.80);
       color:#fff; padding:10px 12px; border-radius:12px;
-      font: 12px/1.35 monospace;
+      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       display:none; white-space:pre-wrap;
       border:1px solid rgba(255,255,255,0.18);
+      pointer-events:none;
     }
 
-    /* Touch: тільки ЛІВИЙ джойстик + кнопка сокири */
-    #touchControls{
-      position:fixed; inset:0;
-      pointer-events:none; z-index:30;
+    /* Minimal HUD (wood count etc.) */
+    #hud{
+      position:fixed;
+      left:10px; bottom:10px;
+      z-index:40;
+      padding:8px 10px;
+      border-radius:12px;
+      background:rgba(0,0,0,0.55);
+      color:#fff;
+      font-size:13px;
+      font-weight:700;
+      letter-spacing:0.2px;
+      border:1px solid rgba(255,255,255,0.10);
+      box-shadow:0 10px 25px rgba(0,0,0,0.35);
+      user-select:none;
+      pointer-events:none;
+    }
+    #hud .small{
+      font-size:11px;
+      font-weight:600;
+      opacity:0.9;
+      margin-top:3px;
+    }
+
+    /* Small minimap (toggle M) */
+    #minimapWrap{
+      position:fixed;
+      right:10px; top:10px;
+      z-index:41;
+      width:140px; height:140px;
+      border-radius:14px;
+      overflow:hidden;
+      border:2px solid rgba(255,255,255,0.70);
+      background:rgba(0,0,0,0.25);
+      box-shadow:0 10px 25px rgba(0,0,0,0.35);
       display:none;
     }
+    #minimap{
+      width:100%; height:100%;
+      image-rendering:pixelated;
+    }
+
+    /* Touch: left joystick + action button */
+    #touchControls{
+      position:fixed; inset:0; pointer-events:none; z-index:30; display:none;
+    }
     #touchControls .pad{
-      position:absolute;
-      width:124px; height:124px;
-      border-radius:50%;
+      position:absolute; width:124px; height:124px; border-radius:50%;
       border:2px solid rgba(255,255,255,0.25);
       background:radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
-      pointer-events:auto;
-      touch-action:none;
-      backdrop-filter:blur(2px);
+      pointer-events:auto; touch-action:none; backdrop-filter:blur(2px);
     }
     #movePad{ left:18px; bottom:28px; }
     #touchControls .stick{
-      position:absolute;
-      width:60px; height:60px;
-      border-radius:50%;
+      position:absolute; width:60px; height:60px; border-radius:50%;
       left:32px; top:32px;
       background:rgba(46,204,113,0.82);
       box-shadow:0 0 14px rgba(46,204,113,0.95);
     }
     #actionBtn{
       position:absolute; right:22px; bottom:22px;
-      width:90px; height:90px;
-      border-radius:50%; border:none;
+      width:90px; height:90px; border-radius:50%; border:none;
       background:radial-gradient(circle, #ffb347 0, #e67e22 60%);
       box-shadow:0 0 18px rgba(230,126,34,0.95);
       font-size:36px; color:#fff;
-      pointer-events:auto;
-      touch-action:none;
-      user-select:none;
+      pointer-events:auto; touch-action:none; user-select:none;
     }
 
     @media (pointer:coarse){
       #touchControls{ display:block; }
-      #minimap{ width:128px; height:128px; right:10px; top:10px; border-radius:14px; }
-      #mpToggle{ right:10px; top:148px; border-radius:14px; padding:10px 12px; }
-      #mpPanel{ left:10px; right:10px; width:auto; top:auto; bottom:120px; max-height:220px; }
-      #info{ font-size:12px; }
-      #stats{ top:72px; }
+      #minimapWrap{ width:120px; height:120px; }
+      #hud{ font-size:12px; }
     }
   </style>
 </head>
 <body>
-
-  <div id="info">
-    ПК: WASD – рух, мишка – напрям, ЛКМ – 🪓 дія/рубка/кнопка<br>
-    Телефон: лівий круг – рух, 🪓 – дія/рубка/кнопка
-  </div>
-  <div id="stats"></div>
-  <div id="heatBar"></div>
-
-  <!-- Day/Night music (кросфейд) -->
-  <audio id="bgmDay" src="https://cdn.pixabay.com/audio/2022/03/15/audio_d542afd1d9.mp3" loop></audio>
-  <audio id="bgmNight" src="https://cdn.pixabay.com/audio/2022/10/25/audio_8ed9eaa0d4.mp3" loop></audio>
-
-  <div id="minimap"><canvas id="minimapCanvas" width="180" height="180"></canvas></div>
-
-  <button id="mpToggle">👥 Друзі</button>
-  <div id="mpPanel">
-    <div id="mpStatus">Мультиплеєр: завантаження...</div>
-    <div id="mpList"></div>
-  </div>
-
   <canvas id="game"></canvas>
   <canvas id="fxCanvas"></canvas>
+
+  <div id="hud"></div>
+
+  <div id="minimapWrap">
+    <canvas id="minimap" width="140" height="140"></canvas>
+  </div>
 
   <div id="touchControls">
     <div id="movePad" class="pad"><div id="moveStick" class="stick"></div></div>
     <button id="actionBtn">🪓</button>
   </div>
 
-  <div id="freezeOverlay"></div>
-  <div id="freezeText">
-    <div class="card">
-      ❄️ Ви замерзли…<br><br>
-      Підійдіть ближче до вогнища, поки шкала тепла не впала до нуля.<br>
-      (Щоб почати заново – онови сторінку)
-    </div>
-  </div>
-
   <div id="errBox"></div>
 
-  <!-- Firebase compat -->
-  <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore-compat.js"></script>
+<script>
+(function(){
+  const errBox = document.getElementById("errBox");
+  function showErr(msg){
+    errBox.style.display="block";
+    errBox.textContent = String(msg);
+  }
+  window.addEventListener("error", (e)=> showErr("JS ERROR:\n" + (e.message || e.error || e)));
+  window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
 
-  <script>
-  (function(){
-    const errBox = document.getElementById("errBox");
-    function showErr(msg){
-      errBox.style.display="block";
-      errBox.textContent = String(msg);
+  const isCoarse = matchMedia("(pointer:coarse)").matches;
+
+  const gameCanvas = document.getElementById("game");
+  const gctx = gameCanvas.getContext("2d");
+  const fxCanvas = document.getElementById("fxCanvas");
+  const fx = fxCanvas.getContext("2d");
+
+  const hudEl = document.getElementById("hud");
+  const miniWrap = document.getElementById("minimapWrap");
+  const mini = document.getElementById("minimap");
+  const mctx = mini.getContext("2d");
+
+  const rgba = (r,g,b,a)=>`rgba(${r},${g},${b},${a})`;
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  const lerp = (a,b,t)=>a+(b-a)*t;
+  const dist2 = (ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
+  function easeOutQuint(t){ return 1 - Math.pow(1-t, 5); }
+
+  /* Pixel buffer */
+  const INTERNAL_W = 512;
+  const INTERNAL_H = 288;
+  const buffer = document.createElement("canvas");
+  buffer.width = INTERNAL_W;
+  buffer.height = INTERNAL_H;
+  const bctx = buffer.getContext("2d");
+  bctx.imageSmoothingEnabled = false;
+  gctx.imageSmoothingEnabled = false;
+
+  /* View transform (for mouse->world) */
+  const view = { scale:1, ox:0, oy:0 };
+
+  /* World scale */
+  const PPU = 16;
+  const WORLD_HALF = 160;
+  const WORLD_SIZE = WORLD_HALF*2; // 320
+
+  /* Tile types */
+  const T = { WATER:0, SAND:1, GRASS:2, HILL:3, ROCK:4 };
+  const tileMap   = new Uint8Array(WORLD_SIZE*WORLD_SIZE);
+  const heightMap = new Float32Array(WORLD_SIZE*WORLD_SIZE);
+  const moistMap  = new Float32Array(WORLD_SIZE*WORLD_SIZE);
+  const riverMask = new Uint8Array(WORLD_SIZE*WORLD_SIZE);
+
+  function idxOf(tx,ty){ return ty*WORLD_SIZE + tx; }
+  function inBounds(tx,ty){ return tx>=0 && ty>=0 && tx<WORLD_SIZE && ty<WORLD_SIZE; }
+  function worldToTile(wx){ return Math.floor(wx + WORLD_HALF); }
+  function tileToWorld(tx){ return (tx - WORLD_HALF) + 0.5; }
+
+  /* Colliders */
+  const colliders = [];
+  function addColliderRect(x,y,hw,hh, tag=""){
+    const r = { x,y,hw,hh,tag };
+    colliders.push(r);
+    return r;
+  }
+  function circleRectCollide(px,py,pr,r){
+    const cx = clamp(px, r.x - r.hw, r.x + r.hw);
+    const cy = clamp(py, r.y - r.hh, r.y + r.hh);
+    const dx = px - cx, dy = py - cy;
+    return dx*dx + dy*dy <= pr*pr;
+  }
+  function isBlocked(px,py,pr){
+    return colliders.some(r => circleRectCollide(px,py,pr,r));
+  }
+  function tileOccupiedByCollider(wx,wy, pad=0.48){
+    for (const r of colliders){
+      if (Math.abs(r.x - wx) < (r.hw + pad) && Math.abs(r.y - wy) < (r.hh + pad)) return true;
     }
-    window.addEventListener("error", (e)=> showErr("JS ERROR:\n" + (e.message || e.error || e)));
-    window.addEventListener("unhandledrejection", (e)=> showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
+    return false;
+  }
 
-    const isCoarse = matchMedia("(pointer:coarse)").matches;
-
-    /* Firebase */
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
-      authDomain: "pine-tycoon.firebaseapp.com",
-      projectId: "pine-tycoon",
-      storageBucket: "pine-tycoon.firebasestorage.app",
-      messagingSenderId: "949986190236",
-      appId: "1:949986190236:web:4f5d50078326f5c1981e59",
-      measurementId: "G-2DY6KSY4G7"
+  /* Seeded RNG + Noise */
+  function xmur3(str){
+    let h = 1779033703 ^ str.length;
+    for (let i=0;i<str.length;i++){
+      h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+      h = (h << 13) | (h >>> 19);
+    }
+    return function(){
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      h ^= h >>> 16;
+      return h >>> 0;
     };
-
-    let auth = null;
-    let db = null;
-    let firebaseOk = !!window.firebase && !!firebase.initializeApp;
-
-    if (firebaseOk){
-      try{
-        firebase.initializeApp(firebaseConfig);
-        auth = firebase.auth();
-        db = firebase.firestore();
-      }catch(e){
-        firebaseOk = false;
-        console.warn("Firebase init failed:", e);
-      }
-    }
-
-    /* DOM */
-    const statsEl = document.getElementById("stats");
-    const heatEl = document.getElementById("heatBar");
-    const freezeOverlay = document.getElementById("freezeOverlay");
-    const freezeText = document.getElementById("freezeText");
-    const mpStatusEl = document.getElementById("mpStatus");
-    const mpListEl = document.getElementById("mpList");
-    const mpPanel = document.getElementById("mpPanel");
-    const mpToggle = document.getElementById("mpToggle");
-
-    const gameCanvas = document.getElementById("game");
-    const gctx = gameCanvas.getContext("2d");
-    const fxCanvas = document.getElementById("fxCanvas");
-    const fx = fxCanvas.getContext("2d");
-    const mini = document.getElementById("minimapCanvas");
-    const mctx = mini.getContext("2d");
-
-    /* Helper rgba */
-    const rgba = (r,g,b,a)=>`rgba(${r},${g},${b},${a})`;
-
-    /* Audio: day/night crossfade */
-    const dayBgm = document.getElementById("bgmDay");
-    const nightBgm = document.getElementById("bgmNight");
-    dayBgm.volume = 0; nightBgm.volume = 0;
-
-    let actx=null;
-    let audioUnlocked=false;
-    function ensureAudio(){
-      if (audioUnlocked) return;
-      audioUnlocked = true;
-      try{
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        actx = new AudioCtx();
-        if (actx.state === "suspended") actx.resume().catch(()=>{});
-      }catch(e){
-        actx=null;
-      }
-      dayBgm.play().catch(()=>{});
-      nightBgm.play().catch(()=>{});
-    }
-    window.addEventListener("pointerdown", ensureAudio, { once:true });
-    window.addEventListener("touchstart", ensureAudio, { once:true });
-
-    function playTone({freq=220, dur=0.08, type="sine", vol=0.18, slideTo=null}){
-      if (!actx) return;
-      const t0 = actx.currentTime;
-      const o = actx.createOscillator();
-      const g = actx.createGain();
-      o.type = type;
-      o.frequency.setValueAtTime(freq, t0);
-      if (slideTo != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, slideTo), t0 + dur);
-      g.gain.setValueAtTime(vol, t0);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-      o.connect(g).connect(actx.destination);
-      o.start(t0);
-      o.stop(t0 + dur + 0.02);
-    }
-    function playNoise({dur=0.09, vol=0.12}){
-      if (!actx) return;
-      const sr = actx.sampleRate;
-      const len = Math.floor(sr * dur);
-      const buf = actx.createBuffer(1, len, sr);
-      const data = buf.getChannelData(0);
-      for(let i=0;i<len;i++){
-        const t = i/len;
-        data[i] = (Math.random()*2-1) * (1 - t) * 0.9;
-      }
-      const src = actx.createBufferSource();
-      src.buffer = buf;
-      const g = actx.createGain();
-      g.gain.value = vol;
-      const f = actx.createBiquadFilter();
-      f.type="highpass";
-      f.frequency.value=800;
-      src.connect(f).connect(g).connect(actx.destination);
-      src.start();
-      src.stop(actx.currentTime + dur + 0.02);
-    }
-    const SFX = {
-      swing(){ ensureAudio(); playTone({freq:280, slideTo:160, dur:0.08, type:"triangle", vol:0.12}); },
-      chop(){ ensureAudio(); playNoise({dur:0.07, vol:0.10}); playTone({freq:120, dur:0.05, type:"sine", vol:0.08}); },
-      restore(){ ensureAudio(); playTone({freq:340, slideTo:760, dur:0.12, type:"sine", vol:0.11}); },
-      error(){ ensureAudio(); playTone({freq:180, slideTo:120, dur:0.10, type:"square", vol:0.07}); },
-      crack(){ ensureAudio(); playNoise({dur:0.10, vol:0.08}); playTone({freq:95, dur:0.08, type:"sine", vol:0.07}); }
+  }
+  function mulberry32(a){
+    return function(){
+      let t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
     };
+  }
+  function fade(t){ return t*t*(3-2*t); }
+  function hash2(ix,iy,seedU32){
+    let h = seedU32 ^ (ix*374761393) ^ (iy*668265263);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h ^= (h >>> 16);
+    return (h >>> 0) / 4294967296;
+  }
+  function valueNoise2D(x,y,seedU32){
+    const x0 = Math.floor(x), y0 = Math.floor(y);
+    const x1 = x0+1, y1 = y0+1;
+    const sx = fade(x - x0);
+    const sy = fade(y - y0);
 
-    /* Helpers */
-    const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-    const lerp = (a,b,t)=>a+(b-a)*t;
-    const dist2 = (ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
-    const rand = (a,b)=> a + Math.random()*(b-a);
-    function easeOutCubic(t){ return 1 - Math.pow(1-t, 3); }
-    function easeOutQuint(t){ return 1 - Math.pow(1-t, 5); }
+    const n00 = hash2(x0,y0,seedU32);
+    const n10 = hash2(x1,y0,seedU32);
+    const n01 = hash2(x0,y1,seedU32);
+    const n11 = hash2(x1,y1,seedU32);
 
-    /* Pixel buffer */
-    const INTERNAL_W = 512;
-    const INTERNAL_H = 288;
-    const buffer = document.createElement("canvas");
-    buffer.width = INTERNAL_W;
-    buffer.height = INTERNAL_H;
-    const bctx = buffer.getContext("2d");
-    bctx.imageSmoothingEnabled = false;
-    gctx.imageSmoothingEnabled = false;
-
-    /* World */
-    const WORLD_HALF = 160;
-    const PPU = 16;
-
-    /* Colliders */
-    const colliders = [];
-    function addColliderRect(x,y,hw,hh, tag=""){
-      const r = { x,y,hw,hh,tag };
-      colliders.push(r);
-      return r;
+    const ix0 = lerp(n00,n10,sx);
+    const ix1 = lerp(n01,n11,sx);
+    return lerp(ix0,ix1,sy);
+  }
+  function fbm(x,y,seedU32, oct=5){
+    let v=0, amp=0.55, freq=1;
+    let norm=0;
+    for (let i=0;i<oct;i++){
+      v += valueNoise2D(x*freq, y*freq, seedU32 + i*1013) * amp;
+      norm += amp;
+      amp *= 0.55;
+      freq *= 2.0;
     }
-    function circleRectCollide(px,py,pr,r){
-      const cx = clamp(px, r.x - r.hw, r.x + r.hw);
-      const cy = clamp(py, r.y - r.hh, r.y + r.hh);
-      const dx = px - cx, dy = py - cy;
-      return dx*dx + dy*dy <= pr*pr;
-    }
-    function isBlocked(px,py,pr){
-      return colliders.some(r => circleRectCollide(px,py,pr,r));
-    }
+    return v / norm;
+  }
 
-    /* Colors */
-    const COL = {
-      snow:"#f5f9ff", snow2:"#e9f1ff",
-      shadow:"rgba(0,0,0,0.35)",
-      path:"#b38a5d", path2:"#a67c52",
-      soil:"#5b3a1a",
-      rock:"#7f8894", rock2:"#5f6772",
-      mtn:"#6a707a", mtn2:"#52585f",
-      btn:"#32d26c", btnGlow:"rgba(50,210,108,0.55)",
-      blue:"#2d6cdf", blue2:"#68a0ff",
-      green:"#1dbb5a",
-      flame:"#ff6b2a", flame2:"#ffd35a",
-      tree:"#3e7f4b", tree2:"#5fb26c", tree3:"#2f6a3b"
-    };
+  let seedStr = "";
+  let seedU32 = 0;
+  let rng = Math.random;
 
-    const groundPattern = (() => {
-      const c = document.createElement("canvas");
-      c.width = 64; c.height = 64;
-      const x = c.getContext("2d");
-      x.fillStyle = COL.snow;
-      x.fillRect(0,0,64,64);
-      for(let i=0;i<150;i++){
-        const px=(Math.random()*64)|0, py=(Math.random()*64)|0;
-        x.fillStyle = Math.random()<0.6 ? COL.snow2 : "#ffffff";
-        x.fillRect(px,py,1,1);
+  function setSeed(str){
+    seedStr = str;
+    const seedFn = xmur3(seedStr);
+    seedU32 = seedFn();
+    rng = mulberry32(seedU32);
+  }
+  function randomSeed(){
+    return (Math.floor(Math.random()*1e9).toString(36) + "-" + Date.now().toString(36).slice(-4));
+  }
+
+  /* Entities */
+  let trees = [];
+  let boulders = [];
+  let berryDecor = [];
+  let lamps = [];
+  const particles = [];
+
+  /* World state we persist */
+  let removedTrees = new Set();    // tree tileId
+  let removedBoulders = new Set(); // boulder tileId
+  let buildMap = new Map();        // tileId -> {type, rot}
+
+  const BUILD = { FLOOR:"floor", WALL:"wall", DOOR:"door", WINDOW:"window", ROOF:"roof" };
+
+  /* Camp */
+  let campfire = { x:0, y:0 };
+
+  /* Player/camera */
+  const player = { x:0, y:0, r:0.60, dir:0, attack:0, attackCooldown:0 };
+  const camera = { x:0, y:0 };
+
+  /* Resources */
+  let wood = 0;
+  let stone = 0;
+  let coal = 0;
+  let treesCutTotal = 0;
+
+  /* Day/Night */
+  const SWITCH_EVERY = 180; // 3 minutes per phase
+  const TRANSITION = 12;
+  let dayNightTimer = 0;
+  let isNight = false;
+  let light = 1;
+  let fromLight = 1, toLight = 1, transT = 1;
+
+  function updateDayNight(dt){
+    dayNightTimer += dt;
+    if (dayNightTimer >= SWITCH_EVERY){
+      dayNightTimer -= SWITCH_EVERY;
+      isNight = !isNight;
+      fromLight = light;
+      toLight = isNight ? 0 : 1;
+      transT = 0;
+    }
+    if (transT < 1){
+      transT = Math.min(1, transT + dt/TRANSITION);
+      light = lerp(fromLight, toLight, easeOutQuint(transT));
+    }
+  }
+
+  /* Controls */
+  const keys = {};
+  document.addEventListener("keydown",(e)=>keys[e.code]=true);
+  document.addEventListener("keyup",(e)=>keys[e.code]=false);
+
+  let mouseAim = null;
+  window.addEventListener("mousemove",(e)=>{ mouseAim={x:e.clientX,y:e.clientY}; });
+  window.addEventListener("mouseleave",()=>{ mouseAim=null; });
+
+  /* Touch */
+  const movePad = document.getElementById("movePad");
+  const moveStick = document.getElementById("moveStick");
+  const actionBtn = document.getElementById("actionBtn");
+  let touchMoveX=0, touchMoveY=0;
+
+  function setupMoveStick(pad, stick){
+    const stickRadius=30;
+    let touchId=null;
+    function reset(){
+      const rect=pad.getBoundingClientRect();
+      const cx=rect.width/2, cy=rect.height/2;
+      stick.style.left=(cx-stickRadius)+"px";
+      stick.style.top =(cy-stickRadius)+"px";
+      touchMoveX=0; touchMoveY=0;
+    }
+    function updateFromTouch(t){
+      const rect=pad.getBoundingClientRect();
+      const cx=rect.width/2, cy=rect.height/2;
+      let dx=t.clientX - (rect.left+cx);
+      let dy=t.clientY - (rect.top +cy);
+      const maxR=rect.width/2 - stickRadius;
+      const d=Math.hypot(dx,dy);
+      if (d>maxR){ dx*=maxR/d; dy*=maxR/d; }
+      stick.style.left=(cx-stickRadius+dx)+"px";
+      stick.style.top =(cy-stickRadius+dy)+"px";
+      touchMoveX=dx/maxR;
+      touchMoveY=dy/maxR;
+    }
+    pad.addEventListener("touchstart",(e)=>{
+      e.preventDefault();
+      const t=e.changedTouches[0];
+      touchId=t.identifier;
+      updateFromTouch(t);
+    },{passive:false});
+    pad.addEventListener("touchmove",(e)=>{
+      e.preventDefault();
+      if (touchId===null) return;
+      for (const t of e.touches){
+        if (t.identifier===touchId){ updateFromTouch(t); break; }
       }
-      return bctx.createPattern(c, "repeat");
-    })();
-
-    /* Entities */
-    const houses = [];
-    const farms = [];
-    const paths = [];
-    const rocks = [];
-    const mountains = [];
-    const lamps = [];
-    let trees = [];
-    let buttons = [];
-    const campfire = { x:0, y:30 };
-
-    function createRestoreButton(x,y,cost,type,target){
-      buttons.push({ x,y,cost,type,target, restored:false, phase:Math.random()*Math.PI*2, flash:0 });
-    }
-
-    function mkHouseVariant(i){
-      const variants = [
-        { walls:"#9a6a3d", walls2:"#7c4f2b", roof:"#c84d3a", roof2:"#a73a2a", chimney:true },
-        { walls:"#7d5c3a", walls2:"#5a3f28", roof:"#3d6fb3", roof2:"#2e568f", chimney:false },
-        { walls:"#b07d4f", walls2:"#8a5a33", roof:"#3a3a3a", roof2:"#242424", chimney:true },
-        { walls:"#8b8b8b", walls2:"#6f6f6f", roof:"#a63b2f", roof2:"#7f2a22", chimney:false }
-      ];
-      return variants[i % variants.length];
-    }
-
-    function createHouse(x,y, vi=0){
-      const v = mkHouseVariant(vi);
-      const h = { kind:"small", x,y, w:6, h:6, restored:false, restoreT:0, v, cost:45 };
-      houses.push(h);
-      createRestoreButton(x, y+4.2, h.cost, "house", h);
-    }
-    function createBigHouse(x,y, vi=1){
-      const v = mkHouseVariant(vi);
-      const h = { kind:"big", x,y, w:7, h:7, restored:false, restoreT:0, v, cost:65 };
-      houses.push(h);
-      createRestoreButton(x, y+4.8, h.cost, "bigHouse", h);
-    }
-    function createFarm(x,y,w,l, cropType=0){
-      const f = { x,y,w,l, restored:false, restoreT:0, cropType, cost:15 };
-      farms.push(f);
-      createRestoreButton(x, y + l/2 + 1.2, f.cost, "farm", f);
-    }
-    function createPath(x,y,w,l){
-      const p = { x,y,w,l, restored:false, restoreT:0, cost:5 };
-      paths.push(p);
-      createRestoreButton(x,y,p.cost,"path",p);
-    }
-    function createLamp(x,y){
-      lamps.push({ x,y, flick: Math.random()*10 });
-      addColliderRect(x,y, 0.45, 0.45, "lamp");
-    }
-    function createRock(x,y,size){
-      rocks.push({ x,y,size });
-      addColliderRect(x,y, size*0.9, size*0.9, "rock");
-    }
-    function createMountain(x,y){
-      const base = 8 + Math.random()*6;
-      const height = 10 + Math.random()*8;
-      mountains.push({ x,y,base,height });
-      addColliderRect(x,y, base*0.85, base*0.85, "mountain");
-    }
-    function createMountainsBorder(){
-      for(let x=-150;x<=150;x+=15){ createMountain(x,-150); createMountain(x,150); }
-      for(let y=-150;y<=150;y+=15){ createMountain(-150,y); createMountain(150,y); }
-      for(let i=0;i<35;i++){
-        const a=Math.random()*Math.PI*2;
-        const r=110 + Math.random()*25;
-        createMountain(Math.cos(a)*r, Math.sin(a)*r);
-      }
-    }
-
-    function createTree(x,y){
-      const kind = (Math.random()*3)|0;
-      const scale = rand(0.85, 1.25);
-      const snowiness = rand(0.35, 0.9);
-      const trunk = rand(0.9, 1.35);
-      const baseHP = 3 + (Math.random()<0.25 ? 1 : 0);
-      const t = {
-        x,y, hp: baseHP,
-        falling:false, fallT:0, fallDir: Math.random()<0.5 ? -1 : 1,
-        removed:false, collider:null,
-        kind, scale, snowiness, trunk
-      };
-      t.collider = addColliderRect(x,y, 0.85, 0.85, "tree");
-      trees.push(t);
-    }
-
-    function forestRing(cx,cy, inner, outer, count){
-      for(let i=0;i<count;i++){
-        const a=Math.random()*Math.PI*2;
-        const r=inner + Math.random()*(outer-inner);
-        const x=cx + Math.cos(a)*r;
-        const y=cy + Math.sin(a)*r;
-        if (Math.sqrt(x*x+y*y) < 20) continue;
-        createTree(x,y);
+    },{passive:false});
+    function end(e){
+      if (touchId===null) return;
+      for (const t of e.changedTouches){
+        if (t.identifier===touchId){ touchId=null; reset(); break; }
       }
     }
+    pad.addEventListener("touchend", end, {passive:false});
+    pad.addEventListener("touchcancel", end, {passive:false});
+    reset();
+  }
+  if (movePad && moveStick) setupMoveStick(movePad, moveStick);
 
-    function createForestRocks(count){
-      for(let i=0;i<count;i++){
-        const a=Math.random()*Math.PI*2;
-        const r=30 + Math.random()*70;
-        const x=Math.cos(a)*r;
-        const y=Math.sin(a)*r;
-        if (Math.sqrt(x*x+y*y) < 25){ i--; continue; }
-        createRock(x,y, 0.8 + Math.random()*1.4);
+  /* Canvas resize */
+  function resize(){
+    const dpr=Math.max(1, Math.min(2, window.devicePixelRatio||1));
+    gameCanvas.width = Math.floor(innerWidth*dpr);
+    gameCanvas.height= Math.floor(innerHeight*dpr);
+    gctx.setTransform(dpr,0,0,dpr,0,0);
+
+    fxCanvas.width = Math.floor(innerWidth*dpr);
+    fxCanvas.height= Math.floor(innerHeight*dpr);
+    fx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  /* Particles */
+  function spawnParticles(type,x,y,count=10){
+    for (let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2;
+      const sp=2.5 + Math.random()*4.5;
+      particles.push({ type, x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:0.35 + Math.random()*0.45 });
+    }
+  }
+
+  /* Render helpers */
+  function worldToScreen(wx,wy){
+    const sx=(wx-camera.x)*PPU + INTERNAL_W/2;
+    const sy=(wy-camera.y)*PPU + INTERNAL_H/2;
+    return { x:sx, y:sy };
+  }
+  function pRect(ctx,x,y,w,h){ ctx.fillRect((x|0),(y|0),(w|0),(h|0)); }
+  function drawShadowCircle(ctx,x,y,r){
+    ctx.fillStyle = "rgba(0,0,0,0.30)";
+    ctx.beginPath();
+    ctx.ellipse(x,y,r*1.15,r*0.7,0,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  /* HUD */
+  function toolName(t){
+    return t===TOOL.PICKAXE ? "Pickaxe" : "Axe";
+  }
+
+  /* ===================== WORLD GEN ===================== */
+  function clearWorldGeometry(){
+    colliders.length = 0;
+    trees.length = 0;
+    boulders.length = 0;
+    berryDecor.length = 0;
+    lamps.length = 0;
+    particles.length = 0;
+    riverMask.fill(0);
+  }
+
+  function classifyTiles(){
+    for (let ty=0; ty<WORLD_SIZE; ty++){
+      for (let tx=0; tx<WORLD_SIZE; tx++){
+        const id = idxOf(tx,ty);
+        const h = heightMap[id];
+        let tt = T.GRASS;
+
+        if (h < 0.24) tt = T.WATER;
+        else if (h < 0.29) tt = T.SAND;
+        else if (h < 0.72) tt = T.GRASS;
+        else if (h < 0.84) tt = T.HILL;
+        else tt = T.ROCK;
+
+        tileMap[id] = tt;
       }
     }
+  }
 
-    function buildVillage(){
-      createHouse( 0, 0, 0);
-      createHouse( 20, -8, 1);
-      createHouse(-22, 10, 2);
-      createHouse( 4, -24, 3);
-      createHouse( 28, 16, 0);
-      createHouse(-30, -16, 1);
-      createHouse( 40, 2, 2);
-      createHouse(-40, -2, 3);
-      createHouse( 14, 30, 1);
-      createHouse(-14, -32, 0);
+  function buildBaseNoise(){
+    const ox = rng()*1000, oy = rng()*1000;
+    const mx = rng()*1000, my = rng()*1000;
 
-      createBigHouse( 32, -30, 2);
-      createBigHouse(-34, 30, 3);
+    const elevScale = 0.045;
+    const moistScale = 0.060;
 
-      createPath(0,-8, 4,20);
-      createPath(0, 8, 4,20);
-      createPath(8,0, 20,4);
-      createPath(-8,0, 20,4);
-      createPath(20,-14, 16,4);
-      createPath(-20,14, 16,4);
+    for (let ty=0; ty<WORLD_SIZE; ty++){
+      for (let tx=0; tx<WORLD_SIZE; tx++){
+        const wx = tx - WORLD_HALF;
+        const wy = ty - WORLD_HALF;
 
-      createFarm( 0, -40, 12, 7, 0);
-      createFarm( 28, 8, 11, 7, 1);
-      createFarm(-28, -8, 11, 7, 2);
+        const nx = wx*elevScale + ox;
+        const ny = wy*elevScale + oy;
 
-      createLamp( 0, 12);
-      createLamp( 0, -12);
-      createLamp( 12, 0);
-      createLamp(-12, 0);
-      createLamp( 22, -14);
-      createLamp(-22, 14);
-    }
+        let h = fbm(nx, ny, seedU32, 5);
 
-    buildVillage();
-    forestRing(0,0,24,42,95);
-    forestRing(0,0,42,70,130);
-    forestRing(0,0,70,100,170);
-    createForestRocks(30);
-    createMountainsBorder();
+        // continent mask (edges lower)
+        const r = Math.sqrt(wx*wx + wy*wy) / WORLD_HALF;
+        const edge = clamp(1 - (r*r)*0.85, 0, 1);
+        h = h*0.90 + edge*0.18;
+        h = clamp(h, 0, 1);
 
-    /* Stats/heat */
-    let treesCutTotal = 0;
-    let wood = 0;
-    const heatMax = 9;
-    let heatValue = heatMax;
-    let isFrozen = false;
+        const mnx = wx*moistScale + mx;
+        const mny = wy*moistScale + my;
+        let m = fbm(mnx, mny, seedU32 + 99991, 4);
 
-    function updateStats(){
-      statsEl.textContent = `Дерев зрубано: ${treesCutTotal} | Дерево: ${wood}`;
-    }
-    function updateHeat(){
-      const full = Math.round(heatValue);
-      let s="";
-      for (let i=0;i<heatMax;i++) s += i<full ? "🔥" : "·";
-      heatEl.textContent = s;
-    }
-    updateStats();
-    updateHeat();
-
-    /* Player/camera */
-    const player = { x:0, y:35, r:0.60, dir:-Math.PI/2, attack:0, attackCooldown:0 };
-    const camera = { x:player.x, y:player.y };
-
-    /* Day/Night */
-    const SWITCH_EVERY = 300;  // 5 хв
-    const TRANSITION = 14;
-    let dayNightTimer = 0;
-    let isNight = false;
-    let light = 1;
-    let fromLight = 1, toLight = 1, transT = 1;
-
-    function updateDayNight(dt){
-      dayNightTimer += dt;
-      if (dayNightTimer >= SWITCH_EVERY){
-        dayNightTimer -= SWITCH_EVERY;
-        isNight = !isNight;
-        fromLight = light;
-        toLight = isNight ? 0 : 1;
-        transT = 0;
-      }
-      if (transT < 1){
-        transT = Math.min(1, transT + dt/TRANSITION);
-        light = lerp(fromLight, toLight, easeOutQuint(transT));
-      }
-      if (audioUnlocked){
-        const base = 0.36;
-        dayBgm.volume = base * light;
-        nightBgm.volume = base * (1 - light);
+        heightMap[idxOf(tx,ty)] = h;
+        moistMap[idxOf(tx,ty)] = m;
       }
     }
+  }
 
-    /* Particles */
-    const particles = [];
-    function spawnParticles(type,x,y,count=10){
-      for (let i=0;i<count;i++){
-        const a=Math.random()*Math.PI*2;
-        const sp=rand(1.8,6.0);
-        particles.push({ type, x,y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:rand(0.35,0.75) });
-      }
-    }
+  function carveRivers(){
+    const flow = new Uint16Array(WORLD_SIZE*WORLD_SIZE);
 
-    /* Controls */
-    const keys = {};
-    document.addEventListener("keydown",(e)=>keys[e.code]=true);
-    document.addEventListener("keyup",(e)=>keys[e.code]=false);
-
-    let mouseAim = null;
-    window.addEventListener("mousemove",(e)=>{ mouseAim={x:e.clientX,y:e.clientY}; });
-    window.addEventListener("mouseleave",()=>{ mouseAim=null; });
-
-    const movePad = document.getElementById("movePad");
-    const moveStick = document.getElementById("moveStick");
-    const actionBtn = document.getElementById("actionBtn");
-
-    let touchMoveX=0, touchMoveY=0;
-    function setupMoveStick(pad, stick){
-      const stickRadius=30;
-      let touchId=null;
-
-      function reset(){
-        const rect=pad.getBoundingClientRect();
-        const cx=rect.width/2, cy=rect.height/2;
-        stick.style.left=(cx-stickRadius)+"px";
-        stick.style.top =(cy-stickRadius)+"px";
-        touchMoveX=0; touchMoveY=0;
-      }
-      function updateFromTouch(t){
-        const rect=pad.getBoundingClientRect();
-        const cx=rect.width/2, cy=rect.height/2;
-        let dx=t.clientX - (rect.left+cx);
-        let dy=t.clientY - (rect.top +cy);
-        const maxR=rect.width/2 - stickRadius;
-        const d=Math.hypot(dx,dy);
-        if (d>maxR){ dx*=maxR/d; dy*=maxR/d; }
-        stick.style.left=(cx-stickRadius+dx)+"px";
-        stick.style.top =(cy-stickRadius+dy)+"px";
-        touchMoveX=dx/maxR;
-        touchMoveY=dy/maxR;
-      }
-
-      pad.addEventListener("touchstart",(e)=>{
-        e.preventDefault();
-        const t=e.changedTouches[0];
-        touchId=t.identifier;
-        updateFromTouch(t);
-      },{passive:false});
-
-      pad.addEventListener("touchmove",(e)=>{
-        e.preventDefault();
-        if (touchId===null) return;
-        for (const t of e.touches){
-          if (t.identifier===touchId){ updateFromTouch(t); break; }
-        }
-      },{passive:false});
-
-      function end(e){
-        if (touchId===null) return;
-        for (const t of e.changedTouches){
-          if (t.identifier===touchId){
-            touchId=null;
-            reset();
-            break;
+    function lowestNeighbor(tx,ty){
+      let bestTx=tx, bestTy=ty;
+      let bestH = heightMap[idxOf(tx,ty)];
+      for (let oy=-1; oy<=1; oy++){
+        for (let ox=-1; ox<=1; ox++){
+          if (ox===0 && oy===0) continue;
+          const nx=tx+ox, ny=ty+oy;
+          if (!inBounds(nx,ny)) continue;
+          const nh = heightMap[idxOf(nx,ny)];
+          if (nh < bestH){
+            bestH = nh; bestTx=nx; bestTy=ny;
           }
         }
       }
-      pad.addEventListener("touchend", end, {passive:false});
-      pad.addEventListener("touchcancel", end, {passive:false});
-      reset();
-    }
-    if (movePad && moveStick) setupMoveStick(movePad, moveStick);
-
-    /* Axe cooldown */
-    const AXE_COOLDOWN = 0.38;
-
-    function doAction(){
-      if (isFrozen) return;
-      ensureAudio();
-      if (player.attackCooldown > 0) return;
-
-      player.attack = 0.0001;
-      player.attackCooldown = AXE_COOLDOWN;
-      SFX.swing();
-
-      const used = tryUseNearestButton();
-      if (!used) chopNearestTree();
+      return { tx:bestTx, ty:bestTy, h:bestH };
     }
 
-    window.addEventListener("mousedown",(e)=>{ if(e.button===0) doAction(); });
-    if (actionBtn){
-      const tap=(e)=>{ e.preventDefault(); doAction(); };
-      actionBtn.addEventListener("click", tap);
-      actionBtn.addEventListener("touchstart", tap, {passive:false});
+    const sources = [];
+    const triesMax = 5000;
+    const want = 10 + ((rng()*5)|0);
+
+    for (let i=0, tries=0; i<want && tries<triesMax; tries++){
+      const tx = 10 + ((rng()*(WORLD_SIZE-20))|0);
+      const ty = 10 + ((rng()*(WORLD_SIZE-20))|0);
+      const id = idxOf(tx,ty);
+      const h = heightMap[id];
+      const m = moistMap[id];
+
+      if (h < 0.74) continue;
+      if (tileMap[id] === T.ROCK) continue;
+      if (m < 0.42) continue;
+      if (hash2(tx,ty,seedU32+777) < 0.75) continue;
+
+      let ok=true;
+      for (const s of sources){
+        const dx=s.tx-tx, dy=s.ty-ty;
+        if (dx*dx+dy*dy < 30*30){ ok=false; break; }
+      }
+      if (!ok) continue;
+
+      sources.push({tx,ty});
+      i++;
     }
 
-    function tryUseNearestButton(){
-      let best=null, bestD=(2.2*2.2);
-      for (const b of buttons){
-        if (b.restored) continue;
-        const d=dist2(player.x,player.y,b.x,b.y);
-        if (d<bestD){ bestD=d; best=b; }
-      }
-      if (!best) return false;
+    const maxSteps = 2400;
+    for (const s of sources){
+      let tx=s.tx, ty=s.ty;
+      const visited = new Set();
 
-      if (wood < best.cost){
-        best.flash = 0.22;
-        SFX.error();
-        return true;
-      }
+      for (let step=0; step<maxSteps; step++){
+        const id = idxOf(tx,ty);
+        flow[id] = Math.min(65535, flow[id] + 25);
 
-      wood -= best.cost;
-      best.restored = true;
+        if (heightMap[id] < 0.26) break;
 
-      if (best.type==="house" || best.type==="bigHouse"){
-        best.target.restored = true;
-        best.target.restoreT = 0.0001;
-        addColliderRect(
-          best.target.x, best.target.y,
-          best.type==="bigHouse" ? 4.2 : 3.2,
-          best.type==="bigHouse" ? 4.2 : 3.2,
-          "house"
-        );
-      } else if (best.type==="farm"){
-        best.target.restored = true;
-        best.target.restoreT = 0.0001;
-        addColliderRect(best.target.x, best.target.y, best.target.w/2, best.target.l/2, "farm");
-      } else if (best.type==="path"){
-        best.target.restored = true;
-        best.target.restoreT = 0.0001;
-      }
+        const key = (tx<<16) | ty;
+        if (visited.has(key)) break;
+        visited.add(key);
 
-      spawnParticles("restore", best.x, best.y, 18);
-      SFX.restore();
-      buttons = buttons.filter(x=>x!==best);
-      updateStats();
-      return true;
-    }
+        const nb = lowestNeighbor(tx,ty);
+        if (nb.tx===tx && nb.ty===ty) break;
 
-    function chopNearestTree(){
-      let best=null, bestD=(3.2*3.2);
-      for (const t of trees){
-        if (t.falling || t.removed) continue;
-        const d=dist2(player.x,player.y,t.x,t.y);
-        if (d<bestD){ bestD=d; best=t; }
-      }
-      if (!best) return;
-
-      best.hp -= 1;
-      spawnParticles("chips", best.x, best.y, 12);
-      SFX.chop();
-
-      if (best.hp<=0 && !best.falling){
-        best.falling=true;
-        best.fallT=0;
-        const idx=colliders.indexOf(best.collider);
-        if (idx!==-1) colliders.splice(idx,1);
-        treesCutTotal++;
-        wood++;
-        updateStats();
-        SFX.crack();
+        tx = nb.tx; ty = nb.ty;
       }
     }
 
-    /* Render helpers */
-    function worldToScreen(wx,wy){
-      const sx=(wx-camera.x)*PPU + INTERNAL_W/2;
-      const sy=(wy-camera.y)*PPU + INTERNAL_H/2;
-      return { x:sx, y:sy };
-    }
-    function drawShadowCircle(ctx,x,y,r){
-      ctx.fillStyle = COL.shadow;
-      ctx.beginPath();
-      ctx.ellipse(x,y,r*1.1,r*0.7,0,0,Math.PI*2);
-      ctx.fill();
-    }
-    function pRect(ctx,x,y,w,h){ ctx.fillRect((x|0),(y|0),(w|0),(h|0)); }
+    for (let ty=1; ty<WORLD_SIZE-1; ty++){
+      for (let tx=1; tx<WORLD_SIZE-1; tx++){
+        const id = idxOf(tx,ty);
+        const f = flow[id];
+        if (f < 60) continue;
 
-    function drawAxe(ctx,x,y, ang, swing){
-      ctx.save();
-      ctx.translate(x,y);
-      ctx.rotate(ang + swing);
-      ctx.fillStyle = "#7c4f2b";
-      pRect(ctx, -1, -10, 2, 18);
-      ctx.fillStyle = "#c3c9d3";
-      pRect(ctx, 0, -7, 11, 6);
-      ctx.fillStyle = "#9aa2ad";
-      pRect(ctx, 0, -7, 11, 2);
-      ctx.restore();
-    }
+        let w = 1;
+        if (f > 220) w = 2;
+        if (f > 520) w = 3;
 
-    function drawPlayer(ctx, p, time){
-      const pos = worldToScreen(p.x,p.y);
-      const bob = Math.sin(time*6)*0.8;
-      drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
+        for (let oy=-w; oy<=w; oy++){
+          for (let ox=-w; ox<=w; ox++){
+            const nx=tx+ox, ny=ty+oy;
+            if (!inBounds(nx,ny)) continue;
+            const rr = ox*ox + oy*oy;
+            if (rr > w*w) continue;
 
-      ctx.fillStyle = COL.blue;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y + bob, 10, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.fillStyle = COL.blue2;
-      ctx.beginPath();
-      ctx.arc(pos.x - 3, pos.y - 3 + bob, 4, 0, Math.PI*2);
-      ctx.fill();
-
-      const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
-      const swing = -0.95*atk;
-
-      const axeX = pos.x + Math.cos(p.dir)*14;
-      const axeY = pos.y + Math.sin(p.dir)*10 + bob;
-      drawAxe(ctx, axeX, axeY, p.dir + Math.PI/2, swing);
-    }
-
-    function drawRemotePlayer(ctx, rp){
-      const pos = worldToScreen(rp.x,rp.y);
-      drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
-
-      ctx.fillStyle = rp.color === "green"
-        ? "rgba(29,187,90,0.58)"
-        : "rgba(45,108,223,0.55)";
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 10, 0, Math.PI*2);
-      ctx.fill();
-
-      const axeX = pos.x + Math.cos(rp.dir)*14;
-      const axeY = pos.y + Math.sin(rp.dir)*10;
-      drawAxe(ctx, axeX, axeY, rp.dir + Math.PI/2, 0);
-
-      ctx.font = "bold 12px Segoe UI, Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillText(rp.name, pos.x+1, pos.y - 14 + 1);
-      ctx.fillStyle = "#ffffff";
-      ctx.fillText(rp.name, pos.x, pos.y - 14);
-    }
-
-    function drawTree(ctx, t){
-      const pos = worldToScreen(t.x,t.y);
-
-      const fallDur = 0.78;
-      const k = t.falling ? clamp(t.fallT/fallDur, 0, 1) : 0;
-      const kk = easeOutQuint(k);
-      const ang = t.falling ? (kk * (Math.PI/2) * t.fallDir) : 0;
-
-      const s = t.scale;
-      const trunkH = PPU*(0.95*t.trunk)*s;
-
-      drawShadowCircle(ctx, pos.x, pos.y + PPU*0.38, PPU*0.72*s);
-
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      if (t.falling){
-        ctx.translate(kk * PPU*0.65 * t.fallDir, kk * PPU*0.12);
+            const nid = idxOf(nx,ny);
+            if (heightMap[nid] > 0.94) continue;
+            riverMask[nid] = 1;
+          }
+        }
       }
-      ctx.translate(0, PPU*0.25*s);
-      ctx.rotate(ang);
-      ctx.translate(0, -PPU*0.25*s);
+    }
 
-      ctx.fillStyle = "#6b4625";
-      pRect(ctx, -2*s, -trunkH*0.15, 4*s, trunkH);
+    for (let i=0;i<tileMap.length;i++){
+      if (riverMask[i]) tileMap[i] = T.WATER;
+    }
 
-      const snowA = t.snowiness;
-      const greenA = 1 - snowA;
+    // shores
+    for (let ty=1; ty<WORLD_SIZE-1; ty++){
+      for (let tx=1; tx<WORLD_SIZE-1; tx++){
+        const id = idxOf(tx,ty);
+        if (tileMap[id] === T.WATER) continue;
 
-      const base = rgba(62,127,75, 0.95*greenA + 0.10);
-      const hi   = rgba(95,178,108, 0.75*greenA + 0.10);
-      const snow1 = rgba(233,241,255, 0.45*snowA);
-      const snow2 = rgba(245,249,255, 0.65*snowA);
+        let nearWater=false;
+        for (let oy=-1; oy<=1; oy++){
+          for (let ox=-1; ox<=1; ox++){
+            if (ox===0 && oy===0) continue;
+            const nx=tx+ox, ny=ty+oy;
+            const nid = idxOf(nx,ny);
+            if (tileMap[nid] === T.WATER){ nearWater=true; break; }
+          }
+          if (nearWater) break;
+        }
 
-      function coneTri(topY, wY, wX){
-        ctx.fillStyle = base;
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(wX, wY);
-        ctx.lineTo(-wX, wY);
-        ctx.closePath();
-        ctx.fill();
+        if (nearWater){
+          const h = heightMap[id];
+          if (h < 0.34) tileMap[id] = T.SAND;
+        }
+      }
+    }
+  }
 
-        ctx.fillStyle = hi;
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(0, wY);
-        ctx.lineTo(-wX, wY);
-        ctx.closePath();
-        ctx.fill();
+  function pickCampfireSpot(){
+    let best = {tx:WORLD_HALF, ty:WORLD_HALF, score:-1};
 
-        ctx.fillStyle = snow2;
-        ctx.beginPath();
-        ctx.moveTo(0, topY + PPU*0.12*s);
-        ctx.lineTo(wX*0.60, wY - PPU*0.10*s);
-        ctx.lineTo(-wX*0.60, wY - PPU*0.10*s);
-        ctx.closePath();
-        ctx.fill();
+    for (let tries=0; tries<2500; tries++){
+      const wx = (rng()*2-1) * 40;
+      const wy = (rng()*2-1) * 40;
+      const tx = worldToTile(wx);
+      const ty = worldToTile(wy);
+      if (!inBounds(tx,ty)) continue;
 
-        ctx.fillStyle = snow1;
-        ctx.beginPath();
-        ctx.moveTo(0, topY + PPU*0.32*s);
-        ctx.lineTo(wX*0.45, wY - PPU*0.30*s);
-        ctx.lineTo(-wX*0.45, wY - PPU*0.30*s);
-        ctx.closePath();
-        ctx.fill();
+      const id = idxOf(tx,ty);
+      const tt = tileMap[id];
+      if (tt === T.WATER) continue;
+
+      const h = heightMap[id];
+      const m = moistMap[id];
+
+      let nearWater = 0;
+      for (let oy=-2; oy<=2; oy++){
+        for (let ox=-2; ox<=2; ox++){
+          const nx=tx+ox, ny=ty+oy;
+          if (!inBounds(nx,ny)) continue;
+          if (tileMap[idxOf(nx,ny)] === T.WATER) nearWater++;
+        }
       }
 
-      if (t.kind === 0){
-        coneTri(-PPU*1.65*s, -PPU*0.10*s, PPU*1.05*s);
-        coneTri(-PPU*1.25*s, -PPU*0.30*s, PPU*0.85*s);
-      } else if (t.kind === 1){
-        coneTri(-PPU*1.55*s, -PPU*0.25*s, PPU*1.20*s);
-        ctx.fillStyle = base;
-        ctx.beginPath();
-        ctx.arc(0, -PPU*0.75*s, PPU*0.70*s, 0, Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle = snow1;
-        ctx.beginPath();
-        ctx.arc(0, -PPU*0.85*s, PPU*0.52*s, 0, Math.PI*2);
-        ctx.fill();
+      const score = (tt===T.GRASS ? 2.0 : 1.0) + (m*1.4) + (nearWater*0.03) + (1.0 - Math.abs(h-0.55))*0.6;
+      if (score > best.score) best = {tx,ty,score};
+    }
+
+    campfire.x = tileToWorld(best.tx);
+    campfire.y = tileToWorld(best.ty);
+
+    if (!loadingFromSave){
+      player.x = campfire.x + 1.4;
+      player.y = campfire.y + 1.2;
+      player.dir = 0;
+      camera.x = player.x; camera.y = player.y;
+    }
+  }
+
+  function nearCamp(wx,wy){ return dist2(wx,wy,campfire.x,campfire.y) < 14*14; }
+
+  function createTreeAtTile(tx,ty){
+    const tileId = idxOf(tx,ty);
+    if (removedTrees.has(tileId)) return;
+
+    const wx = tileToWorld(tx);
+    const wy = tileToWorld(ty);
+
+    const jx = (hash2(tx,ty,seedU32+7)-0.5)*0.35;
+    const jy = (hash2(tx,ty,seedU32+9)-0.5)*0.35;
+
+    const kRoll = hash2(tx,ty,seedU32+17);
+    let kind = 0;
+    if (kRoll < 0.58) kind = 0;      // pine
+    else if (kRoll < 0.88) kind = 1; // oak
+    else kind = 2;                   // tall pine
+
+    const scale = 0.90 + hash2(tx,ty, seedU32+19)*0.55;
+    const trunk = 0.90 + hash2(tx,ty, seedU32+23)*0.70;
+    const hueVar = hash2(tx,ty, seedU32+29);
+    const baseHP = 3 + ((hash2(tx,ty, seedU32+31) < 0.25) ? 1 : 0);
+
+    const x = wx + jx;
+    const y = wy + jy;
+
+    const t = {
+      tileId,
+      x,y,
+      hp:baseHP,
+      falling:false, fallT:0,
+      fallDir: (hash2(tx,ty, seedU32+37)<0.5) ? -1 : 1,
+      removed:false,
+      collider:null,
+      kind, scale, trunk, hueVar,
+      sway: hash2(tx,ty, seedU32+41)*Math.PI*2
+    };
+    t.collider = addColliderRect(x,y, 0.80, 0.80, "tree");
+    trees.push(t);
+  }
+
+  function createBoulderAtTile(tx,ty, type){
+    const tileId = idxOf(tx,ty);
+    if (removedBoulders.has(tileId)) return;
+
+    const wx = tileToWorld(tx);
+    const wy = tileToWorld(ty);
+    const jx = (hash2(tx,ty,seedU32+111)-0.5)*0.28;
+    const jy = (hash2(tx,ty,seedU32+113)-0.5)*0.28;
+
+    const size = (type==="coal") ? (0.95 + hash2(tx,ty,seedU32+115)*1.2) : (0.80 + hash2(tx,ty,seedU32+117)*1.1);
+    const hp = (type==="coal") ? 4 : 3;
+
+    const b = {
+      tileId,
+      x:wx+jx, y:wy+jy,
+      size,
+      hp,
+      type, // "stone" or "coal"
+      removed:false,
+      collider:null
+    };
+    b.collider = addColliderRect(b.x,b.y, size*0.80, size*0.80, "boulder");
+    boulders.push(b);
+  }
+
+  function createBerryDecorAtTile(tx,ty){
+    const wx = tileToWorld(tx);
+    const wy = tileToWorld(ty);
+    const jx = (hash2(tx,ty,seedU32+31)-0.5)*0.28;
+    const jy = (hash2(tx,ty,seedU32+33)-0.5)*0.28;
+
+    berryDecor.push({
+      x:wx+jx, y:wy+jy,
+      phase: hash2(tx,ty,seedU32+99)*Math.PI*2,
+      size: 0.70 + hash2(tx,ty,seedU32+101)*0.45,
+      berryCount: 2 + ((hash2(tx,ty,seedU32+103)*3)|0)
+    });
+  }
+
+  function placeLamps(){
+    lamps = [];
+    // few lamps around campfire
+    const points = [
+      {x:campfire.x+6, y:campfire.y+2},
+      {x:campfire.x-6, y:campfire.y-2},
+      {x:campfire.x+2, y:campfire.y+6},
+      {x:campfire.x-2, y:campfire.y-6}
+    ];
+
+    // plus random lamps on grass near center
+    for (let i=0;i<6;i++){
+      const a = rng()*Math.PI*2;
+      const r = 18 + rng()*45;
+      points.push({ x:campfire.x + Math.cos(a)*r, y:campfire.y + Math.sin(a)*r });
+    }
+
+    for (const p of points){
+      const tx = worldToTile(p.x);
+      const ty = worldToTile(p.y);
+      if (!inBounds(tx,ty)) continue;
+      if (tileMap[idxOf(tx,ty)]===T.WATER) continue;
+      const wx = tileToWorld(tx);
+      const wy = tileToWorld(ty);
+      if (nearCamp(wx,wy)) continue;
+      // small collider so player doesn't overlap the pole
+      lamps.push({ x:wx, y:wy, flick: rng()*10 });
+      addColliderRect(wx, wy, 0.35, 0.35, "lamp");
+    }
+  }
+
+  function spawnDecor(){
+    trees = [];
+    boulders = [];
+    berryDecor = [];
+    colliders.length = 0; // rebuild from scratch
+
+    for (let ty=1; ty<WORLD_SIZE-1; ty++){
+      for (let tx=1; tx<WORLD_SIZE-1; tx++){
+        const id = idxOf(tx,ty);
+        const tt = tileMap[id];
+        const h = heightMap[id];
+        const m = moistMap[id];
+
+        const wx = tileToWorld(tx);
+        const wy = tileToWorld(ty);
+
+        if (nearCamp(wx,wy)) continue;
+
+        // Trees
+        if (tt===T.GRASS || tt===T.HILL){
+          const forest = clamp((m - 0.45) * 1.6, 0, 1);
+          const hillPenalty = (tt === T.HILL) ? 0.55 : 1.0;
+          const chance = 0.14 * forest * hillPenalty;
+          const r = hash2(tx,ty, seedU32 + 424242);
+          if (r < chance) createTreeAtTile(tx,ty);
+        }
+
+        // Mineable boulders (stone + coal)
+        if (tt===T.HILL || tt===T.ROCK){
+          const rocky = (tt===T.ROCK) ? 1.0 : clamp((h - 0.70) * 2.0, 0, 1);
+          const r = hash2(tx,ty, seedU32 + 888888);
+          if (r < 0.060 * rocky){
+            // coal rarer, mostly on rock tiles
+            const coalChance = (tt===T.ROCK ? 0.35 : 0.18) * (0.50 + 0.50*rocky);
+            const isCoal = (hash2(tx,ty, seedU32 + 999001) < coalChance);
+            createBoulderAtTile(tx,ty, isCoal ? "coal" : "stone");
+          }
+        }
+
+        // Decorative berries only
+        if (tt===T.GRASS && m>0.56 && h>0.34){
+          const rr = hash2(tx,ty, seedU32 + 551155);
+          if (rr < 0.032) createBerryDecorAtTile(tx,ty);
+        }
+      }
+    }
+
+    // Add campfire "clear zone" and then lamps
+    placeLamps();
+
+    // apply build colliders after natural colliders exist
+    rebuildBuildColliders();
+  }
+
+  function rebuildBuildColliders(){
+    // remove previous build colliders
+    for (let i=colliders.length-1;i>=0;i--){
+      const tag = colliders[i].tag || "";
+      if (tag.startsWith("build_")) colliders.splice(i,1);
+    }
+    // walls + windows are solid, doors passable, roofs/floors passable
+    buildMap.forEach((v, tileId)=>{
+      if (v.type !== BUILD.WALL && v.type !== BUILD.WINDOW) return;
+      const tx = tileId % WORLD_SIZE;
+      const ty = (tileId / WORLD_SIZE) | 0;
+      const wx = tileToWorld(tx);
+      const wy = tileToWorld(ty);
+      addColliderRect(wx, wy, 0.48, 0.48, v.type===BUILD.WINDOW ? "build_window" : "build_wall");
+    });
+  }
+
+  let loadingFromSave = false;
+
+  function generateWorld(){
+    clearWorldGeometry();
+    buildBaseNoise();
+    classifyTiles();
+    carveRivers();
+    pickCampfireSpot();
+    spawnDecor();
+  }
+
+  /* ===================== BUILDING ===================== */
+
+  let buildMode = false;
+  let buildType = BUILD.WALL;
+  let buildRot = 0;
+
+  const COST = {
+    [BUILD.FLOOR]: 1,
+    [BUILD.WALL]: 2,
+    [BUILD.DOOR]: 3,
+    [BUILD.WINDOW]: 3,
+    [BUILD.ROOF]: 2
+  };
+
+  /* Tools */
+  const TOOL = { AXE:0, PICKAXE:1 };
+  let currentTool = TOOL.AXE;
+
+  const toast = { text:"", t:0 };
+  function showToast(text, seconds=1.0){
+    toast.text = text;
+    toast.t = seconds;
+  }
+
+  function getTargetTile(){
+    let tx, ty;
+
+    if (!isCoarse && mouseAim){
+      const ix = (mouseAim.x - view.ox) / view.scale;
+      const iy = (mouseAim.y - view.oy) / view.scale;
+      if (ix>=0 && iy>=0 && ix<INTERNAL_W && iy<INTERNAL_H){
+        const wx = (ix - INTERNAL_W/2)/PPU + camera.x;
+        const wy = (iy - INTERNAL_H/2)/PPU + camera.y;
+        tx = worldToTile(wx);
+        ty = worldToTile(wy);
+      }
+    }
+
+    if (tx==null || ty==null){
+      const wx = player.x + Math.cos(player.dir)*2.0;
+      const wy = player.y + Math.sin(player.dir)*2.0;
+      tx = worldToTile(wx);
+      ty = worldToTile(wy);
+    }
+
+    if (!inBounds(tx,ty)) return null;
+    return { tx, ty, tileId: idxOf(tx,ty) };
+  }
+
+  function canPlaceAt(tileId){
+    const tx = tileId % WORLD_SIZE;
+    const ty = (tileId / WORLD_SIZE) | 0;
+    if (!inBounds(tx,ty)) return false;
+
+    if (tileMap[tileId] === T.WATER) return false;
+
+    const cTx = worldToTile(campfire.x);
+    const cTy = worldToTile(campfire.y);
+    if (tx===cTx && ty===cTy) return false;
+
+    const wx = tileToWorld(tx);
+    const wy = tileToWorld(ty);
+
+    if (buildMap.has(tileId)) return false;
+
+    if (tileOccupiedByCollider(wx,wy, 0.48)) return false;
+
+    return true;
+  }
+
+  function placeBuild(tileId){
+    const cost = COST[buildType] || 1;
+    if (wood < cost){
+      showToast("Not enough wood", 1.0);
+      return false;
+    }
+    if (!canPlaceAt(tileId)){
+      showToast("Can't place here", 1.0);
+      return false;
+    }
+
+    wood -= cost;
+    buildMap.set(tileId, { type: buildType, rot: buildRot });
+
+    if (buildType === BUILD.WALL || buildType === BUILD.WINDOW){
+      const tx = tileId % WORLD_SIZE;
+      const ty = (tileId / WORLD_SIZE) | 0;
+      addColliderRect(tileToWorld(tx), tileToWorld(ty), 0.48, 0.48, buildType===BUILD.WINDOW ? "build_window" : "build_wall");
+    }
+
+    const tx = tileId % WORLD_SIZE;
+    const ty = (tileId / WORLD_SIZE) | 0;
+    spawnParticles("build", tileToWorld(tx), tileToWorld(ty), 10);
+
+    return true;
+  }
+
+  function removeBuild(tileId){
+    const b = buildMap.get(tileId);
+    if (!b) { showToast("No block here", 0.7); return false; }
+
+    // refund a bit (to feel good but not OP)
+    const back = Math.max(1, Math.floor((COST[b.type] || 1) * 0.5));
+    wood += back;
+
+    buildMap.delete(tileId);
+
+    // rebuild build colliders (simple and safe)
+    rebuildBuildColliders();
+
+    const tx = tileId % WORLD_SIZE;
+    const ty = (tileId / WORLD_SIZE) | 0;
+    spawnParticles("chips", tileToWorld(tx), tileToWorld(ty), 8);
+    showToast(`Removed (+${back} wood)`, 0.9);
+    return true;
+  }
+
+  /* ===================== ACTIONS ===================== */
+
+  const AXE_COOLDOWN = 0.36;
+
+  function doAction(){
+    if (player.attackCooldown > 0) return;
+
+    player.attack = 0.0001;
+    player.attackCooldown = AXE_COOLDOWN;
+
+    if (buildMode){
+      const tgt = getTargetTile();
+      if (!tgt) return;
+      placeBuild(tgt.tileId);
+      return;
+    }
+
+    if (currentTool === TOOL.PICKAXE) mineNearestBoulder();
+    else chopNearestTree();
+  }
+
+  function doRemoveAction(){
+    if (!buildMode) return;
+    const tgt = getTargetTile();
+    if (!tgt) return;
+    removeBuild(tgt.tileId);
+  }
+
+  window.addEventListener("mousedown",(e)=>{
+    if(e.button===0) doAction();
+    if(e.button===2) doRemoveAction();
+  });
+  window.addEventListener("contextmenu",(e)=> e.preventDefault());
+
+  if (actionBtn){
+    const tap=(e)=>{ e.preventDefault(); doAction(); };
+    actionBtn.addEventListener("click", tap);
+    actionBtn.addEventListener("touchstart", tap, {passive:false});
+  }
+
+  function chopNearestTree(){
+    let best=null, bestD=(3.2*3.2);
+    for (const t of trees){
+      if (t.falling || t.removed) continue;
+      const d=dist2(player.x,player.y,t.x,t.y);
+      if (d<bestD){ bestD=d; best=t; }
+    }
+    if (!best) return;
+
+    best.hp -= 1;
+    spawnParticles("chips", best.x, best.y, 12);
+
+    if (best.hp<=0){
+      const idx=colliders.indexOf(best.collider);
+      if (idx!==-1) colliders.splice(idx,1);
+
+      best.removed = true;
+      removedTrees.add(best.tileId);
+
+      treesCutTotal++;
+      wood++;
+      showToast("+1 wood", 0.7);
+    }
+  }
+
+  function mineNearestBoulder(){
+    let best=null, bestD=(3.3*3.3);
+    for (const b of boulders){
+      if (b.removed) continue;
+      const d=dist2(player.x,player.y,b.x,b.y);
+      if (d<bestD){ bestD=d; best=b; }
+    }
+    if (!best) return;
+
+    best.hp -= 1;
+    spawnParticles("chips", best.x, best.y, 10);
+
+    if (best.hp<=0){
+      const idx=colliders.indexOf(best.collider);
+      if (idx!==-1) colliders.splice(idx,1);
+
+      best.removed = true;
+      removedBoulders.add(best.tileId);
+
+      if (best.type === "coal"){
+        coal += 1 + ((hash2(best.tileId, 17, seedU32+7711) < 0.35) ? 1 : 0);
+        stone += 1;
+        showToast("+coal +stone", 0.9);
       } else {
-        coneTri(-PPU*1.80*s, -PPU*0.05*s, PPU*0.95*s);
-        coneTri(-PPU*1.10*s, -PPU*0.25*s, PPU*0.75*s);
-      }
-
-      ctx.restore();
-    }
-
-    function drawLamp(ctx, l, time){
-      const pos = worldToScreen(l.x,l.y);
-      drawShadowCircle(ctx, pos.x, pos.y + 10, 10);
-
-      ctx.fillStyle = "rgba(60,60,70,0.95)";
-      pRect(ctx, pos.x-1, pos.y-20, 2, 26);
-
-      ctx.fillStyle = "rgba(30,30,40,0.95)";
-      pRect(ctx, pos.x-6, pos.y-26, 12, 10);
-
-      const night = 1 - light;
-      if (night > 0.02){
-        const flick = 0.9 + Math.sin(time*6 + l.flick)*0.12;
-        ctx.fillStyle = rgba(255,230,170, 0.55*night*flick);
-        pRect(ctx, pos.x-4, pos.y-24, 8, 6);
-
-        const g = ctx.createRadialGradient(pos.x, pos.y-22, 6, pos.x, pos.y-22, 70);
-        g.addColorStop(0, rgba(255,210,120, 0.22*night*flick));
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y-22, 70, 0, Math.PI*2);
-        ctx.fill();
+        stone += 1;
+        // small chance of coal drop
+        if (hash2(best.tileId, 99, seedU32+8822) < 0.18) coal += 1;
+        showToast("+1 stone", 0.8);
       }
     }
+  }
 
-    function drawCampfire(ctx, time){
-      const pos = worldToScreen(campfire.x, campfire.y);
-      for (let i=0;i<6;i++){
-        const a = i*(Math.PI/3);
-        const px = pos.x + Math.cos(a)*PPU*1.0;
-        const py = pos.y + Math.sin(a)*PPU*0.75;
-        ctx.fillStyle = COL.rock2;
-        ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI*2);
-        ctx.fill();
-      }
+  /* Keyboard controls */
+  let minimapOn = false;
+  function setMinimap(v){
+    minimapOn = v;
+    miniWrap.style.display = minimapOn ? "block" : "none";
+    if (minimapOn) minimapDirty = true;
+  }
 
-      const night = 1 - light;
-      const flick = 1 + Math.sin(time*10)*0.18;
-
-      drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
-
-      ctx.fillStyle = COL.flame;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - 22*flick);
-      ctx.quadraticCurveTo(pos.x + 12, pos.y - 6, pos.x, pos.y + 12);
-      ctx.quadraticCurveTo(pos.x - 12, pos.y - 6, pos.x, pos.y - 22*flick);
-      ctx.fill();
-
-      ctx.fillStyle = COL.flame2;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - 14*flick);
-      ctx.quadraticCurveTo(pos.x + 9, pos.y - 3, pos.x, pos.y + 9);
-      ctx.quadraticCurveTo(pos.x - 9, pos.y - 3, pos.x, pos.y - 14*flick);
-      ctx.fill();
-
-      const g = ctx.createRadialGradient(pos.x, pos.y, 14, pos.x, pos.y, 92);
-      g.addColorStop(0, rgba(255,120,60, 0.28 + 0.25*night));
-      g.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 92, 0, Math.PI*2);
-      ctx.fill();
+  window.addEventListener("keydown",(e)=>{
+    // Tools
+    if (e.code === "Digit1"){
+      currentTool = TOOL.AXE;
+      showToast("Tool: Axe", 0.8);
+    }
+    if (e.code === "Digit2"){
+      currentTool = TOOL.PICKAXE;
+      showToast("Tool: Pickaxe", 0.8);
     }
 
-    function drawButton(ctx, b, time){
-      const pos = worldToScreen(b.x,b.y);
-      const pulse = 1 + Math.sin(time*5 + b.phase)*0.10;
-
-      drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
-
-      ctx.fillStyle = COL.btn;
-      ctx.beginPath();
-      ctx.ellipse(pos.x, pos.y, 14*pulse, 10*pulse, 0, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.fillStyle = COL.btnGlow;
-      ctx.beginPath();
-      ctx.ellipse(pos.x, pos.y, 20*pulse, 14*pulse, 0, 0, Math.PI*2);
-      ctx.fill();
-
-      ctx.font = "900 14px Segoe UI, Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillStyle = (b.flash>0) ? "#ff4d4d" : "#ffffff";
-      ctx.fillText(String(b.cost), pos.x, pos.y - 18);
+    // Build mode
+    if (e.code === "KeyB"){
+      buildMode = !buildMode;
+      showToast(buildMode ? "Build mode ON" : "Build mode OFF", 0.9);
     }
 
-    function drawHouse(ctx, h){
-      const v = h.v;
-      const fade = h.restored ? (0.45 + 0.55*easeOutCubic(h.restoreT)) : 0.38;
-      const pos = worldToScreen(h.x,h.y);
-      const w = h.w*PPU, l = h.h*PPU;
-
-      drawShadowCircle(ctx, pos.x, pos.y + l*0.18, Math.max(w,l)*0.25);
-
-      ctx.globalAlpha = fade;
-
-      ctx.fillStyle = v.walls;
-      pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
-
-      ctx.fillStyle = "rgba(255,255,255,0.07)";
-      pRect(ctx, pos.x - w/2 + 3, pos.y - l/2 + 3, w*0.55, l-6);
-
-      ctx.fillStyle = "rgba(0,0,0,0.12)";
-      pRect(ctx, pos.x + w*0.18, pos.y - l/2 + 2, w*0.32, l-4);
-
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
-      pRect(ctx, pos.x - w/2, pos.y - l/2, w, 3);
-
-      const roofH = (h.kind==="big") ? PPU*2.5 : PPU*2.15;
-
-      ctx.fillStyle = v.roof;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - l/2 - roofH);
-      ctx.lineTo(pos.x + w/2 + 2, pos.y - l/2 + PPU*0.9);
-      ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.6);
-      ctx.lineTo(pos.x - w/2 - 2, pos.y - l/2 + PPU*0.9);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = v.roof2;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - l/2 - roofH);
-      ctx.lineTo(pos.x, pos.y - l/2 + PPU*2.6);
-      ctx.lineTo(pos.x - w/2 - 2, pos.y - l/2 + PPU*0.9);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(0,0,0,0.12)";
-      for (let i=0;i<6;i++){
-        const yy = pos.y - l/2 + PPU*0.95 + i*2;
-        pRect(ctx, pos.x - w/2, yy, w, 1);
-      }
-
-      if (v.chimney){
-        ctx.fillStyle = "#3b3b3b";
-        pRect(ctx, pos.x + w*0.18, pos.y - l/2 - roofH*0.6, PPU*0.55, PPU*1.2);
-      }
-
-      ctx.fillStyle = v.walls2;
-      pRect(ctx, pos.x - PPU*0.95, pos.y + l*0.12, PPU*1.9, PPU*2.4);
-
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
-      pRect(ctx, pos.x - PPU*1.4, pos.y + l*0.36, PPU*2.8, 2);
-
-      const night = 1 - light;
-      const windowGlow = h.restored ? (0.15 + 0.85*night) : 0.12;
-
-      ctx.fillStyle = rgba(255,230,160, 0.35*windowGlow);
-      pRect(ctx, pos.x - PPU*2.2, pos.y - PPU*0.2, PPU*1.25, PPU*1.25);
-
-      ctx.fillStyle = rgba(255,230,160, 0.45*windowGlow);
-      pRect(ctx, pos.x + PPU*1.2, pos.y - PPU*0.2, PPU*1.25, PPU*1.25);
-
-      if (h.restored && night > 0.02){
-        const g = ctx.createRadialGradient(pos.x, pos.y, 8, pos.x, pos.y, 62);
-        g.addColorStop(0, rgba(255,210,120, 0.20*night));
-        g.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 62, 0, Math.PI*2);
-        ctx.fill();
-      }
-
-      ctx.globalAlpha = 1;
+    // Minimap
+    if (e.code === "KeyM"){
+      setMinimap(!minimapOn);
     }
 
-    function drawFarm(ctx, f){
-      const fade = f.restored ? (0.45 + 0.55*easeOutCubic(f.restoreT)) : 0.38;
-      const pos = worldToScreen(f.x,f.y);
-      const w = f.w*PPU, l = f.l*PPU;
+    // Build selection (only when in build mode)
+    if (buildMode){
+      if (e.code === "Digit3"){ buildType = BUILD.FLOOR;  showToast("Build: Floor (3)", 0.9); }
+      if (e.code === "Digit4"){ buildType = BUILD.WALL;   showToast("Build: Wall (4)", 0.9); }
+      if (e.code === "Digit5"){ buildType = BUILD.DOOR;   showToast("Build: Door (5)", 0.9); }
+      if (e.code === "Digit6"){ buildType = BUILD.WINDOW; showToast("Build: Window (6)", 0.9); }
+      if (e.code === "Digit7"){ buildType = BUILD.ROOF;   showToast("Build: Roof (7)", 0.9); }
 
-      drawShadowCircle(ctx, pos.x, pos.y + l*0.22, Math.max(w,l)*0.20);
-
-      ctx.globalAlpha = fade;
-
-      ctx.fillStyle = COL.soil;
-      pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
-
-      ctx.fillStyle = "rgba(0,0,0,0.18)";
-      for (let r=0;r<5;r++){
-        const yy = pos.y - l/2 + (r+0.5)*(l/5);
-        pRect(ctx, pos.x - w/2 + 2, yy, w-4, 1);
+      if (e.code === "KeyR"){
+        buildRot = (buildRot + 1) & 3;
+        showToast("Rotate (R)", 0.6);
       }
+      if (e.code === "KeyX"){
+        doRemoveAction();
+      }
+    }
+  });
 
-      for (let row=0; row<4; row++){
-        for (let col=0; col<Math.floor(f.w); col++){
-          const cx = pos.x - w/2 + (col+0.5)*PPU;
-          const cy = pos.y - l/2 + (row+0.65)*(l/4);
+  /* ===================== DRAW ===================== */
 
-          if (f.cropType === 0){
-            ctx.fillStyle = "rgba(255,244,200,0.86)";
-            pRect(ctx, cx-1, cy-3, 2, 6);
-            ctx.fillStyle = "rgba(180,140,70,0.45)";
-            pRect(ctx, cx-2, cy+3, 4, 1);
-          } else if (f.cropType === 1){
-            ctx.fillStyle = "rgba(120,255,170,0.85)";
-            pRect(ctx, cx-1, cy-3, 2, 4);
-            ctx.fillStyle = "rgba(255,160,90,0.85)";
-            pRect(ctx, cx-1, cy+1, 2, 2);
-          } else {
-            ctx.fillStyle = "rgba(230,245,255,0.9)";
-            pRect(ctx, cx-2, cy-2, 4, 4);
-            ctx.fillStyle = "rgba(0,0,0,0.15)";
-            pRect(ctx, cx-2, cy+2, 4, 1);
+  function tileColor(tt, h, m, time, tx, ty){
+    const day = 0.62 + 0.38*light;
+
+    if (tt === T.WATER){
+      const depth = clamp((0.28 - h) * 4.0, 0, 1);
+      const wave = 0.06*Math.sin(time*2.2 + (tx*0.35) + (ty*0.22))
+                 + 0.04*Math.sin(time*3.1 + (tx*0.18) - (ty*0.29));
+
+      const baseR = lerp(18, 24, 1-depth);
+      const baseG = lerp(70, 125, 1-depth);
+      const baseB = lerp(125, 185, 1-depth);
+
+      const a = clamp(0.62 + wave, 0.50, 0.75);
+      return rgba((baseR*day)|0, (baseG*day)|0, (baseB*day)|0, a);
+    }
+    if (tt === T.SAND){
+      const v = 205 + ((h*22)|0);
+      return rgba((v*day)|0, (190*day)|0, (120*day)|0, 1.0);
+    }
+    if (tt === T.GRASS){
+      const wet = clamp((m - 0.40)*1.3, 0, 1);
+      let r = 35 + (wet*10)|0;
+      let g = 150 + (wet*35)|0;
+      let b = 45 + (wet*12)|0;
+      if (m > 0.58){
+        r = (r*0.95)|0; g = (g*1.02)|0; b = (b*0.92)|0;
+      }
+      return rgba((r*day)|0, (g*day)|0, (b*day)|0, 1.0);
+    }
+    if (tt === T.HILL){
+      return rgba((70*day)|0, (135*day)|0, (70*day)|0, 1.0);
+    }
+    return rgba((110*day)|0, (112*day)|0, (120*day)|0, 1.0);
+  }
+
+  function drawTerrain(ctx, time){
+    const halfW = INTERNAL_W/(2*PPU);
+    const halfH = INTERNAL_H/(2*PPU);
+
+    const minX = Math.floor(camera.x - halfW - 2);
+    const maxX = Math.floor(camera.x + halfW + 2);
+    const minY = Math.floor(camera.y - halfH - 2);
+    const maxY = Math.floor(camera.y + halfH + 2);
+
+    for (let wy=minY; wy<=maxY; wy++){
+      for (let wx=minX; wx<=maxX; wx++){
+        const tx = worldToTile(wx);
+        const ty = worldToTile(wy);
+        if (!inBounds(tx,ty)) continue;
+
+        const id = idxOf(tx,ty);
+        const tt = tileMap[id];
+        const h = heightMap[id];
+        const m = moistMap[id];
+
+        const pos = worldToScreen(wx,wy);
+
+        ctx.fillStyle = tileColor(tt,h,m,time,tx,ty);
+        pRect(ctx, pos.x, pos.y, PPU+1, PPU+1);
+
+        const speck = hash2(tx,ty, seedU32+12345);
+        if (tt===T.GRASS || tt===T.HILL){
+          if (speck < 0.35){
+            ctx.fillStyle = "rgba(0,0,0,0.06)";
+            pRect(ctx, pos.x + ((speck*11)|0), pos.y + (((speck*19)|0)%12), 2, 2);
+          }
+        } else if (tt===T.SAND){
+          if (speck < 0.30){
+            ctx.fillStyle = "rgba(0,0,0,0.05)";
+            pRect(ctx, pos.x + ((speck*13)|0), pos.y + (((speck*23)|0)%12), 2, 1);
+          }
+        } else if (tt===T.ROCK){
+          if (speck < 0.55){
+            ctx.fillStyle = "rgba(255,255,255,0.05)";
+            pRect(ctx, pos.x + ((speck*9)|0), pos.y + (((speck*17)|0)%12), 1, 1);
+          }
+        } else if (tt===T.WATER){
+          // foam near shore
+          let shore=false;
+          for (let oy=-1; oy<=1; oy++){
+            for (let ox=-1; ox<=1; ox++){
+              if (ox===0 && oy===0) continue;
+              const nx=tx+ox, ny=ty+oy;
+              if (!inBounds(nx,ny)) continue;
+              if (tileMap[idxOf(nx,ny)] !== T.WATER){ shore=true; break; }
+            }
+            if (shore) break;
+          }
+          if (shore){
+            const flick = 0.55 + 0.45*Math.sin(time*2.6 + tx*0.27 + ty*0.21);
+            ctx.fillStyle = rgba(210, 240, 255, (0.08 + 0.06*flick) * (0.55 + 0.45*light));
+            pRect(ctx, pos.x, pos.y, PPU+1, 2);
+            pRect(ctx, pos.x, pos.y+PPU-2, PPU+1, 2);
+            pRect(ctx, pos.x, pos.y, 2, PPU+1);
+            pRect(ctx, pos.x+PPU-2, pos.y, 2, PPU+1);
+          }
+          // glints
+          if (speck < 0.06){
+            const t = (time*1.4 + speck*10) % 1;
+            const sx = pos.x + ((t*PPU)|0);
+            const sy = pos.y + (((speck*19)%1)*PPU)|0;
+            ctx.fillStyle = rgba(255,255,255,0.10*(0.55+0.45*light));
+            pRect(ctx, sx, sy, 2, 1);
           }
         }
-      }
 
-      ctx.globalAlpha = 1;
-    }
+        // relief shading
+        const south = inBounds(tx,ty+1) ? heightMap[idxOf(tx,ty+1)] : h;
+        const east  = inBounds(tx+1,ty) ? heightMap[idxOf(tx+1,ty)] : h;
 
-    function drawPath(ctx, p){
-      const fade = p.restored ? (0.48 + 0.52*easeOutCubic(p.restoreT)) : 0.35;
-      const pos = worldToScreen(p.x,p.y);
-      const w = p.w*PPU, l = p.l*PPU;
+        const dhS = h - south;
+        const dhE = h - east;
 
-      ctx.globalAlpha = fade;
-
-      ctx.fillStyle = COL.path;
-      pRect(ctx, pos.x - w/2, pos.y - l/2, w, l);
-
-      ctx.fillStyle = COL.path2;
-      for (let i=0;i<10;i++){
-        const tx = pos.x - w/2 + Math.random()*w;
-        const ty = pos.y - l/2 + Math.random()*l;
-        pRect(ctx, tx, ty, 2, 2);
-      }
-
-      ctx.globalAlpha = 1;
-    }
-
-    function drawRock(ctx, r){
-      const pos = worldToScreen(r.x,r.y);
-      const s = r.size*PPU;
-
-      drawShadowCircle(ctx, pos.x, pos.y + s*0.22, s*0.55);
-
-      ctx.fillStyle = COL.rock;
-      ctx.beginPath();
-      ctx.moveTo(pos.x - s*0.6, pos.y);
-      ctx.lineTo(pos.x - s*0.2, pos.y - s*0.45);
-      ctx.lineTo(pos.x + s*0.55, pos.y - s*0.1);
-      ctx.lineTo(pos.x + s*0.35, pos.y + s*0.50);
-      ctx.lineTo(pos.x - s*0.35, pos.y + s*0.45);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = COL.rock2;
-      ctx.beginPath();
-      ctx.moveTo(pos.x - s*0.2, pos.y - s*0.45);
-      ctx.lineTo(pos.x + s*0.15, pos.y - s*0.30);
-      ctx.lineTo(pos.x + s*0.55, pos.y - s*0.1);
-      ctx.lineTo(pos.x + s*0.05, pos.y - s*0.05);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawMountain(ctx, m){
-      const pos = worldToScreen(m.x,m.y);
-      const base = m.base*PPU;
-      const h = m.height*PPU;
-
-      drawShadowCircle(ctx, pos.x, pos.y + base*0.25, base*0.80);
-
-      ctx.fillStyle = COL.mtn;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - h*0.55);
-      ctx.lineTo(pos.x + base*0.65, pos.y + base*0.50);
-      ctx.lineTo(pos.x - base*0.65, pos.y + base*0.50);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = COL.mtn2;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - h*0.55);
-      ctx.lineTo(pos.x, pos.y + base*0.50);
-      ctx.lineTo(pos.x - base*0.65, pos.y + base*0.50);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = COL.snow2;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - h*0.55);
-      ctx.lineTo(pos.x + base*0.18, pos.y - h*0.30);
-      ctx.lineTo(pos.x, pos.y - h*0.18);
-      ctx.lineTo(pos.x - base*0.20, pos.y - h*0.30);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    /* Minimap + multiplayer state maps */
-    const remoteStates = new Map();   // uid -> {name,x,y,dir}
-
-    function updateMinimap(){
-      mctx.clearRect(0,0,mini.width,mini.height);
-      mctx.fillStyle="#132e13";
-      mctx.fillRect(0,0,mini.width,mini.height);
-
-      const scale = mini.width/(WORLD_HALF*2);
-      const toM=(wx,wy)=>({ x:(wx+WORLD_HALF)*scale, y:(wy+WORLD_HALF)*scale });
-
-      mctx.strokeStyle="rgba(255,255,255,0.20)";
-      mctx.lineWidth=2;
-      mctx.strokeRect(1,1,mini.width-2,mini.height-2);
-
-      mctx.fillStyle="rgba(80,255,120,0.55)";
-      for (const c of colliders){
-        const p=toM(c.x,c.y);
-        mctx.fillRect(p.x|0, p.y|0, 2, 2);
-      }
-
-      const cf=toM(campfire.x,campfire.y);
-      mctx.fillStyle="rgba(255,160,90,0.9)";
-      mctx.beginPath();
-      mctx.arc(cf.x, cf.y, 3, 0, Math.PI*2);
-      mctx.fill();
-
-      remoteStates.forEach((d)=>{
-        const p=toM(d.x,d.y);
-        mctx.fillStyle="rgba(90,160,255,0.85)";
-        mctx.fillRect((p.x|0)-1,(p.y|0)-1,3,3);
-      });
-
-      const mp=toM(player.x,player.y);
-      mctx.save();
-      mctx.translate(mp.x, mp.y);
-      mctx.rotate(player.dir);
-      mctx.fillStyle="#ffffff";
-      mctx.beginPath();
-      mctx.moveTo(0,-6);
-      mctx.lineTo(4,4);
-      mctx.lineTo(-4,4);
-      mctx.closePath();
-      mctx.fill();
-      mctx.restore();
-    }
-
-    /* Snow FX */
-    let snowflakes=[];
-    function resize(){
-      const dpr=Math.max(1, Math.min(2, window.devicePixelRatio||1));
-      gameCanvas.width = Math.floor(innerWidth*dpr);
-      gameCanvas.height= Math.floor(innerHeight*dpr);
-      gctx.setTransform(dpr,0,0,dpr,0,0);
-
-      fxCanvas.width = Math.floor(innerWidth*dpr);
-      fxCanvas.height= Math.floor(innerHeight*dpr);
-      fx.setTransform(dpr,0,0,dpr,0,0);
-    }
-    function initSnow(count=150){
-      snowflakes=[];
-      for (let i=0;i<count;i++){
-        snowflakes.push({
-          x:Math.random()*innerWidth,
-          y:Math.random()*innerHeight,
-          r:1 + Math.random()*1.8,
-          speed:24 + Math.random()*40,
-          drift:-12 + Math.random()*22
-        });
-      }
-    }
-    function updateSnow(dt){
-      fx.clearRect(0,0,innerWidth,innerHeight);
-      const night = 1 - light;
-      fx.fillStyle = rgba(170,220,255, 0.85 - 0.15*night);
-
-      for (const f of snowflakes){
-        f.y += f.speed*dt;
-        f.x += f.drift*dt;
-
-        if (f.y > innerHeight + f.r){
-          f.y=-f.r;
-          f.x=Math.random()*innerWidth;
+        if (dhS > 0.06){
+          ctx.fillStyle = "rgba(0,0,0,0.12)";
+          pRect(ctx, pos.x, pos.y + PPU-2, PPU+1, 2);
         }
-        if (f.x < -10) f.x=innerWidth+10;
-        if (f.x > innerWidth+10) f.x=-10;
-
-        fx.beginPath();
-        fx.arc(f.x,f.y,f.r,0,Math.PI*2);
-        fx.fill();
+        if (dhE > 0.06){
+          ctx.fillStyle = "rgba(0,0,0,0.10)";
+          pRect(ctx, pos.x + PPU-2, pos.y, 2, PPU+1);
+        }
       }
     }
+  }
 
-    /* Multiplayer */
-    let currentUserUid=null;
-    let currentUserName=null;
+  function drawBoulder(ctx, b){
+    const pos = worldToScreen(b.x,b.y);
+    const s = b.size*PPU;
+    drawShadowCircle(ctx, pos.x, pos.y + s*0.24, s*0.55);
 
-    const remotePlayers = new Map(); // uid -> smooth {x,y,tx,ty,dir,tdir,name,color}
-    const MAX_INACTIVE_MS = 30000;
-    let lastSyncTime = 0;
-    const SYNC_INTERVAL = 220;
+    const dayMul = 0.62 + 0.38*light;
 
-    function hashUid(uid){
-      let h=0;
-      for (let i=0;i<uid.length;i++) h = (h*31 + uid.charCodeAt(i))|0;
-      return Math.abs(h);
-    }
-
-    function joinToPlayer(uid){
-      const data = remoteStates.get(uid);
-      if (!data) return;
-      player.x = data.x + 2;
-      player.y = data.y + 2;
-      player.dir = data.dir ?? player.dir;
-    }
-
-    let mpOpen = true;
-    function setMpOpen(v){
-      mpOpen = v;
-      mpPanel.style.display = mpOpen ? "block" : "none";
-      mpToggle.textContent = mpOpen ? "👥 Друзі" : "👥";
-    }
-    mpToggle.addEventListener("click", ()=> setMpOpen(!mpOpen));
-    if (isCoarse) setMpOpen(false);
-
-    function updateMpUI(){
-      if (!firebaseOk){
-        mpStatusEl.textContent = "Мультиплеєр: вимкнено (Firebase не завантажився)";
-        mpListEl.textContent = "";
-        return;
-      }
-      if (!currentUserUid) mpStatusEl.textContent = "Мультиплеєр: увійдіть у акаунт на головному сайті";
-      else mpStatusEl.textContent = "Мультиплеєр: ви " + (currentUserName || "Гравець");
-
-      mpListEl.innerHTML = "";
-      if (remoteStates.size === 0){
-        const d=document.createElement("div");
-        d.textContent="Немає інших гравців у грі";
-        mpListEl.appendChild(d);
-        return;
-      }
-      remoteStates.forEach((data, uid)=>{
-        const row=document.createElement("div");
-        row.className="playerRow";
-
-        const name=document.createElement("div");
-        name.textContent = `${data.name} у грі`;
-
-        const btn=document.createElement("button");
-        btn.textContent="Приєднатися";
-        btn.onclick=()=>joinToPlayer(uid);
-
-        row.appendChild(name);
-        row.appendChild(btn);
-        mpListEl.appendChild(row);
-      });
-    }
-
-    function syncGamePlayer(){
-      if (!firebaseOk || !currentUserUid || !currentUserName) return;
-      const ref = db.collection("gamePlayers").doc(currentUserUid);
-      return ref.set({
-        name: currentUserName,
-        x: player.x, y: player.y, dir: player.dir,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, { merge:true }).catch(err => console.error("Помилка синхронізації гравця:", err));
-    }
-    function maybeSyncGamePlayer(){
-      if (!firebaseOk || !currentUserUid || !currentUserName) return;
-      const now = performance.now();
-      if (now - lastSyncTime < SYNC_INTERVAL) return;
-      lastSyncTime = now;
-      syncGamePlayer();
-    }
-
-    if (!firebaseOk){
-      updateMpUI();
+    if (b.type === "coal"){
+      ctx.fillStyle = rgba((50*dayMul)|0,(52*dayMul)|0,(60*dayMul)|0, 0.96);
     } else {
-      db.collection("gamePlayers").onSnapshot((snapshot)=>{
-        remoteStates.clear();
-        const nowMs = Date.now();
-        remotePlayers.forEach(p=>p._seen=false);
-
-        snapshot.forEach((docSnap)=>{
-          const uid = docSnap.id;
-          if (uid === currentUserUid) return;
-
-          const data = docSnap.data() || {};
-          const updatedAt = data.updatedAt?.toDate ? data.updatedAt.toDate().getTime() : 0;
-          if (!updatedAt || nowMs - updatedAt > MAX_INACTIVE_MS){
-            remotePlayers.delete(uid);
-            return;
-          }
-
-          const name = data.name || "Гравець";
-          const x = data.x ?? 0;
-          const y = data.y ?? 2;
-          const dir = data.dir ?? 0;
-
-          remoteStates.set(uid, { name, x, y, dir });
-
-          let rp = remotePlayers.get(uid);
-          if (!rp){
-            const h = hashUid(uid);
-            const color = (h % 3 === 0) ? "green" : "blue";
-            rp = { name, x, y, tx:x, ty:y, dir, tdir:dir, color, _seen:true };
-            remotePlayers.set(uid, rp);
-          } else {
-            rp.name = name;
-            rp.tx = x; rp.ty = y;
-            rp.tdir = dir;
-            rp._seen = true;
-          }
-        });
-
-        for (const [uid, rp] of remotePlayers){
-          if (!rp._seen) remotePlayers.delete(uid);
-          else delete rp._seen;
-        }
-
-        updateMpUI();
-      }, (err)=>console.error("Помилка читання gamePlayers:", err));
-
-      auth.onAuthStateChanged((user)=>{
-        if (user && user.displayName){
-          currentUserUid = user.uid;
-          currentUserName = user.displayName;
-        } else {
-          currentUserUid = null;
-          currentUserName = null;
-        }
-        updateMpUI();
-      });
+      ctx.fillStyle = rgba((92*dayMul)|0,(95*dayMul)|0,(105*dayMul)|0, 0.96);
     }
 
-    /* Loop */
-    function worldToVisible(x,y,camx,camy){
-      const halfW = INTERNAL_W/(2*PPU);
-      const halfH = INTERNAL_H/(2*PPU);
-      return !(x < camx-halfW-20 || x > camx+halfW+20 || y < camy-halfH-20 || y > camy+halfH+20);
+    ctx.beginPath();
+    ctx.moveTo(pos.x - s*0.60, pos.y);
+    ctx.lineTo(pos.x - s*0.15, pos.y - s*0.50);
+    ctx.lineTo(pos.x + s*0.55, pos.y - s*0.15);
+    ctx.lineTo(pos.x + s*0.35, pos.y + s*0.52);
+    ctx.lineTo(pos.x - s*0.38, pos.y + s*0.45);
+    ctx.closePath();
+    ctx.fill();
+
+    // highlights + specks
+    ctx.fillStyle = b.type==="coal"
+      ? rgba(255,255,255, 0.04*(0.55+0.45*light))
+      : rgba(255,255,255, 0.06*(0.55+0.45*light));
+    for (let i=0;i<8;i++){
+      const rr = hash2((b.tileId+i)|0, (i*17)|0, seedU32+9911);
+      const px = pos.x + (rr*2-1) * s*0.35;
+      const py = pos.y + (hash2((b.tileId+i)|0, (i*31)|0, seedU32+9933)*2-1) * s*0.25;
+      pRect(ctx, px, py, 1, 1);
     }
 
-    let last = performance.now();
+    if (b.type==="coal"){
+      // tiny coal sheen
+      ctx.fillStyle = rgba(120,170,255, 0.08*(0.55+0.45*light));
+      pRect(ctx, pos.x - s*0.12, pos.y - s*0.12, 3, 1);
+    }
+  }
 
-    function update(dt, time){
-      updateDayNight(dt);
+  function drawTree(ctx, t, time){
+    const pos = worldToScreen(t.x,t.y);
 
-      if (isFrozen){
-        updateSnow(dt);
-        return;
-      }
+    const k = t.falling ? clamp(t.fallT/0.78, 0, 1) : 0;
+    const kk = 1 - Math.pow(1-k, 4);
+    const ang = t.falling ? (kk * (Math.PI/2) * t.fallDir) : 0;
 
-      let mx=0,my=0;
-      if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
-      if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
-      if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
-      if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
+    const s = t.scale;
+    const trunkH = PPU*(1.05*t.trunk)*s;
+    drawShadowCircle(ctx, pos.x, pos.y + PPU*0.40, PPU*0.78*s);
 
-      if (Math.abs(touchMoveX)>0.05 || Math.abs(touchMoveY)>0.05){
-        mx += touchMoveX; my += touchMoveY;
-      }
+    const sway = (!t.falling) ? (Math.sin(time*1.6 + t.sway)*0.06) : 0;
 
-      const len = Math.hypot(mx,my);
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
 
-      // ✅ ПК: напрям завжди від мишки (якщо є)
-      if (!isCoarse && mouseAim){
-        const cx=innerWidth/2, cy=innerHeight/2;
-        const dx=mouseAim.x - cx;
-        const dy=mouseAim.y - cy;
-        if (Math.hypot(dx,dy)>6) player.dir = Math.atan2(dy,dx);
-      } else if (len>0.001){
-        // Телефон: напрям = напрям руху
-        player.dir = Math.atan2(my, mx);
-      }
-
-      const speed = 7.8;
-      if (len>0.001){
-        const nx = clamp(player.x + (mx/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
-        if (!isBlocked(nx, player.y, player.r)) player.x = nx;
-
-        const ny = clamp(player.y + (my/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
-        if (!isBlocked(player.x, ny, player.r)) player.y = ny;
-      }
-
-      if (player.attackCooldown>0) player.attackCooldown -= dt;
-      if (player.attack>0){
-        player.attack += dt*3.2;
-        if (player.attack>=1) player.attack=0;
-      }
-
-      for (const t of trees){
-        if (t.falling && !t.removed){
-          t.fallT += dt;
-          if (t.fallT >= 0.85) t.removed = true;
-        }
-      }
-      trees = trees.filter(t=>!t.removed);
-
-      for (const b of buttons) if (b.flash>0) b.flash -= dt;
-      for (const h of houses) if (h.restored && h.restoreT<1) h.restoreT = Math.min(1, h.restoreT + dt*1.6);
-      for (const f of farms) if (f.restored && f.restoreT<1) f.restoreT = Math.min(1, f.restoreT + dt*1.6);
-      for (const p of paths) if (p.restored && p.restoreT<1) p.restoreT = Math.min(1, p.restoreT + dt*1.8);
-
-      for (const pt of particles){
-        pt.life -= dt;
-        pt.x += pt.vx*dt; pt.y += pt.vy*dt;
-        pt.vx *= 0.90; pt.vy *= 0.90;
-        if (pt.type==="chips") pt.vy += 6.5*dt;
-        if (pt.type==="restore") pt.vy -= 2.0*dt;
-      }
-      for (let i=particles.length-1;i>=0;i--) if (particles[i].life<=0) particles.splice(i,1);
-
-      const d = Math.sqrt(dist2(player.x,player.y,campfire.x,campfire.y));
-      const warmRadius=12;
-      const coolRate=0.025;
-      const warmRate=2.1;
-
-      if (d<warmRadius){
-        const factor=1-d/warmRadius;
-        heatValue += warmRate*factor*dt;
-      } else {
-        heatValue -= coolRate*dt;
-      }
-
-      heatValue = clamp(heatValue, 0, heatMax);
-      updateHeat();
-
-      if (!isFrozen && heatValue<=0.01){
-        isFrozen=true;
-        freezeOverlay.style.opacity="1";
-        freezeText.style.opacity="1";
-      }
-
-      camera.x = lerp(camera.x, player.x, 0.12);
-      camera.y = lerp(camera.y, player.y, 0.12);
-
-      for (const rp of remotePlayers.values()){
-        rp.x = lerp(rp.x, rp.tx, 0.22);
-        rp.y = lerp(rp.y, rp.ty, 0.22);
-        let da = (rp.tdir - rp.dir);
-        while (da > Math.PI) da -= Math.PI*2;
-        while (da < -Math.PI) da += Math.PI*2;
-        rp.dir += da*0.22;
-      }
-
-      updateSnow(dt);
-      maybeSyncGamePlayer();
+    if (t.falling){
+      ctx.translate(kk * PPU*0.75 * t.fallDir, kk * PPU*0.10);
     }
 
-    function render(time){
-      bctx.fillStyle = groundPattern;
-      bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
+    ctx.translate(0, PPU*0.25*s);
+    ctx.rotate(ang + sway);
+    ctx.translate(0, -PPU*0.25*s);
 
-      for (const p of paths) if (worldToVisible(p.x,p.y,camera.x,camera.y)) drawPath(bctx,p);
-      for (const f of farms) if (worldToVisible(f.x,f.y,camera.x,camera.y)) drawFarm(bctx,f);
-      for (const h of houses) if (worldToVisible(h.x,h.y,camera.x,camera.y)) drawHouse(bctx,h);
-      for (const r of rocks) if (worldToVisible(r.x,r.y,camera.x,camera.y)) drawRock(bctx,r);
-      for (const m of mountains) if (worldToVisible(m.x,m.y,camera.x,camera.y)) drawMountain(bctx,m);
-      for (const t of trees) if (worldToVisible(t.x,t.y,camera.x,camera.y)) drawTree(bctx,t);
+    // trunk
+    ctx.fillStyle = "#6b4625";
+    pRect(ctx, -2*s, -trunkH*0.10, 4*s, trunkH);
 
-      drawCampfire(bctx,time);
+    const hv = t.hueVar;
+    const base = { r: (22 + hv*22)|0, g: (110 + hv*70)|0, b: (30 + hv*18)|0 };
+    const hi   = { r: (40 + hv*22)|0, g: (165 + hv*60)|0, b: (55 + hv*20)|0 };
+    const deep = { r: (16 + hv*12)|0, g: (85 + hv*55)|0,  b: (22 + hv*12)|0 };
 
-      for (const l of lamps) if (worldToVisible(l.x,l.y,camera.x,camera.y)) drawLamp(bctx,l,time);
-      for (const b of buttons) if (worldToVisible(b.x,b.y,camera.x,camera.y)) drawButton(bctx,b,time);
+    const dayMul = 0.62 + 0.38*light;
+    const cBase = rgba((base.r*dayMul)|0, (base.g*dayMul)|0, (base.b*dayMul)|0, 0.98);
+    const cHi   = rgba((hi.r*dayMul)|0,   (hi.g*dayMul)|0,   (hi.b*dayMul)|0,   0.45);
+    const cDeep = rgba((deep.r*dayMul)|0, (deep.g*dayMul)|0, (deep.b*dayMul)|0, 0.98);
 
-      for (const pt of particles){
-        const p = worldToScreen(pt.x,pt.y);
-        const a = clamp(pt.life/0.75,0,1);
-        bctx.fillStyle = (pt.type==="chips")
-          ? rgba(180,120,70, 0.85*a)
-          : rgba(110,255,170, 0.75*a);
-        bctx.fillRect((p.x|0),(p.y|0),2,2);
+    function tri(topY, baseY, w, col){
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(0, topY);
+      ctx.lineTo(w, baseY);
+      ctx.lineTo(-w, baseY);
+      ctx.closePath();
+      ctx.fill();
+    }
+    function blob(cx,cy,rx,ry, col){
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+      ctx.fill();
+    }
+
+    if (t.kind === 0 || t.kind === 2){
+      const tall = (t.kind===2) ? 1.14 : 1.0;
+      tri(-PPU*1.70*s*tall, -PPU*0.15*s, PPU*1.05*s, cDeep);
+      tri(-PPU*1.25*s*tall, -PPU*0.35*s, PPU*0.88*s, cDeep);
+      tri(-PPU*0.85*s*tall, -PPU*0.55*s, PPU*0.72*s, cDeep);
+
+      tri(-PPU*1.60*s*tall, -PPU*0.15*s, PPU*0.92*s, cBase);
+      tri(-PPU*1.15*s*tall, -PPU*0.35*s, PPU*0.78*s, cBase);
+      tri(-PPU*0.75*s*tall, -PPU*0.55*s, PPU*0.62*s, cBase);
+
+      tri(-PPU*1.48*s*tall, -PPU*0.20*s, PPU*0.55*s, cHi);
+    } else {
+      const topY = -PPU*1.40*s;
+      const midY = -PPU*0.95*s;
+      const lowY = -PPU*0.55*s;
+
+      blob(0, topY, PPU*0.70*s, PPU*0.55*s, cBase);
+      blob(-PPU*0.40*s, midY, PPU*0.85*s, PPU*0.65*s, cBase);
+      blob(PPU*0.42*s,  midY, PPU*0.85*s, PPU*0.65*s, cBase);
+      blob(0, lowY, PPU*1.10*s, PPU*0.78*s, cDeep);
+
+      blob(-PPU*0.30*s, topY+PPU*0.15*s, PPU*0.42*s, PPU*0.32*s, cHi);
+      blob(PPU*0.25*s,  midY-PPU*0.05*s, PPU*0.55*s, PPU*0.40*s, cHi);
+    }
+
+    ctx.restore();
+  }
+
+  function drawBerryDecor(ctx, b, time){
+    const pos = worldToScreen(b.x,b.y);
+    const s = b.size;
+    drawShadowCircle(ctx, pos.x, pos.y + 9, 10*s);
+
+    const sway = Math.sin(time*1.6 + b.phase)*0.08;
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    ctx.rotate(sway);
+
+    const dayMul = 0.62 + 0.38*light;
+    const base = rgba((40*dayMul)|0,(120*dayMul)|0,(55*dayMul)|0,0.95);
+    const hi   = rgba((70*dayMul)|0,(170*dayMul)|0,(80*dayMul)|0,0.40);
+
+    ctx.fillStyle = base;
+    ctx.beginPath();
+    ctx.ellipse(-6*s, -2*s, 10*s, 7*s, 0, 0, Math.PI*2);
+    ctx.ellipse( 6*s, -2*s, 10*s, 7*s, 0, 0, Math.PI*2);
+    ctx.ellipse( 0*s,  2*s, 13*s, 9*s, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = hi;
+    ctx.beginPath();
+    ctx.ellipse(-2*s, -5*s, 8*s, 5*s, 0, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = rgba(120,80,255,0.90*(0.55+0.45*light));
+    for (let i=0;i<b.berryCount;i++){
+      const px = (-3 + i*3)*s;
+      const py = (-1 - i*1)*s;
+      ctx.beginPath();
+      ctx.arc(px, py, 2.2, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    ctx.restore();
+  }
+
+  function drawCampfire(ctx, time){
+    const pos = worldToScreen(campfire.x, campfire.y);
+
+    for (let i=0;i<6;i++){
+      const a = i*(Math.PI/3);
+      const px = pos.x + Math.cos(a)*PPU*1.0;
+      const py = pos.y + Math.sin(a)*PPU*0.75;
+      ctx.fillStyle = rgba(90,92,100,0.95);
+      ctx.beginPath();
+      ctx.arc(px, py, 4, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
+
+    const flick = 1 + Math.sin(time*10)*0.18;
+
+    ctx.fillStyle = rgba(255,110,42,0.95);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y - 22*flick);
+    ctx.quadraticCurveTo(pos.x + 12, pos.y - 6, pos.x, pos.y + 12);
+    ctx.quadraticCurveTo(pos.x - 12, pos.y - 6, pos.x, pos.y - 22*flick);
+    ctx.fill();
+
+    ctx.fillStyle = rgba(255,210,90,0.95);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y - 14*flick);
+    ctx.quadraticCurveTo(pos.x + 9, pos.y - 3, pos.x, pos.y + 9);
+    ctx.quadraticCurveTo(pos.x - 9, pos.y - 3, pos.x, pos.y - 14*flick);
+    ctx.fill();
+
+    const night = 1 - light;
+    const g = ctx.createRadialGradient(pos.x, pos.y, 14, pos.x, pos.y, 92);
+    g.addColorStop(0, rgba(255,120,60, 0.18 + 0.30*night));
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, 92, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawLamp(ctx, l, time){
+    const pos = worldToScreen(l.x,l.y);
+    drawShadowCircle(ctx, pos.x, pos.y + 9, 10);
+
+    // pole
+    const dayMul = 0.62 + 0.38*light;
+    bctx.fillStyle = rgba((55*dayMul)|0,(55*dayMul)|0,(65*dayMul)|0, 0.95);
+    pRect(bctx, pos.x-1, pos.y-18, 2, 24);
+    // head
+    bctx.fillStyle = rgba((25*dayMul)|0,(25*dayMul)|0,(35*dayMul)|0, 0.95);
+    pRect(bctx, pos.x-6, pos.y-24, 12, 9);
+
+    const night = 1 - light;
+    if (night > 0.02){
+      const flick = 0.9 + Math.sin(time*6 + l.flick)*0.12;
+      bctx.fillStyle = rgba(255,230,170, 0.55*night*flick);
+      pRect(bctx, pos.x-4, pos.y-22, 8, 5);
+
+      const g = bctx.createRadialGradient(pos.x, pos.y-20, 6, pos.x, pos.y-20, 62);
+      g.addColorStop(0, rgba(255,210,120, 0.20*night*flick));
+      g.addColorStop(1, "rgba(0,0,0,0)");
+      bctx.fillStyle = g;
+      bctx.beginPath();
+      bctx.arc(pos.x, pos.y-20, 62, 0, Math.PI*2);
+      bctx.fill();
+    }
+  }
+
+  function drawAxe(ctx,x,y, ang, swing){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(ang + swing);
+    ctx.fillStyle = "#7c4f2b";
+    pRect(ctx, -1, -10, 2, 18);
+    ctx.fillStyle = "#c3c9d3";
+    pRect(ctx, 0, -7, 11, 6);
+    ctx.fillStyle = "#9aa2ad";
+    pRect(ctx, 0, -7, 11, 2);
+    ctx.restore();
+  }
+
+  function drawPickaxe(ctx,x,y, ang, swing){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.rotate(ang + swing);
+
+    // handle
+    ctx.fillStyle = "#7c4f2b";
+    pRect(ctx, -1, -10, 2, 18);
+
+    // head
+    ctx.fillStyle = "#b7bcc6";
+    pRect(ctx, -9, -9, 18, 3);
+    ctx.fillStyle = "#8e96a3";
+    pRect(ctx, -9, -9, 18, 1);
+
+    ctx.restore();
+  }
+
+  function drawPlayer(ctx, p, time){
+    const pos = worldToScreen(p.x,p.y);
+    const bob = Math.sin(time*6)*0.7;
+
+    drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
+
+    ctx.fillStyle = rgba(70,150,255,0.95);
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y + bob, 10, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = rgba(255,255,255,0.25);
+    ctx.beginPath();
+    ctx.arc(pos.x - 3, pos.y - 3 + bob, 4, 0, Math.PI*2);
+    ctx.fill();
+
+    const atk = p.attack>0 ? Math.sin(p.attack*Math.PI) : 0;
+    const swing = -0.95*atk;
+
+    const toolX = pos.x + Math.cos(p.dir)*14;
+    const toolY = pos.y + Math.sin(p.dir)*10 + bob;
+
+    if (!buildMode && currentTool === TOOL.PICKAXE){
+      drawPickaxe(ctx, toolX, toolY, p.dir + Math.PI/2, swing);
+    } else {
+      drawAxe(ctx, toolX, toolY, p.dir + Math.PI/2, swing);
+    }
+  }
+
+  function drawBuildTile(ctx, tx, ty, type, rot){
+    const wx = tileToWorld(tx);
+    const wy = tileToWorld(ty);
+    const pos = worldToScreen(wx,wy);
+
+    const x = pos.x;
+    const y = pos.y;
+
+    const shade = 0.65 + 0.35*light;
+    const night = 1 - light;
+
+    if (type === BUILD.FLOOR){
+      ctx.fillStyle = rgba((120*shade)|0,(85*shade)|0,(50*shade)|0, 0.95);
+      pRect(ctx, x, y, PPU+1, PPU+1);
+      ctx.fillStyle = rgba(0,0,0,0.10);
+      for (let i=0;i<4;i++) pRect(ctx, x + i*4, y, 1, PPU+1);
+      ctx.fillStyle = rgba(255,255,255,0.06);
+      pRect(ctx, x+1, y+1, PPU-2, 1);
+      return;
+    }
+
+    if (type === BUILD.WALL){
+      drawShadowCircle(ctx, x+PPU/2, y+PPU*0.95, 10);
+      ctx.fillStyle = rgba((110*shade)|0,(75*shade)|0,(45*shade)|0, 0.98);
+      pRect(ctx, x, y, PPU+1, PPU+1);
+      ctx.fillStyle = rgba(0,0,0,0.10);
+      for (let r=0;r<4;r++) pRect(ctx, x, y + r*4 + 3, PPU+1, 1);
+      ctx.fillStyle = rgba(255,255,255,0.08);
+      pRect(ctx, x+1, y+1, PPU-2, 2);
+
+      if (night > 0.02){
+        ctx.fillStyle = rgba(0,0,0, 0.08*night);
+        pRect(ctx, x, y, PPU+1, PPU+1);
+      }
+      return;
+    }
+
+    if (type === BUILD.WINDOW){
+      drawShadowCircle(ctx, x+PPU/2, y+PPU*0.95, 10);
+      ctx.fillStyle = rgba((110*shade)|0,(75*shade)|0,(45*shade)|0, 0.98);
+      pRect(ctx, x, y, PPU+1, PPU+1);
+
+      // window hole
+      const glow = 0.10 + 0.45*(1-light);
+      ctx.fillStyle = rgba((40*shade)|0,(55*shade)|0,(70*shade)|0, 0.90);
+      pRect(ctx, x+4, y+4, PPU-8, PPU-8);
+
+      // glass
+      ctx.fillStyle = rgba(120,170,255, 0.18 + 0.25*glow);
+      pRect(ctx, x+5, y+5, PPU-10, PPU-10);
+
+      // frame cross
+      ctx.fillStyle = rgba(0,0,0,0.18);
+      pRect(ctx, x + (PPU/2)|0, y+5, 1, PPU-10);
+      pRect(ctx, x+5, y + (PPU/2)|0, PPU-10, 1);
+
+      // subtle inside warm at night
+      if ((1-light) > 0.1){
+        ctx.fillStyle = rgba(255,220,170, 0.08*(1-light));
+        pRect(ctx, x+5, y+5, PPU-10, PPU-10);
+      }
+      return;
+    }
+
+    if (type === BUILD.DOOR){
+      drawShadowCircle(ctx, x+PPU/2, y+PPU*0.95, 9);
+      ctx.fillStyle = rgba((95*shade)|0,(65*shade)|0,(40*shade)|0, 0.98);
+      pRect(ctx, x, y, PPU+1, PPU+1);
+
+      ctx.fillStyle = rgba((135*shade)|0,(92*shade)|0,(55*shade)|0, 0.92);
+      pRect(ctx, x+3, y+2, PPU-6, PPU-4);
+
+      const knobX = (rot===0 || rot===2) ? x + PPU - 5 : x + 5;
+      const knobY = (rot===1 || rot===3) ? y + PPU - 6 : y + 6;
+      ctx.fillStyle = rgba((230*shade)|0,(200*shade)|0,(120*shade)|0, 0.9);
+      pRect(ctx, knobX|0, knobY|0, 2, 2);
+
+      return;
+    }
+
+    if (type === BUILD.ROOF){
+      // Roof tile: shingles + triangle highlight
+      ctx.fillStyle = rgba((150*shade)|0,(55*shade)|0,(50*shade)|0, 0.95);
+      pRect(ctx, x, y, PPU+1, PPU+1);
+
+      // shingles lines
+      ctx.fillStyle = rgba(0,0,0,0.12);
+      for (let r=0;r<4;r++){
+        pRect(ctx, x+1, y + r*4 + 2, PPU-2, 1);
+      }
+      ctx.fillStyle = rgba(255,255,255,0.06);
+      pRect(ctx, x+1, y+1, PPU-2, 1);
+
+      // small ridge based on rotation
+      ctx.fillStyle = rgba(0,0,0,0.16);
+      if (rot===0) pRect(ctx, x+PPU/2-1, y, 2, PPU+1);
+      if (rot===1) pRect(ctx, x, y+PPU/2-1, PPU+1, 2);
+
+      return;
+    }
+  }
+
+  function drawBuilds(ctx){
+    const halfW = INTERNAL_W/(2*PPU);
+    const halfH = INTERNAL_H/(2*PPU);
+    const minTx = clamp(Math.floor(camera.x - halfW) + WORLD_HALF - 4, 0, WORLD_SIZE-1);
+    const maxTx = clamp(Math.floor(camera.x + halfW) + WORLD_HALF + 4, 0, WORLD_SIZE-1);
+    const minTy = clamp(Math.floor(camera.y - halfH) + WORLD_HALF - 4, 0, WORLD_SIZE-1);
+    const maxTy = clamp(Math.floor(camera.y + halfH) + WORLD_HALF + 4, 0, WORLD_SIZE-1);
+
+    for (let ty=minTy; ty<=maxTy; ty++){
+      for (let tx=minTx; tx<=maxTx; tx++){
+        const tileId = idxOf(tx,ty);
+        const b = buildMap.get(tileId);
+        if (!b) continue;
+        drawBuildTile(ctx, tx, ty, b.type, b.rot|0);
+      }
+    }
+  }
+
+  function drawBuildGhost(ctx){
+    if (!buildMode) return;
+    const tgt = getTargetTile();
+    if (!tgt) return;
+
+    const tileId = tgt.tileId;
+    const wx = tileToWorld(tgt.tx);
+    const wy = tileToWorld(tgt.ty);
+    const pos = worldToScreen(wx,wy);
+
+    const ok = canPlaceAt(tileId) && wood >= (COST[buildType]||1);
+
+    bctx.save();
+    bctx.globalAlpha = 0.45;
+    bctx.fillStyle = ok ? "rgba(110,255,170,0.55)" : "rgba(255,90,90,0.55)";
+    pRect(bctx, pos.x, pos.y, PPU+1, PPU+1);
+
+    bctx.globalAlpha = 0.85;
+    bctx.strokeStyle = ok ? "rgba(255,255,255,0.35)" : "rgba(0,0,0,0.35)";
+    bctx.lineWidth = 2;
+    bctx.strokeRect(pos.x+1, pos.y+1, PPU-2, PPU-2);
+
+    bctx.restore();
+  }
+
+  function drawToast(ctx){
+    if (toast.t <= 0 || !toast.text) return;
+    const pos = worldToScreen(player.x, player.y);
+    ctx.save();
+    ctx.globalAlpha = clamp(toast.t, 0, 1);
+    ctx.font = "bold 12px system-ui, Segoe UI, Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillText(toast.text, pos.x+1, pos.y - 18 + 1);
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    ctx.fillText(toast.text, pos.x, pos.y - 18);
+    ctx.restore();
+  }
+
+  /* ===================== MINIMAP ===================== */
+  let minimapDirty = true;
+  let minimapTimer = 0;
+
+  function colorForTileType(tt){
+    // a tiny palette for minimap
+    if (tt===T.WATER) return [20, 95, 170];
+    if (tt===T.SAND)  return [210, 195, 120];
+    if (tt===T.GRASS) return [45, 160, 65];
+    if (tt===T.HILL)  return [70, 135, 80];
+    return [120, 120, 130];
+  }
+
+  function updateMinimap(){
+    if (!minimapOn) return;
+
+    // Render a coarse view: each pixel samples a tile
+    const w = mini.width, h = mini.height;
+    const img = mctx.createImageData(w, h);
+    const data = img.data;
+
+    for (let py=0; py<h; py++){
+      for (let px=0; px<w; px++){
+        const tx = Math.floor((px / w) * WORLD_SIZE);
+        const ty = Math.floor((py / h) * WORLD_SIZE);
+        const id = idxOf(tx,ty);
+        const tt = tileMap[id];
+
+        const [r,g,b] = colorForTileType(tt);
+
+        const i = (py*w + px) * 4;
+        data[i+0] = r;
+        data[i+1] = g;
+        data[i+2] = b;
+        data[i+3] = 255;
+      }
+    }
+    mctx.putImageData(img, 0, 0);
+
+    // campfire marker
+    const cpx = Math.floor(((campfire.x + WORLD_HALF)/WORLD_SIZE) * w);
+    const cpy = Math.floor(((campfire.y + WORLD_HALF)/WORLD_SIZE) * h);
+    mctx.fillStyle = "rgba(255,140,80,0.95)";
+    mctx.beginPath(); mctx.arc(cpx, cpy, 3, 0, Math.PI*2); mctx.fill();
+
+    // player marker
+    const ppx = Math.floor(((player.x + WORLD_HALF)/WORLD_SIZE) * w);
+    const ppy = Math.floor(((player.y + WORLD_HALF)/WORLD_SIZE) * h);
+    mctx.save();
+    mctx.translate(ppx, ppy);
+    mctx.rotate(player.dir);
+    mctx.fillStyle = "rgba(255,255,255,0.95)";
+    mctx.beginPath();
+    mctx.moveTo(0,-6);
+    mctx.lineTo(4,4);
+    mctx.lineTo(-4,4);
+    mctx.closePath();
+    mctx.fill();
+    mctx.restore();
+
+    // frame
+    mctx.strokeStyle = "rgba(255,255,255,0.25)";
+    mctx.lineWidth = 2;
+    mctx.strokeRect(1,1,w-2,h-2);
+  }
+
+  /* ===================== SAVE / LOAD ===================== */
+  const SAVE_KEY = "procedural_survival_save_v3";
+
+  function serializeBuilds(){
+    const arr = [];
+    buildMap.forEach((v, k)=>{
+      arr.push({ k, type:v.type, rot:v.rot|0 });
+    });
+    return arr;
+  }
+  function deserializeBuilds(arr){
+    buildMap = new Map();
+    if (!Array.isArray(arr)) return;
+    for (const it of arr){
+      if (!it || typeof it.k !== "number") continue;
+      const valid = (it.type===BUILD.FLOOR || it.type===BUILD.WALL || it.type===BUILD.DOOR || it.type===BUILD.WINDOW || it.type===BUILD.ROOF);
+      const type = valid ? it.type : BUILD.WALL;
+      const rot = (it.rot|0) & 3;
+      buildMap.set(it.k, { type, rot });
+    }
+  }
+
+  function saveGame(){
+    try{
+      const data = {
+        v: 3,
+        seedStr,
+        player: { x: player.x, y: player.y, dir: player.dir },
+        resources: { wood, stone, coal, treesCutTotal },
+        removedTrees: Array.from(removedTrees),
+        removedBoulders: Array.from(removedBoulders),
+        builds: serializeBuilds(),
+        dayNight: { isNight, dayNightTimer, light, fromLight, toLight, transT },
+        tool: { currentTool }
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    }catch(e){}
+  }
+
+  function loadGame(){
+    try{
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data || !data.seedStr) return false;
+
+      loadingFromSave = true;
+
+      removedTrees = new Set(Array.isArray(data.removedTrees) ? data.removedTrees : []);
+      removedBoulders = new Set(Array.isArray(data.removedBoulders) ? data.removedBoulders : []);
+      deserializeBuilds(data.builds);
+
+      setSeed(String(data.seedStr));
+      generateWorld();
+
+      if (data.player){
+        player.x = Number(data.player.x ?? player.x);
+        player.y = Number(data.player.y ?? player.y);
+        player.dir = Number(data.player.dir ?? player.dir);
+        camera.x = player.x; camera.y = player.y;
+      }
+      if (data.resources){
+        wood = Number(data.resources.wood ?? wood);
+        stone = Number(data.resources.stone ?? stone);
+        coal = Number(data.resources.coal ?? coal);
+        treesCutTotal = Number(data.resources.treesCutTotal ?? treesCutTotal);
+      }
+      if (data.dayNight){
+        isNight = !!data.dayNight.isNight;
+        dayNightTimer = Number(data.dayNight.dayNightTimer ?? dayNightTimer);
+        light = Number(data.dayNight.light ?? light);
+        fromLight = Number(data.dayNight.fromLight ?? light);
+        toLight = Number(data.dayNight.toLight ?? (isNight?0:1));
+        transT = Number(data.dayNight.transT ?? 1);
+      }
+      if (data.tool && typeof data.tool.currentTool === "number"){
+        currentTool = data.tool.currentTool|0;
       }
 
-      for (const rp of remotePlayers.values()){
-        if (worldToVisible(rp.x,rp.y,camera.x,camera.y)) drawRemotePlayer(bctx,rp);
-      }
+      rebuildBuildColliders();
 
-      drawPlayer(bctx,player,time);
+      loadingFromSave = false;
+      return true;
+    }catch(e){
+      loadingFromSave = false;
+      return false;
+    }
+  }
 
-      const night = 1 - light;
-      if (night > 0.001){
-        bctx.fillStyle = rgba(10,20,40, 0.08 + 0.52*night);
-        bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
-      }
+  let autosaveTimer = 0;
+  window.addEventListener("beforeunload", saveGame);
+  window.addEventListener("pagehide", saveGame);
+  document.addEventListener("visibilitychange", ()=>{
+    if (document.visibilityState === "hidden") saveGame();
+  });
 
-      const screenW = innerWidth, screenH = innerHeight;
-      const scale = Math.max(1, Math.floor(Math.min(screenW/INTERNAL_W, screenH/INTERNAL_H)));
-      const drawW = INTERNAL_W*scale, drawH = INTERNAL_H*scale;
-      const ox = ((screenW - drawW)/2)|0;
-      const oy = ((screenH - drawH)/2)|0;
+  /* ===================== LOOP ===================== */
+  let last = performance.now();
 
-      gctx.clearRect(0,0,screenW,screenH);
-      gctx.imageSmoothingEnabled = false;
-      gctx.drawImage(buffer, 0,0,INTERNAL_W,INTERNAL_H, ox,oy, drawW,drawH);
+  function update(dt, time){
+    updateDayNight(dt);
 
+    // movement
+    let mx=0,my=0;
+    if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
+    if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
+    if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
+    if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
+
+    if (Math.abs(touchMoveX)>0.05 || Math.abs(touchMoveY)>0.05){
+      mx += touchMoveX; my += touchMoveY;
+    }
+
+    const len = Math.hypot(mx,my);
+
+    if (!isCoarse && mouseAim){
+      const cx=innerWidth/2, cy=innerHeight/2;
+      const dx=mouseAim.x - cx;
+      const dy=mouseAim.y - cy;
+      if (Math.hypot(dx,dy)>6) player.dir = Math.atan2(dy,dx);
+    } else if (len>0.001){
+      player.dir = Math.atan2(my, mx);
+    }
+
+    const speed = 7.8;
+    if (len>0.001){
+      const nx = clamp(player.x + (mx/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
+      if (!isBlocked(nx, player.y, player.r)) player.x = nx;
+
+      const ny = clamp(player.y + (my/Math.max(1,len))*speed*dt, -WORLD_HALF+1, WORLD_HALF-1);
+      if (!isBlocked(player.x, ny, player.r)) player.y = ny;
+    }
+
+    // avoid water
+    const tx = worldToTile(player.x);
+    const ty = worldToTile(player.y);
+    if (inBounds(tx,ty) && tileMap[idxOf(tx,ty)] === T.WATER){
+      player.x += Math.cos(player.dir + Math.PI)*0.12;
+      player.y += Math.sin(player.dir + Math.PI)*0.12;
+    }
+
+    // swing anim / cooldown
+    if (player.attackCooldown>0) player.attackCooldown -= dt;
+    if (player.attack>0){
+      player.attack += dt*3.2;
+      if (player.attack>=1) player.attack=0;
+    }
+
+    // particles
+    for (const pt of particles){
+      pt.life -= dt;
+      pt.x += pt.vx*dt; pt.y += pt.vy*dt;
+      pt.vx *= 0.90; pt.vy *= 0.90;
+      if (pt.type==="chips") pt.vy += 6.5*dt;
+      if (pt.type==="build") pt.vy -= 1.5*dt;
+    }
+    for (let i=particles.length-1;i>=0;i--) if (particles[i].life<=0) particles.splice(i,1);
+
+    // toast
+    if (toast.t > 0) toast.t -= dt;
+
+    // camera follow
+    camera.x = lerp(camera.x, player.x, 0.12);
+    camera.y = lerp(camera.y, player.y, 0.12);
+
+    // autosave
+    autosaveTimer += dt;
+    if (autosaveTimer >= 6.0){
+      autosaveTimer = 0;
+      saveGame();
+    }
+
+    // minimap update throttled
+    minimapTimer += dt;
+    if (minimapOn && (minimapDirty || minimapTimer >= 0.35)){
+      minimapTimer = 0;
+      minimapDirty = false;
       updateMinimap();
     }
 
-    function loop(now){
-      const dt = Math.min(0.033, (now - last)/1000);
-      last = now;
-      const time = now/1000;
-      update(dt,time);
-      render(time);
-      requestAnimationFrame(loop);
+    // HUD update
+    hudEl.innerHTML =
+      `Wood: ${wood} | Stone: ${stone} | Coal: ${coal}`
+      + `<div class="small">Tool: ${toolName(currentTool)} | Build: ${buildMode ? "ON" : "OFF"}`
+      + (buildMode ? ` | Block: ${buildType.toUpperCase()} (3-7) | Remove: X / Right Click` : ` | Axe=1 Pickaxe=2`)
+      + ` | Minimap: M</div>`;
+  }
+
+  function render(time){
+    bctx.clearRect(0,0,INTERNAL_W,INTERNAL_H);
+
+    drawTerrain(bctx, time);
+
+    // boulders
+    for (const b of boulders){
+      if (b.removed) continue;
+      const dx = Math.abs(b.x - camera.x);
+      const dy = Math.abs(b.y - camera.y);
+      if (dx < 28 && dy < 18) drawBoulder(bctx,b);
     }
 
-    /* Start */
-    resize();
-    initSnow(isCoarse ? 140 : 160);
-    updateMpUI();
+    // berries (decor)
+    for (const b of berryDecor){
+      const dx = Math.abs(b.x - camera.x);
+      const dy = Math.abs(b.y - camera.y);
+      if (dx < 28 && dy < 18) drawBerryDecor(bctx,b,time);
+    }
+
+    // builds
+    drawBuilds(bctx);
+
+    // trees
+    for (const t of trees){
+      if (t.removed) continue;
+      const dx = Math.abs(t.x - camera.x);
+      const dy = Math.abs(t.y - camera.y);
+      if (dx < 28 && dy < 18) drawTree(bctx,t,time);
+    }
+
+    drawCampfire(bctx, time);
+
+    // lamps
+    for (const l of lamps){
+      const dx = Math.abs(l.x - camera.x);
+      const dy = Math.abs(l.y - camera.y);
+      if (dx < 28 && dy < 18) drawLamp(bctx,l,time);
+    }
+
+    // particles
+    for (const pt of particles){
+      const p = worldToScreen(pt.x,pt.y);
+      const a = clamp(pt.life/0.75,0,1);
+      bctx.fillStyle = pt.type==="chips"
+        ? rgba(190,120,70, 0.85*a)
+        : rgba(120,255,170, 0.65*a);
+      bctx.fillRect((p.x|0),(p.y|0),2,2);
+    }
+
+    drawBuildGhost(bctx);
+    drawPlayer(bctx,player,time);
+    drawToast(bctx);
+
+    // night overlay
+    const night = 1 - light;
+    if (night > 0.001){
+      bctx.fillStyle = rgba(10,20,40, 0.10 + 0.55*night);
+      bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H);
+      const starA = 0.10*night;
+      if (starA > 0.01){
+        bctx.fillStyle = rgba(220,240,255, starA);
+        for (let i=0;i<24;i++){
+          const sx = (hash2(i, 7, seedU32+60001)*INTERNAL_W)|0;
+          const sy = (hash2(i, 13, seedU32+60007)*120)|0;
+          bctx.fillRect(sx, sy, 1, 1);
+        }
+      }
+    }
+
+    // scale to screen (store view)
+    const screenW = innerWidth, screenH = innerHeight;
+    const scale = Math.max(1, Math.floor(Math.min(screenW/INTERNAL_W, screenH/INTERNAL_H)));
+    const drawW = INTERNAL_W*scale, drawH = INTERNAL_H*scale;
+    const ox = ((screenW - drawW)/2)|0;
+    const oy = ((screenH - drawH)/2)|0;
+
+    view.scale = scale;
+    view.ox = ox;
+    view.oy = oy;
+
+    gctx.clearRect(0,0,screenW,screenH);
+    gctx.imageSmoothingEnabled = false;
+    gctx.drawImage(buffer, 0,0,INTERNAL_W,INTERNAL_H, ox,oy, drawW,drawH);
+
+    fx.clearRect(0,0,innerWidth,innerHeight);
+  }
+
+  function loop(now){
+    const dt = Math.min(0.033, (now - last)/1000);
+    last = now;
+    const time = now/1000;
+
+    update(dt,time);
+    render(time);
+
     requestAnimationFrame(loop);
+  }
 
-    window.addEventListener("resize", ()=>{
-      resize();
-      initSnow(snowflakes.length||150);
-    });
+  /* Start */
+  resize();
 
-  })();
-  </script>
+  if (!loadGame()){
+    setSeed(randomSeed());
+    removedTrees = new Set();
+    removedBoulders = new Set();
+    buildMap = new Map();
+    wood = 0; stone = 0; coal = 0; treesCutTotal = 0;
+    currentTool = TOOL.AXE;
 
+    isNight = false; light = 1; fromLight = 1; toLight = 1; transT = 1; dayNightTimer = 0;
+
+    generateWorld();
+    saveGame();
+  }
+
+  // default minimap off
+  miniWrap.style.display = "none";
+
+  requestAnimationFrame(loop);
+  window.addEventListener("resize", ()=> resize());
+
+})();
+</script>
 </body>
 </html>
