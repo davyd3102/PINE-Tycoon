@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ук">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
     <title>Sign up — PINE Tycoon</title>
@@ -17,12 +17,25 @@
       }
 
       .card {
+        position: relative;
         background: #ffffff;
         padding: 20px 24px;
         border-radius: 12px;
         box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         max-width: 380px;
         width: 100%;
+      }
+
+      .lang-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        border: 1px solid #ccc;
+        background: #fff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 12px;
       }
 
       h1 {
@@ -45,7 +58,7 @@
         font-size: 14px;
       }
 
-      button {
+      button[type="submit"] {
         width: 100%;
         margin-top: 14px;
         padding: 10px;
@@ -57,9 +70,7 @@
         cursor: pointer;
       }
 
-      button:hover {
-        opacity: 0.9;
-      }
+      button:hover { opacity: 0.9; }
 
       .msg {
         margin-top: 10px;
@@ -67,13 +78,8 @@
         min-height: 18px;
       }
 
-      .msg.error {
-        color: #c00;
-      }
-
-      .msg.success {
-        color: #008800;
-      }
+      .msg.error { color: #c00; }
+      .msg.success { color: #008800; }
 
       .back-link {
         margin-top: 10px;
@@ -86,50 +92,56 @@
         text-decoration: none;
       }
 
-      .back-link a:hover {
-        text-decoration: underline;
-      }
+      .back-link a:hover { text-decoration: underline; }
     </style>
   </head>
 
   <body>
     <div class="card">
-      <h1>Реєстрація</h1>
+      <button class="lang-btn" id="langBtn" type="button">EN</button>
+
+      <h1 id="titleH1">Реєстрація</h1>
+
       <form id="signupForm">
-        <label>
+        <label id="labelName">
           Нікнейм
-          <input type="text" id="signupName" required />
+          <input type="text" id="signupName" required placeholder="Наприклад: davyd3102" />
         </label>
 
-        <label>
+        <label id="labelPass">
           Пароль
           <input type="password" id="signupPassword" required />
         </label>
 
-        <label>
+        <label id="labelPass2">
           Повтор паролю
           <input type="password" id="signupPassword2" required />
         </label>
 
-        <button type="submit">Створити акаунт</button>
+        <button type="submit" id="submitBtn">Створити акаунт</button>
       </form>
 
       <div id="signupMsg" class="msg"></div>
 
       <div class="back-link">
-        Вже маєш акаунт? <a href="login.html">Sign in</a><br />
-        <a href="index.html">← Повернутися на головну</a>
+        <span id="haveAccText">Вже маєш акаунт?</span> <a href="login.html" id="signinLink">Sign in</a><br />
+        <a href="index.html" id="backHomeLink">← Повернутися на головну</a>
       </div>
     </div>
 
-    <!-- Firebase: реєстрація -->
     <script type="module">
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js';
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
       import {
         getAuth,
         createUserWithEmailAndPassword,
         updateProfile
-      } from 'https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js';
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        setDoc,
+        serverTimestamp
+      } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
@@ -141,70 +153,176 @@
         measurementId: "G-2DY6KSY4G7"
       };
 
-      const app  = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
+      const db = getFirestore(app);
 
-      const form      = document.getElementById('signupForm');
-      const nameInput = document.getElementById('signupName');
-      const passInput = document.getElementById('signupPassword');
-      const pass2Input= document.getElementById('signupPassword2');
-      const msgEl     = document.getElementById('signupMsg');
+      // 5 avatar options (1 default + 4 твої)
+      const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+      const AVATAR_2 = "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png";
+      const AVATAR_3 = "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png";
+      const AVATAR_4 = "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png";
+      const AVATAR_5 = "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png";
 
-      form.addEventListener('submit', async (e) => {
+      const form = document.getElementById("signupForm");
+      const nameInput = document.getElementById("signupName");
+      const passInput = document.getElementById("signupPassword");
+      const pass2Input = document.getElementById("signupPassword2");
+      const msgEl = document.getElementById("signupMsg");
+
+      // i18n
+      const T = {
+        uk: {
+          h1: "Реєстрація",
+          name: "Нікнейм",
+          pass: "Пароль",
+          pass2: "Повтор паролю",
+          submit: "Створити акаунт",
+          haveAcc: "Вже маєш акаунт?",
+          backHome: "← Повернутися на головну",
+          phName: "Наприклад: davyd3102",
+
+          errName: "Введи нік.",
+          errSpace: "Нік не повинен містити пробілів.",
+          errChars: "Нік може містити лише літери/цифри та символи . _ -",
+          errPassLen: "Пароль має бути хоча б 4 символи.",
+          errPassMatch: "Паролі не співпадають.",
+          ok: "Акаунт створено! Переходимо на головну...",
+          taken: "Такий нік уже зайнятий.",
+          fail: (m) => "Помилка реєстрації: " + m,
+        },
+        en: {
+          h1: "Sign up",
+          name: "Username",
+          pass: "Password",
+          pass2: "Confirm password",
+          submit: "Create account",
+          haveAcc: "Already have an account?",
+          backHome: "← Back to home",
+          phName: "Example: davyd3102",
+
+          errName: "Please type a username.",
+          errSpace: "Username must not contain spaces.",
+          errChars: "Username can only contain letters/numbers and . _ -",
+          errPassLen: "Password must be at least 4 characters.",
+          errPassMatch: "Passwords do not match.",
+          ok: "Account created! Redirecting to home...",
+          taken: "That username is already taken.",
+          fail: (m) => "Sign up error: " + m,
+        }
+      };
+
+      function getLang() {
+        return localStorage.getItem("pineLang") || "uk";
+      }
+
+      function setLang(lang) {
+        localStorage.setItem("pineLang", lang);
+        document.documentElement.lang = lang;
+
+        const t = T[lang];
+        document.getElementById("titleH1").textContent = t.h1;
+
+        // labels
+        document.getElementById("labelName").childNodes[0].textContent = t.name + " ";
+        document.getElementById("labelPass").childNodes[0].textContent = t.pass + " ";
+        document.getElementById("labelPass2").childNodes[0].textContent = t.pass2 + " ";
+
+        document.getElementById("submitBtn").textContent = t.submit;
+        document.getElementById("haveAccText").textContent = t.haveAcc;
+        document.getElementById("backHomeLink").textContent = t.backHome;
+
+        nameInput.placeholder = t.phName;
+
+        // button shows the OTHER language
+        document.getElementById("langBtn").textContent = (lang === "uk") ? "EN" : "UK";
+      }
+
+      document.getElementById("langBtn").addEventListener("click", () => {
+        const cur = getLang();
+        setLang(cur === "uk" ? "en" : "uk");
+      });
+
+      setLang(getLang());
+
+      function isValidUsername(name) {
+        // дозволяємо: a-z A-Z 0-9 . _ -
+        return /^[A-Za-z0-9._-]+$/.test(name);
+      }
+
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        msgEl.textContent = '';
-        msgEl.className = 'msg';
+        msgEl.textContent = "";
+        msgEl.className = "msg";
+
+        const lang = getLang();
+        const t = T[lang];
 
         const name = nameInput.value.trim();
         const pass = passInput.value;
-        const pass2= pass2Input.value;
+        const pass2 = pass2Input.value;
 
         if (!name) {
-          msgEl.textContent = 'Введи нік.';
-          msgEl.classList.add('error');
+          msgEl.textContent = t.errName;
+          msgEl.classList.add("error");
           return;
         }
 
-        if (name.includes(' ')) {
-          msgEl.textContent = 'Нік не повинен містити пробілів.';
-          msgEl.classList.add('error');
+        if (name.includes(" ")) {
+          msgEl.textContent = t.errSpace;
+          msgEl.classList.add("error");
+          return;
+        }
+
+        if (!isValidUsername(name)) {
+          msgEl.textContent = t.errChars;
+          msgEl.classList.add("error");
           return;
         }
 
         if (pass.length < 4) {
-          msgEl.textContent = 'Пароль має бути хоча б 4 символи.';
-          msgEl.classList.add('error');
+          msgEl.textContent = t.errPassLen;
+          msgEl.classList.add("error");
           return;
         }
 
         if (pass !== pass2) {
-          msgEl.textContent = 'Паролі не співпадають.';
-          msgEl.classList.add('error');
+          msgEl.textContent = t.errPassMatch;
+          msgEl.classList.add("error");
           return;
         }
 
-        // «Фейковий» email з ніку, щоб не просити справжній
-        const email = name + '@pine.local';
+        const email = name.toLowerCase() + "@pine.local";
 
         try {
           const cred = await createUserWithEmailAndPassword(auth, email, pass);
           await updateProfile(cred.user, { displayName: name });
 
-          msgEl.textContent = 'Акаунт створено! Переходимо на головну...';
-          msgEl.classList.add('success');
+          // створимо users/{uid} одразу, щоб був аватар+bio
+          await setDoc(
+            doc(db, "users", cred.user.uid),
+            {
+              name: name,
+              avatar: DEFAULT_AVATAR,
+              bio: "",
+              lastActive: serverTimestamp(),
+            },
+            { merge: true }
+          );
 
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 800);
+          msgEl.textContent = t.ok;
+          msgEl.classList.add("success");
+
+          setTimeout(() => (window.location.href = "index.html"), 800);
         } catch (err) {
           console.error(err);
-          msgEl.classList.add('error');
+          msgEl.classList.add("error");
 
-          if (err.code === 'auth/email-already-in-use') {
-            msgEl.textContent = 'Такий нік уже зайнятий.';
+          if (err.code === "auth/email-already-in-use") {
+            msgEl.textContent = t.taken;
           } else {
-            msgEl.textContent = 'Помилка реєстрації: ' + err.message;
+            msgEl.textContent = t.fail(err.message);
           }
         }
       });
