@@ -5,2642 +5,332 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
   <title>PINE Tycoon Multiplayer</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family: system-ui, -apple-system, Segoe UI, Arial, sans-serif;
-      touch-action: none;
-    }
-
-    #game {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-    }
-
-    #hud {
-      position: fixed;
-      left: 10px;
-      bottom: 10px;
-      z-index: 40;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: rgba(0, 0, 0, 0.55);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.10);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-      user-select: none;
-      pointer-events: none;
-      max-width: min(960px, calc(100vw - 20px));
-    }
-
-    #hud .small {
-      font-size: 11px;
-      font-weight: 600;
-      opacity: 0.92;
-      margin-top: 3px;
-      line-height: 1.45;
-    }
-
-    #topBar {
-      position: fixed;
-      left: 10px;
-      top: 10px;
-      z-index: 45;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      max-width: calc(100vw - 20px);
-    }
-
-    .glass {
-      background: rgba(0, 0, 0, 0.55);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-    }
-
-    #serverInfo {
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .top-btn {
-      padding: 8px 12px;
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 999px;
-      background: rgba(255,255,255,0.08);
-      color: #fff;
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 700;
-    }
-
-    .top-btn:hover { transform: scale(1.04); }
-
-    #minimapWrap {
-      position: fixed;
-      right: 10px;
-      top: 10px;
-      z-index: 41;
-      width: 140px;
-      height: 140px;
-      border-radius: 14px;
-      overflow: hidden;
-      border: 2px solid rgba(255,255,255,0.70);
-      background: rgba(0,0,0,0.25);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.35);
-      display: none;
-    }
-
-    #minimap {
-      width: 100%;
-      height: 100%;
-      image-rendering: pixelated;
-    }
-
-    #touchControls {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 30;
-      display: none;
-    }
-
-    #touchControls .pad {
-      position: absolute;
-      width: 124px;
-      height: 124px;
-      border-radius: 50%;
-      border: 2px solid rgba(255,255,255,0.25);
-      background: radial-gradient(circle, rgba(255,255,255,0.12) 0, rgba(0,0,0,0) 60%);
-      pointer-events: auto;
-      touch-action: none;
-      backdrop-filter: blur(2px);
-    }
-
-    #movePad {
-      left: 18px;
-      bottom: 28px;
-    }
-
-    #touchControls .stick {
-      position: absolute;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      left: 32px;
-      top: 32px;
-      background: rgba(46,204,113,0.82);
-      box-shadow: 0 0 14px rgba(46,204,113,0.95);
-    }
-
-    #actionBtn {
-      position: absolute;
-      right: 22px;
-      bottom: 22px;
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      border: none;
-      background: radial-gradient(circle, #ffb347 0, #e67e22 60%);
-      box-shadow: 0 0 18px rgba(230,126,34,0.95);
-      font-size: 36px;
-      color: #fff;
-      pointer-events: auto;
-      touch-action: none;
-      user-select: none;
-    }
-
-    #errBox,
-    #loadingBox {
-      position: fixed;
-      left: 10px;
-      right: 10px;
-      z-index: 99;
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 12px;
-      font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      white-space: pre-wrap;
-      border: 1px solid rgba(255,255,255,0.18);
-    }
-
-    #errBox {
-      background: rgba(120,0,0,0.80);
-      display: none;
-      bottom: 10px;
-      pointer-events: none;
-    }
-
-    #loadingBox {
-      top: 50%;
-      bottom: auto;
-      transform: translateY(-50%);
-      text-align: center;
-      background: rgba(0,0,0,0.70);
-      max-width: 480px;
-      margin: 0 auto;
-    }
-
-    #quickChatWheel {
-      position: fixed;
-      inset: 0;
-      z-index: 70;
-      display: none;
-      pointer-events: none;
-    }
-
-    #quickChatWheel.show {
-      display: block;
-    }
-
-    #quickChatBackdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.16);
-    }
-
-    #quickChatCenter {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: 330px;
-      height: 330px;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      pointer-events: none;
-    }
-
-    .chat-option {
-      position: absolute;
-      width: 96px;
-      height: 40px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.16);
-      background: rgba(0,0,0,0.76);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      pointer-events: auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.28);
-      transform: translate(-50%, -50%) scale(0.96);
-      transition: transform 0.14s ease, background 0.14s ease;
-    }
-
-    .chat-option:hover {
-      transform: translate(-50%, -50%) scale(1.05);
-      background: rgba(255,160,70,0.90);
-    }
-
-    #quickChatHint {
-      position: absolute;
-      left: 50%;
-      top: calc(50% + 190px);
-      transform: translateX(-50%);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      background: rgba(0,0,0,0.58);
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.12);
-      pointer-events: none;
-    }
-
-    @media (pointer: coarse) {
-      #touchControls { display: block; }
-      #minimapWrap { width: 120px; height: 120px; }
-      #hud { font-size: 12px; }
-    }
+    html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#000;font-family:system-ui,-apple-system,Segoe UI,Arial,sans-serif;touch-action:none}
+    #game{position:fixed;inset:0;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+    #hud{position:fixed;left:10px;bottom:10px;z-index:40;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.55);color:#fff;font-size:13px;font-weight:700;border:1px solid rgba(255,255,255,.1);box-shadow:0 10px 25px rgba(0,0,0,.35);user-select:none;pointer-events:none;max-width:min(980px,calc(100vw - 20px))}
+    #hud .small{font-size:11px;font-weight:600;opacity:.92;margin-top:3px;line-height:1.45}
+    #topBar{position:fixed;left:10px;top:10px;z-index:45;display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100vw - 20px)}
+    .glass{background:rgba(0,0,0,.55);color:#fff;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 10px 25px rgba(0,0,0,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+    #serverInfo{padding:8px 12px;font-size:12px;font-weight:700}.top-btn{padding:8px 12px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(255,255,255,.08);color:#fff;cursor:pointer;font-size:13px;font-weight:700}.top-btn:hover{transform:scale(1.04)}
+    #minimapWrap{position:fixed;right:10px;top:10px;z-index:41;width:140px;height:140px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,.7);background:rgba(0,0,0,.25);box-shadow:0 10px 25px rgba(0,0,0,.35);display:none}#minimap{width:100%;height:100%;image-rendering:pixelated}
+    #touchControls{position:fixed;inset:0;pointer-events:none;z-index:30;display:none}#touchControls .pad{position:absolute;width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:radial-gradient(circle,rgba(255,255,255,.12) 0,rgba(0,0,0,0) 60%);pointer-events:auto;touch-action:none;backdrop-filter:blur(2px)}#movePad{left:18px;bottom:28px}#touchControls .stick{position:absolute;width:60px;height:60px;border-radius:50%;left:32px;top:32px;background:rgba(46,204,113,.82);box-shadow:0 0 14px rgba(46,204,113,.95)}
+    #actionBtn{position:absolute;right:22px;bottom:22px;width:90px;height:90px;border-radius:50%;border:none;background:radial-gradient(circle,#ffb347 0,#e67e22 60%);box-shadow:0 0 18px rgba(230,126,34,.95);font-size:36px;color:#fff;pointer-events:auto;touch-action:none;user-select:none}
+    #errBox,#loadingBox{position:fixed;left:10px;right:10px;z-index:99;color:#fff;padding:10px 12px;border-radius:12px;font:12px/1.35 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;border:1px solid rgba(255,255,255,.18)}#errBox{background:rgba(120,0,0,.8);display:none;bottom:10px;pointer-events:none}#loadingBox{top:50%;bottom:auto;transform:translateY(-50%);text-align:center;background:rgba(0,0,0,.7);max-width:480px;margin:0 auto}
+    #quickChatWheel{position:fixed;inset:0;z-index:70;display:none;pointer-events:none}#quickChatWheel.show{display:block}#quickChatBackdrop{position:absolute;inset:0;background:rgba(0,0,0,.16)}#quickChatCenter{position:absolute;left:50%;top:50%;width:330px;height:330px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none}
+    .chat-option{position:absolute;width:96px;height:40px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.76);color:#fff;font-size:13px;font-weight:700;cursor:pointer;pointer-events:auto;box-shadow:0 8px 20px rgba(0,0,0,.28);transform:translate(-50%,-50%) scale(.96);transition:transform .14s ease,background .14s ease}.chat-option:hover{transform:translate(-50%,-50%) scale(1.05);background:rgba(255,160,70,.9)}#quickChatHint{position:absolute;left:50%;top:calc(50% + 190px);transform:translateX(-50%);color:#fff;font-size:12px;font-weight:700;background:rgba(0,0,0,.58);padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.12);pointer-events:none}
+    @media(pointer:coarse){#touchControls{display:block}#minimapWrap{width:120px;height:120px}#hud{font-size:12px}}
   </style>
 </head>
 <body>
   <canvas id="game"></canvas>
-
   <div id="topBar">
     <div id="serverInfo" class="glass">Loading server...</div>
     <button id="leaveBtn" class="top-btn glass">Leave</button>
     <button id="audioBtn" class="top-btn glass">Audio: Off</button>
   </div>
-
   <div id="hud"></div>
-
-  <div id="minimapWrap">
-    <canvas id="minimap" width="140" height="140"></canvas>
-  </div>
-
-  <div id="touchControls">
-    <div id="movePad" class="pad"><div id="moveStick" class="stick"></div></div>
-    <button id="actionBtn">🪓</button>
-  </div>
-
+  <div id="minimapWrap"><canvas id="minimap" width="140" height="140"></canvas></div>
+  <div id="touchControls"><div id="movePad" class="pad"><div id="moveStick" class="stick"></div></div><button id="actionBtn">🪓</button></div>
   <div id="loadingBox">Connecting to multiplayer server...</div>
   <div id="errBox"></div>
-
-  <div id="quickChatWheel">
-    <div id="quickChatBackdrop"></div>
-    <div id="quickChatCenter"></div>
-    <div id="quickChatHint">Hold Q → choose a safe quick message</div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      updateDoc,
-      deleteDoc,
-      onSnapshot,
-      collection,
-      serverTimestamp,
-      increment,
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
-      authDomain: "pine-tycoon.firebaseapp.com",
-      projectId: "pine-tycoon",
-      storageBucket: "pine-tycoon.firebasestorage.app",
-      messagingSenderId: "949986190236",
-      appId: "1:949986190236:web:4f5d50078326f5c1981e59",
-      measurementId: "G-2DY6KSY4G7",
-    };
-
-    const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    const serverId = new URLSearchParams(location.search).get("server");
-
-    const errBox = document.getElementById("errBox");
-    const loadingBox = document.getElementById("loadingBox");
-    const hudEl = document.getElementById("hud");
-    const serverInfoEl = document.getElementById("serverInfo");
-    const leaveBtn = document.getElementById("leaveBtn");
-    const audioBtn = document.getElementById("audioBtn");
-    const miniWrap = document.getElementById("minimapWrap");
-    const mini = document.getElementById("minimap");
-    const mctx = mini.getContext("2d");
-    const gameCanvas = document.getElementById("game");
-    const gctx = gameCanvas.getContext("2d");
-    const movePad = document.getElementById("movePad");
-    const moveStick = document.getElementById("moveStick");
-    const actionBtn = document.getElementById("actionBtn");
-    const quickChatWheel = document.getElementById("quickChatWheel");
-    const quickChatCenter = document.getElementById("quickChatCenter");
-    const quickChatBackdrop = document.getElementById("quickChatBackdrop");
-
-    function showErr(msg) {
-      errBox.style.display = "block";
-      errBox.textContent = String(msg);
-      console.error(msg);
-    }
-
-    if (!serverId) {
-      showErr("Server ID is missing.");
-      loadingBox.textContent = "Server ID is missing.";
-      throw new Error("Server ID is missing.");
-    }
-
-    const PLAYER_TIMEOUT_MS = 10000;
-    const SERVER_TIMEOUT_MS = 12000;
-    const QUICK_CHAT_VISIBLE_MS = 4000;
-    const CLAIM_SIZE = 16;
-
-    const QUICK_CHAT_MESSAGES = [
-      "Hello!",
-      "Bye!",
-      "How are you?",
-      "Follow me!",
-      "Need help!",
-      "Thanks!",
-      "Sorry!",
-      "Good luck!",
-      ";)",
-      ":D",
-      ":(",
-      ":3",
-    ];
-
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const lerp = (a, b, t) => a + (b - a) * t;
-    const dist2 = (ax, ay, bx, by) => {
-      const dx = ax - bx, dy = ay - by;
-      return dx * dx + dy * dy;
-    };
-    const rgba = (r, g, b, a) => `rgba(${r},${g},${b},${a})`;
-    function easeOutQuint(t) { return 1 - Math.pow(1 - t, 5); }
-
-    window.addEventListener("error", (e) => {
-      showErr("JS ERROR:\n" + (e.message || e.error || e));
-    });
-
-    window.addEventListener("unhandledrejection", (e) => {
-      showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e));
-    });
-
-    const audio = {
-      ctx: null,
-      muted: true,
-      ensure() {
-        if (this.ctx) return;
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        this.ctx = new AC();
-      },
-      resume() {
-        this.ensure();
-        if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
-      },
-      beep(freq = 440, dur = 0.08, vol = 0.03) {
-        if (this.muted) return;
-        this.resume();
-        if (!this.ctx) return;
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(freq, t);
-        gain.gain.setValueAtTime(vol, t);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(t);
-        osc.stop(t + dur);
-      },
-      toggle() {
-        this.muted = !this.muted;
-        if (!this.muted) this.beep(700, 0.06, 0.04);
-        audioBtn.textContent = this.muted ? "Audio: Off" : "Audio: On";
-      }
-    };
-
-    audioBtn.addEventListener("click", () => audio.toggle());
-    window.addEventListener("pointerdown", () => audio.resume(), { once: true, capture: true });
-    window.addEventListener("keydown", () => audio.resume(), { once: true, capture: true });
-
-    const isCoarse = matchMedia("(pointer:coarse)").matches;
-
-    const INTERNAL_W = 512;
-    const INTERNAL_H = 288;
-    const buffer = document.createElement("canvas");
-    buffer.width = INTERNAL_W;
-    buffer.height = INTERNAL_H;
-    const bctx = buffer.getContext("2d");
-    bctx.imageSmoothingEnabled = false;
-    gctx.imageSmoothingEnabled = false;
-
-    const view = { scale: 1, ox: 0, oy: 0 };
-    const PPU = 16;
-    const WORLD_HALF = 160;
-    const WORLD_SIZE = WORLD_HALF * 2;
-
-    const T = { WATER: 0, SAND: 1, GRASS: 2, HILL: 3, ROCK: 4 };
-    const BUILD = { FLOOR: "floor", WALL: "wall", DOOR: "door", WINDOW: "window", ROOF: "roof" };
-    const TOOL = { AXE: 0, PICKAXE: 1 };
-    const COST = { floor: 1, wall: 2, door: 3, window: 3, roof: 2 };
-
-    const tileMap = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
-    const heightMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
-    const moistMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
-    const riverMask = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
-
-    function idxOf(tx, ty) { return ty * WORLD_SIZE + tx; }
-    function inBounds(tx, ty) { return tx >= 0 && ty >= 0 && tx < WORLD_SIZE && ty < WORLD_SIZE; }
-    function worldToTile(wx) { return Math.floor(wx + WORLD_HALF); }
-    function tileToWorld(tx) { return (tx - WORLD_HALF) + 0.5; }
-
-    function claimKey(chunkX, chunkY) {
-      return `${chunkX}_${chunkY}`;
-    }
-
-    function getChunkFromTile(tx, ty) {
-      return {
-        chunkX: Math.floor(tx / CLAIM_SIZE),
-        chunkY: Math.floor(ty / CLAIM_SIZE),
-      };
-    }
-
-    function getChunkWorldRect(chunkX, chunkY) {
-      const startTx = chunkX * CLAIM_SIZE;
-      const startTy = chunkY * CLAIM_SIZE;
-      const endTx = startTx + CLAIM_SIZE - 1;
-      const endTy = startTy + CLAIM_SIZE - 1;
-      return {
-        x1: tileToWorld(startTx) - 0.5,
-        y1: tileToWorld(startTy) - 0.5,
-        x2: tileToWorld(endTx) + 0.5,
-        y2: tileToWorld(endTy) + 0.5,
-      };
-    }
-
-    const colliders = [];
-    function addColliderRect(x, y, hw, hh, tag = "") {
-      const r = { x, y, hw, hh, tag };
-      colliders.push(r);
-      return r;
-    }
-
-    function circleRectCollide(px, py, pr, r) {
-      const cx = clamp(px, r.x - r.hw, r.x + r.hw);
-      const cy = clamp(py, r.y - r.hh, r.y + r.hh);
-      const dx = px - cx, dy = py - cy;
-      return dx * dx + dy * dy <= pr * pr;
-    }
-
-    function isBlocked(px, py, pr) {
-      return colliders.some((r) => circleRectCollide(px, py, pr, r));
-    }
-
-    function tileOccupiedByCollider(wx, wy, pad = 0.48) {
-      for (const r of colliders) {
-        if (Math.abs(r.x - wx) < r.hw + pad && Math.abs(r.y - wy) < r.hh + pad) return true;
-      }
-      return false;
-    }
-
-    function xmur3(str) {
-      let h = 1779033703 ^ str.length;
-      for (let i = 0; i < str.length; i++) {
-        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
-        h = (h << 13) | (h >>> 19);
-      }
-      return function () {
-        h = Math.imul(h ^ (h >>> 16), 2246822507);
-        h = Math.imul(h ^ (h >>> 13), 3266489909);
-        h ^= h >>> 16;
-        return h >>> 0;
-      };
-    }
-
-    function mulberry32(a) {
-      return function () {
-        let t = a += 0x6D2B79F5;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-
-    function fade(t) { return t * t * (3 - 2 * t); }
-
-    function hash2(ix, iy, seedU32) {
-      let h = seedU32 ^ (ix * 374761393) ^ (iy * 668265263);
-      h = Math.imul(h ^ (h >>> 13), 1274126177);
-      h ^= (h >>> 16);
-      return (h >>> 0) / 4294967296;
-    }
-
-    function valueNoise2D(x, y, seedU32) {
-      const x0 = Math.floor(x), y0 = Math.floor(y);
-      const x1 = x0 + 1, y1 = y0 + 1;
-      const sx = fade(x - x0);
-      const sy = fade(y - y0);
-
-      const n00 = hash2(x0, y0, seedU32);
-      const n10 = hash2(x1, y0, seedU32);
-      const n01 = hash2(x0, y1, seedU32);
-      const n11 = hash2(x1, y1, seedU32);
-
-      const ix0 = lerp(n00, n10, sx);
-      const ix1 = lerp(n01, n11, sx);
-      return lerp(ix0, ix1, sy);
-    }
-
-    function fbm(x, y, seedU32, oct = 5) {
-      let v = 0, amp = 0.55, freq = 1, norm = 0;
-      for (let i = 0; i < oct; i++) {
-        v += valueNoise2D(x * freq, y * freq, seedU32 + i * 1013) * amp;
-        norm += amp;
-        amp *= 0.55;
-        freq *= 2;
-      }
-      return v / norm;
-    }
-
-    let seedStr = "";
-    let seedU32 = 0;
-    let rng = Math.random;
-
-    function setSeed(str) {
-      seedStr = str;
-      const seedFn = xmur3(seedStr);
-      seedU32 = seedFn();
-      rng = mulberry32(seedU32);
-    }
-
-    let trees = [];
-    let boulders = [];
-    let particles = [];
-    let buildMap = new Map();
-    let removedTrees = new Set();
-    let removedBoulders = new Set();
-    let claimsMap = new Map();
-
-    const campfire = { x: 0, y: 0 };
-    const player = {
-      x: 0,
-      y: 0,
-      r: 0.60,
-      dir: 0,
-      attack: 0,
-      attackCooldown: 0,
-      name: "You",
-      avatar: DEFAULT_AVATAR,
-      quickChatText: "",
-      quickChatUntil: 0,
-    };
-
-    const camera = { x: 0, y: 0 };
-
-    let wood = 0;
-    let stone = 0;
-    let coal = 0;
-    let currentTool = TOOL.AXE;
-    let buildMode = false;
-    let buildType = BUILD.WALL;
-    let buildRot = 0;
-    let minimapOn = false;
-    let minimapDirty = true;
-    let minimapTimer = 0;
-    let quickChatOpen = false;
-    let claimPreviewActive = false;
-
-    const toast = { text: "", t: 0 };
-    const keys = {};
-    document.addEventListener("keydown", (e) => keys[e.code] = true);
-    document.addEventListener("keyup", (e) => keys[e.code] = false);
-
-    let mouseAim = null;
-    window.addEventListener("mousemove", (e) => { mouseAim = { x: e.clientX, y: e.clientY }; });
-    window.addEventListener("mouseleave", () => { mouseAim = null; });
-
-    let touchMoveX = 0;
-    let touchMoveY = 0;
-
-    function setupMoveStick(pad, stick) {
-      const stickRadius = 30;
-      let touchId = null;
-
-      function reset() {
-        const rect = pad.getBoundingClientRect();
-        const cx = rect.width / 2;
-        const cy = rect.height / 2;
-        stick.style.left = (cx - stickRadius) + "px";
-        stick.style.top = (cy - stickRadius) + "px";
-        touchMoveX = 0;
-        touchMoveY = 0;
-      }
-
-      function updateFromTouch(t) {
-        const rect = pad.getBoundingClientRect();
-        const cx = rect.width / 2;
-        const cy = rect.height / 2;
-        let dx = t.clientX - (rect.left + cx);
-        let dy = t.clientY - (rect.top + cy);
-        const maxR = rect.width / 2 - stickRadius;
-        const d = Math.hypot(dx, dy);
-        if (d > maxR) {
-          dx *= maxR / d;
-          dy *= maxR / d;
-        }
-        stick.style.left = (cx - stickRadius + dx) + "px";
-        stick.style.top = (cy - stickRadius + dy) + "px";
-        touchMoveX = dx / maxR;
-        touchMoveY = dy / maxR;
-      }
-
-      pad.addEventListener("touchstart", (e) => {
-        e.preventDefault();
-        audio.resume();
-        const t = e.changedTouches[0];
-        touchId = t.identifier;
-        updateFromTouch(t);
-      }, { passive: false });
-
-      pad.addEventListener("touchmove", (e) => {
-        e.preventDefault();
-        if (touchId === null) return;
-        for (const t of e.touches) {
-          if (t.identifier === touchId) {
-            updateFromTouch(t);
-            break;
-          }
-        }
-      }, { passive: false });
-
-      function end(e) {
-        if (touchId === null) return;
-        for (const t of e.changedTouches) {
-          if (t.identifier === touchId) {
-            touchId = null;
-            reset();
-            break;
-          }
-        }
-      }
-
-      pad.addEventListener("touchend", end, { passive: false });
-      pad.addEventListener("touchcancel", end, { passive: false });
-      reset();
-    }
-
-    if (movePad && moveStick) setupMoveStick(movePad, moveStick);
-
-    function resize() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      gameCanvas.width = Math.floor(innerWidth * dpr);
-      gameCanvas.height = Math.floor(innerHeight * dpr);
-      gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    function worldToScreen(wx, wy) {
-      const sx = (wx - camera.x) * PPU + INTERNAL_W / 2;
-      const sy = (wy - camera.y) * PPU + INTERNAL_H / 2;
-      return { x: sx, y: sy };
-    }
-
-    function pRect(ctx, x, y, w, h) {
-      ctx.fillRect((x | 0), (y | 0), (w | 0), (h | 0));
-    }
-
-    function drawShadowCircle(ctx, x, y, r) {
-      ctx.fillStyle = "rgba(0,0,0,0.30)";
-      ctx.beginPath();
-      ctx.ellipse(x, y, r * 1.15, r * 0.7, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function spawnParticles(type, x, y, count = 10) {
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 2.5 + Math.random() * 4.5;
-        particles.push({
-          type,
-          x,
-          y,
-          vx: Math.cos(a) * sp,
-          vy: Math.sin(a) * sp,
-          life: 0.35 + Math.random() * 0.45
-        });
-      }
-    }
-
-    function showToast(text, seconds = 1.0) {
-      toast.text = text;
-      toast.t = seconds;
-    }
-
-    function clearWorldGeometry() {
-      colliders.length = 0;
-      trees = [];
-      boulders = [];
-      particles = [];
-      riverMask.fill(0);
-    }
-
-    function classifyTiles() {
-      for (let ty = 0; ty < WORLD_SIZE; ty++) {
-        for (let tx = 0; tx < WORLD_SIZE; tx++) {
-          const id = idxOf(tx, ty);
-          const h = heightMap[id];
-          let tt = T.GRASS;
-
-          if (h < 0.24) tt = T.WATER;
-          else if (h < 0.29) tt = T.SAND;
-          else if (h < 0.72) tt = T.GRASS;
-          else if (h < 0.84) tt = T.HILL;
-          else tt = T.ROCK;
-
-          tileMap[id] = tt;
-        }
-      }
-    }
-
-    function buildBaseNoise() {
-      const ox = rng() * 1000, oy = rng() * 1000;
-      const mx = rng() * 1000, my = rng() * 1000;
-      const elevScale = 0.045;
-      const moistScale = 0.060;
-
-      for (let ty = 0; ty < WORLD_SIZE; ty++) {
-        for (let tx = 0; tx < WORLD_SIZE; tx++) {
-          const wx = tx - WORLD_HALF;
-          const wy = ty - WORLD_HALF;
-          const nx = wx * elevScale + ox;
-          const ny = wy * elevScale + oy;
-
-          let h = fbm(nx, ny, seedU32, 5);
-          const r = Math.sqrt(wx * wx + wy * wy) / WORLD_HALF;
-          const edge = clamp(1 - (r * r) * 0.85, 0, 1);
-          h = h * 0.90 + edge * 0.18;
-          h = clamp(h, 0, 1);
-
-          const mnx = wx * moistScale + mx;
-          const mny = wy * moistScale + my;
-          const m = fbm(mnx, mny, seedU32 + 99991, 4);
-
-          heightMap[idxOf(tx, ty)] = h;
-          moistMap[idxOf(tx, ty)] = m;
-        }
-      }
-    }
-
-    function carveRivers() {
-      const flow = new Uint16Array(WORLD_SIZE * WORLD_SIZE);
-
-      function lowestNeighbor(tx, ty) {
-        let bestTx = tx, bestTy = ty;
-        let bestH = heightMap[idxOf(tx, ty)];
-        for (let oy = -1; oy <= 1; oy++) {
-          for (let ox = -1; ox <= 1; ox++) {
-            if (ox === 0 && oy === 0) continue;
-            const nx = tx + ox, ny = ty + oy;
-            if (!inBounds(nx, ny)) continue;
-            const nh = heightMap[idxOf(nx, ny)];
-            if (nh < bestH) {
-              bestH = nh;
-              bestTx = nx;
-              bestTy = ny;
-            }
-          }
-        }
-        return { tx: bestTx, ty: bestTy };
-      }
-
-      const sources = [];
-      for (let i = 0, tries = 0; i < 10 && tries < 5000; tries++) {
-        const tx = 10 + ((rng() * (WORLD_SIZE - 20)) | 0);
-        const ty = 10 + ((rng() * (WORLD_SIZE - 20)) | 0);
-        const id = idxOf(tx, ty);
-        const h = heightMap[id];
-        const m = moistMap[id];
-        if (h < 0.74 || tileMap[id] === T.ROCK || m < 0.42) continue;
-        sources.push({ tx, ty });
-        i++;
-      }
-
-      for (const s of sources) {
-        let tx = s.tx, ty = s.ty;
-        const visited = new Set();
-
-        for (let step = 0; step < 2400; step++) {
-          const id = idxOf(tx, ty);
-          flow[id] = Math.min(65535, flow[id] + 25);
-          if (heightMap[id] < 0.26) break;
-
-          const key = (tx << 16) | ty;
-          if (visited.has(key)) break;
-          visited.add(key);
-
-          const nb = lowestNeighbor(tx, ty);
-          if (nb.tx === tx && nb.ty === ty) break;
-          tx = nb.tx;
-          ty = nb.ty;
-        }
-      }
-
-      for (let ty = 1; ty < WORLD_SIZE - 1; ty++) {
-        for (let tx = 1; tx < WORLD_SIZE - 1; tx++) {
-          const id = idxOf(tx, ty);
-          const f = flow[id];
-          if (f < 60) continue;
-
-          let w = 1;
-          if (f > 220) w = 2;
-          if (f > 520) w = 3;
-
-          for (let oy = -w; oy <= w; oy++) {
-            for (let ox = -w; ox <= w; ox++) {
-              const nx = tx + ox, ny = ty + oy;
-              if (!inBounds(nx, ny)) continue;
-              if (ox * ox + oy * oy > w * w) continue;
-              const nid = idxOf(nx, ny);
-              if (heightMap[nid] > 0.94) continue;
-              riverMask[nid] = 1;
-            }
-          }
-        }
-      }
-
-      for (let i = 0; i < tileMap.length; i++) {
-        if (riverMask[i]) tileMap[i] = T.WATER;
-      }
-
-      for (let ty = 1; ty < WORLD_SIZE - 1; ty++) {
-        for (let tx = 1; tx < WORLD_SIZE - 1; tx++) {
-          const id = idxOf(tx, ty);
-          if (tileMap[id] === T.WATER) continue;
-
-          let nearWater = false;
-          for (let oy = -1; oy <= 1; oy++) {
-            for (let ox = -1; ox <= 1; ox++) {
-              if (ox === 0 && oy === 0) continue;
-              const nx = tx + ox, ny = ty + oy;
-              if (!inBounds(nx, ny)) continue;
-              if (tileMap[idxOf(nx, ny)] === T.WATER) {
-                nearWater = true;
-                break;
-              }
-            }
-            if (nearWater) break;
-          }
-
-          if (nearWater && heightMap[id] < 0.34) tileMap[id] = T.SAND;
-        }
-      }
-    }
-
-    function pickCampfireSpot() {
-      let best = { tx: WORLD_HALF, ty: WORLD_HALF, score: -1 };
-
-      for (let tries = 0; tries < 2500; tries++) {
-        const wx = (rng() * 2 - 1) * 40;
-        const wy = (rng() * 2 - 1) * 40;
-        const tx = worldToTile(wx);
-        const ty = worldToTile(wy);
-        if (!inBounds(tx, ty)) continue;
-
-        const id = idxOf(tx, ty);
-        const tt = tileMap[id];
-        if (tt === T.WATER) continue;
-
-        const h = heightMap[id];
-        const m = moistMap[id];
-
-        let nearWater = 0;
-        for (let oy = -2; oy <= 2; oy++) {
-          for (let ox = -2; ox <= 2; ox++) {
-            const nx = tx + ox, ny = ty + oy;
-            if (!inBounds(nx, ny)) continue;
-            if (tileMap[idxOf(nx, ny)] === T.WATER) nearWater++;
-          }
-        }
-
-        const score = (tt === T.GRASS ? 2.0 : 1.0) + (m * 1.4) + (nearWater * 0.03) + (1.0 - Math.abs(h - 0.55)) * 0.6;
-        if (score > best.score) best = { tx, ty, score };
-      }
-
-      campfire.x = tileToWorld(best.tx);
-      campfire.y = tileToWorld(best.ty);
-    }
-
-    function nearCamp(wx, wy) {
-      return dist2(wx, wy, campfire.x, campfire.y) < 14 * 14;
-    }
-
-    function createTreeAtTile(tx, ty) {
-      const tileId = idxOf(tx, ty);
-      const wx = tileToWorld(tx);
-      const wy = tileToWorld(ty);
-      const jx = (hash2(tx, ty, seedU32 + 7) - 0.5) * 0.35;
-      const jy = (hash2(tx, ty, seedU32 + 9) - 0.5) * 0.35;
-      const kindRoll = hash2(tx, ty, seedU32 + 17);
-      const kind = kindRoll < 0.58 ? 0 : kindRoll < 0.88 ? 1 : 2;
-      const scale = 0.90 + hash2(tx, ty, seedU32 + 19) * 0.55;
-      const trunk = 0.90 + hash2(tx, ty, seedU32 + 23) * 0.70;
-      const hueVar = hash2(tx, ty, seedU32 + 29);
-      const baseHP = 3 + (hash2(tx, ty, seedU32 + 31) < 0.25 ? 1 : 0);
-      const x = wx + jx;
-      const y = wy + jy;
-
-      const t = {
-        tileId,
-        x,
-        y,
-        hp: baseHP,
-        removed: false,
-        kind,
-        scale,
-        trunk,
-        hueVar,
-        sway: hash2(tx, ty, seedU32 + 41) * Math.PI * 2,
-        collider: addColliderRect(x, y, 0.80, 0.80, "tree"),
-      };
-
-      trees.push(t);
-    }
-
-    function createBoulderAtTile(tx, ty, type) {
-      const tileId = idxOf(tx, ty);
-      const wx = tileToWorld(tx);
-      const wy = tileToWorld(ty);
-      const jx = (hash2(tx, ty, seedU32 + 111) - 0.5) * 0.28;
-      const jy = (hash2(tx, ty, seedU32 + 113) - 0.5) * 0.28;
-      const size = type === "coal"
-        ? 0.95 + hash2(tx, ty, seedU32 + 115) * 1.2
-        : 0.80 + hash2(tx, ty, seedU32 + 117) * 1.1;
-      const hp = type === "coal" ? 4 : 3;
-
-      const x = wx + jx;
-      const y = wy + jy;
-
-      const b = {
-        tileId,
-        x,
-        y,
-        size,
-        hp,
-        type,
-        removed: false,
-        collider: addColliderRect(x, y, size * 0.80, size * 0.80, "boulder"),
-      };
-
-      boulders.push(b);
-    }
-
-    function rebuildBuildColliders() {
-      for (let i = colliders.length - 1; i >= 0; i--) {
-        const tag = colliders[i].tag || "";
-        if (tag.startsWith("build_")) colliders.splice(i, 1);
-      }
-
-      buildMap.forEach((v, tileId) => {
-        if (v.type !== BUILD.WALL && v.type !== BUILD.WINDOW) return;
-        const tx = tileId % WORLD_SIZE;
-        const ty = (tileId / WORLD_SIZE) | 0;
-        addColliderRect(tileToWorld(tx), tileToWorld(ty), 0.48, 0.48, v.type === BUILD.WINDOW ? "build_window" : "build_wall");
-      });
-    }
-
-    function spawnDecor() {
-      trees = [];
-      boulders = [];
-      colliders.length = 0;
-
-      for (let ty = 1; ty < WORLD_SIZE - 1; ty++) {
-        for (let tx = 1; tx < WORLD_SIZE - 1; tx++) {
-          const id = idxOf(tx, ty);
-          const tt = tileMap[id];
-          const h = heightMap[id];
-          const m = moistMap[id];
-          const wx = tileToWorld(tx);
-          const wy = tileToWorld(ty);
-
-          if (nearCamp(wx, wy)) continue;
-
-          if (tt === T.GRASS || tt === T.HILL) {
-            const forest = clamp((m - 0.45) * 1.6, 0, 1);
-            const hillPenalty = tt === T.HILL ? 0.55 : 1.0;
-            const chance = 0.14 * forest * hillPenalty;
-            if (hash2(tx, ty, seedU32 + 424242) < chance) createTreeAtTile(tx, ty);
-          }
-
-          if (tt === T.HILL || tt === T.ROCK) {
-            const rocky = tt === T.ROCK ? 1.0 : clamp((h - 0.70) * 2.0, 0, 1);
-            if (hash2(tx, ty, seedU32 + 888888) < 0.060 * rocky) {
-              const coalChance = (tt === T.ROCK ? 0.35 : 0.18) * (0.50 + 0.50 * rocky);
-              const isCoal = hash2(tx, ty, seedU32 + 999001) < coalChance;
-              createBoulderAtTile(tx, ty, isCoal ? "coal" : "stone");
-            }
-          }
-        }
-      }
-
-      rebuildBuildColliders();
-    }
-
-    function applyRemovedTreeSet() {
-      for (const t of trees) {
-        if (removedTrees.has(t.tileId) && !t.removed) {
-          t.removed = true;
-          const i = colliders.indexOf(t.collider);
-          if (i !== -1) colliders.splice(i, 1);
-        }
-      }
-    }
-
-    function applyRemovedBoulderSet() {
-      for (const b of boulders) {
-        if (removedBoulders.has(b.tileId) && !b.removed) {
-          b.removed = true;
-          const i = colliders.indexOf(b.collider);
-          if (i !== -1) colliders.splice(i, 1);
-        }
-      }
-    }
-
-    function generateWorld() {
-      clearWorldGeometry();
-      buildBaseNoise();
-      classifyTiles();
-      carveRivers();
-      pickCampfireSpot();
-      spawnDecor();
-      applyRemovedTreeSet();
-      applyRemovedBoulderSet();
-      rebuildBuildColliders();
-      minimapDirty = true;
-    }
-
-    function tileColor(tt, h, m, time, tx, ty, light) {
-      const day = 0.62 + 0.38 * light;
-
-      if (tt === T.WATER) {
-        const depth = clamp((0.28 - h) * 4.0, 0, 1);
-        const wave =
-          0.06 * Math.sin(time * 2.2 + tx * 0.35 + ty * 0.22) +
-          0.04 * Math.sin(time * 3.1 + tx * 0.18 - ty * 0.29);
-
-        const baseR = lerp(18, 24, 1 - depth);
-        const baseG = lerp(70, 125, 1 - depth);
-        const baseB = lerp(125, 185, 1 - depth);
-        const a = clamp(0.62 + wave, 0.50, 0.75);
-        return rgba((baseR * day) | 0, (baseG * day) | 0, (baseB * day) | 0, a);
-      }
-
-      if (tt === T.SAND) return rgba((205 * day) | 0, (190 * day) | 0, (120 * day) | 0, 1);
-
-      if (tt === T.GRASS) {
-        const wet = clamp((m - 0.40) * 1.3, 0, 1);
-        let r = 35 + (wet * 10) | 0;
-        let g = 150 + (wet * 35) | 0;
-        let b = 45 + (wet * 12) | 0;
-        return rgba((r * day) | 0, (g * day) | 0, (b * day) | 0, 1);
-      }
-
-      if (tt === T.HILL) return rgba((70 * day) | 0, (135 * day) | 0, (70 * day) | 0, 1);
-      return rgba((110 * day) | 0, (112 * day) | 0, (120 * day) | 0, 1);
-    }
-
-    function drawTerrain(ctx, time, light) {
-      const halfW = INTERNAL_W / (2 * PPU);
-      const halfH = INTERNAL_H / (2 * PPU);
-      const minX = Math.floor(camera.x - halfW - 2);
-      const maxX = Math.floor(camera.x + halfW + 2);
-      const minY = Math.floor(camera.y - halfH - 2);
-      const maxY = Math.floor(camera.y + halfH + 2);
-
-      for (let wy = minY; wy <= maxY; wy++) {
-        for (let wx = minX; wx <= maxX; wx++) {
-          const tx = worldToTile(wx);
-          const ty = worldToTile(wy);
-          if (!inBounds(tx, ty)) continue;
-
-          const id = idxOf(tx, ty);
-          const pos = worldToScreen(wx, wy);
-          ctx.fillStyle = tileColor(tileMap[id], heightMap[id], moistMap[id], time, tx, ty, light);
-          pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
-
-          const speck = hash2(tx, ty, seedU32 + 12345);
-          if ((tileMap[id] === T.GRASS || tileMap[id] === T.HILL) && speck < 0.35) {
-            ctx.fillStyle = "rgba(0,0,0,0.06)";
-            pRect(ctx, pos.x + ((speck * 11) | 0), pos.y + (((speck * 19) | 0) % 12), 2, 2);
-          }
-        }
-      }
-    }
-
-    function drawTree(ctx, t, time, light) {
-      const pos = worldToScreen(t.x, t.y);
-      const s = t.scale;
-      const trunkH = PPU * (1.05 * t.trunk) * s;
-      drawShadowCircle(ctx, pos.x, pos.y + PPU * 0.40, PPU * 0.78 * s);
-      const sway = Math.sin(time * 1.6 + t.sway) * 0.06;
-
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.translate(0, PPU * 0.25 * s);
-      ctx.rotate(sway);
-      ctx.translate(0, -PPU * 0.25 * s);
-
-      ctx.fillStyle = "#6b4625";
-      pRect(ctx, -2 * s, -trunkH * 0.10, 4 * s, trunkH);
-
-      const hv = t.hueVar;
-      const base = { r: (22 + hv * 22) | 0, g: (110 + hv * 70) | 0, b: (30 + hv * 18) | 0 };
-      const hi = { r: (40 + hv * 22) | 0, g: (165 + hv * 60) | 0, b: (55 + hv * 20) | 0 };
-      const deep = { r: (16 + hv * 12) | 0, g: (85 + hv * 55) | 0, b: (22 + hv * 12) | 0 };
-
-      const dayMul = 0.62 + 0.38 * light;
-      const cBase = rgba((base.r * dayMul) | 0, (base.g * dayMul) | 0, (base.b * dayMul) | 0, 0.98);
-      const cHi = rgba((hi.r * dayMul) | 0, (hi.g * dayMul) | 0, (hi.b * dayMul) | 0, 0.45);
-      const cDeep = rgba((deep.r * dayMul) | 0, (deep.g * dayMul) | 0, (deep.b * dayMul) | 0, 0.98);
-
-      function tri(topY, baseY, w, col) {
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.moveTo(0, topY);
-        ctx.lineTo(w, baseY);
-        ctx.lineTo(-w, baseY);
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      function blob(cx, cy, rx, ry, col) {
-        ctx.fillStyle = col;
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (t.kind === 0 || t.kind === 2) {
-        const tall = t.kind === 2 ? 1.14 : 1.0;
-        tri(-PPU * 1.70 * s * tall, -PPU * 0.15 * s, PPU * 1.05 * s, cDeep);
-        tri(-PPU * 1.25 * s * tall, -PPU * 0.35 * s, PPU * 0.88 * s, cDeep);
-        tri(-PPU * 0.85 * s * tall, -PPU * 0.55 * s, PPU * 0.72 * s, cDeep);
-        tri(-PPU * 1.60 * s * tall, -PPU * 0.15 * s, PPU * 0.92 * s, cBase);
-        tri(-PPU * 1.15 * s * tall, -PPU * 0.35 * s, PPU * 0.78 * s, cBase);
-        tri(-PPU * 0.75 * s * tall, -PPU * 0.55 * s, PPU * 0.62 * s, cBase);
-        tri(-PPU * 1.48 * s * tall, -PPU * 0.20 * s, PPU * 0.55 * s, cHi);
-      } else {
-        blob(0, -PPU * 1.40 * s, PPU * 0.70 * s, PPU * 0.55 * s, cBase);
-        blob(-PPU * 0.40 * s, -PPU * 0.95 * s, PPU * 0.85 * s, PPU * 0.65 * s, cBase);
-        blob(PPU * 0.42 * s, -PPU * 0.95 * s, PPU * 0.85 * s, PPU * 0.65 * s, cBase);
-        blob(0, -PPU * 0.55 * s, PPU * 1.10 * s, PPU * 0.78 * s, cDeep);
-        blob(-PPU * 0.30 * s, -PPU * 1.25 * s, PPU * 0.42 * s, PPU * 0.32 * s, cHi);
-        blob(PPU * 0.25 * s, -PPU * 1.00 * s, PPU * 0.55 * s, PPU * 0.40 * s, cHi);
-      }
-
-      ctx.restore();
-    }
-
-    function drawBoulder(ctx, b, light) {
-      const pos = worldToScreen(b.x, b.y);
-      const s = b.size * PPU;
-      drawShadowCircle(ctx, pos.x, pos.y + s * 0.24, s * 0.55);
-
-      const dayMul = 0.62 + 0.38 * light;
-      ctx.fillStyle = b.type === "coal"
-        ? rgba((50 * dayMul) | 0, (52 * dayMul) | 0, (60 * dayMul) | 0, 0.96)
-        : rgba((92 * dayMul) | 0, (95 * dayMul) | 0, (105 * dayMul) | 0, 0.96);
-
-      ctx.beginPath();
-      ctx.moveTo(pos.x - s * 0.60, pos.y);
-      ctx.lineTo(pos.x - s * 0.15, pos.y - s * 0.50);
-      ctx.lineTo(pos.x + s * 0.55, pos.y - s * 0.15);
-      ctx.lineTo(pos.x + s * 0.35, pos.y + s * 0.52);
-      ctx.lineTo(pos.x - s * 0.38, pos.y + s * 0.45);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawCampfire(ctx, time, light) {
-      const pos = worldToScreen(campfire.x, campfire.y);
-
-      for (let i = 0; i < 6; i++) {
-        const a = i * (Math.PI / 3);
-        const px = pos.x + Math.cos(a) * PPU * 1.0;
-        const py = pos.y + Math.sin(a) * PPU * 0.75;
-        ctx.fillStyle = rgba(90, 92, 100, 0.95);
-        ctx.beginPath();
-        ctx.arc(px, py, 4, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
-      const flick = 1 + Math.sin(time * 10) * 0.18;
-
-      ctx.fillStyle = rgba(255, 110, 42, 0.95);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - 22 * flick);
-      ctx.quadraticCurveTo(pos.x + 12, pos.y - 6, pos.x, pos.y + 12);
-      ctx.quadraticCurveTo(pos.x - 12, pos.y - 6, pos.x, pos.y - 22 * flick);
-      ctx.fill();
-
-      ctx.fillStyle = rgba(255, 210, 90, 0.95);
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - 14 * flick);
-      ctx.quadraticCurveTo(pos.x + 9, pos.y - 3, pos.x, pos.y + 9);
-      ctx.quadraticCurveTo(pos.x - 9, pos.y - 3, pos.x, pos.y - 14 * flick);
-      ctx.fill();
-
-      const night = 1 - light;
-      const g = ctx.createRadialGradient(pos.x, pos.y, 14, pos.x, pos.y, 92);
-      g.addColorStop(0, rgba(255, 120, 60, 0.18 + 0.30 * night));
-      g.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 92, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function drawBuildTile(ctx, tx, ty, type, rot, light) {
-      const pos = worldToScreen(tileToWorld(tx), tileToWorld(ty));
-      const x = pos.x;
-      const y = pos.y;
-      const shade = 0.65 + 0.35 * light;
-
-      if (type === BUILD.FLOOR) {
-        ctx.fillStyle = rgba((120 * shade) | 0, (85 * shade) | 0, (50 * shade) | 0, 0.95);
-        pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba(0, 0, 0, 0.10);
-        for (let i = 0; i < 4; i++) pRect(ctx, x + i * 4, y, 1, PPU + 1);
-        return;
-      }
-
-      if (type === BUILD.WALL) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 10);
-        ctx.fillStyle = rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98);
-        pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba(0, 0, 0, 0.10);
-        for (let r = 0; r < 4; r++) pRect(ctx, x, y + r * 4 + 3, PPU + 1, 1);
-        return;
-      }
-
-      if (type === BUILD.WINDOW) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 10);
-        ctx.fillStyle = rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98);
-        pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba((40 * shade) | 0, (55 * shade) | 0, (70 * shade) | 0, 0.90);
-        pRect(ctx, x + 4, y + 4, PPU - 8, PPU - 8);
-        ctx.fillStyle = rgba(120, 170, 255, 0.25);
-        pRect(ctx, x + 5, y + 5, PPU - 10, PPU - 10);
-        return;
-      }
-
-      if (type === BUILD.DOOR) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 9);
-        ctx.fillStyle = rgba((95 * shade) | 0, (65 * shade) | 0, (40 * shade) | 0, 0.98);
-        pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba((135 * shade) | 0, (92 * shade) | 0, (55 * shade) | 0, 0.92);
-        pRect(ctx, x + 3, y + 2, PPU - 6, PPU - 4);
-        return;
-      }
-
-      if (type === BUILD.ROOF) {
-        ctx.fillStyle = rgba((150 * shade) | 0, (55 * shade) | 0, (50 * shade) | 0, 0.95);
-        pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba(0, 0, 0, 0.12);
-        for (let r = 0; r < 4; r++) pRect(ctx, x + 1, y + r * 4 + 2, PPU - 2, 1);
-      }
-    }
-
-    function drawBuilds(ctx, light) {
-      const halfW = INTERNAL_W / (2 * PPU);
-      const halfH = INTERNAL_H / (2 * PPU);
-      const minTx = clamp(Math.floor(camera.x - halfW) + WORLD_HALF - 4, 0, WORLD_SIZE - 1);
-      const maxTx = clamp(Math.floor(camera.x + halfW) + WORLD_HALF + 4, 0, WORLD_SIZE - 1);
-      const minTy = clamp(Math.floor(camera.y - halfH) + WORLD_HALF - 4, 0, WORLD_SIZE - 1);
-      const maxTy = clamp(Math.floor(camera.y + halfH) + WORLD_HALF + 4, 0, WORLD_SIZE - 1);
-
-      for (let ty = minTy; ty <= maxTy; ty++) {
-        for (let tx = minTx; tx <= maxTx; tx++) {
-          const tileId = idxOf(tx, ty);
-          const b = buildMap.get(tileId);
-          if (!b) continue;
-          drawBuildTile(ctx, tx, ty, b.type, b.rot | 0, light);
-        }
-      }
-    }
-
-    function drawBuildGhost(ctx) {
-      if (!buildMode) return;
-      const tgt = getTargetTile();
-      if (!tgt) return;
-
-      const pos = worldToScreen(tileToWorld(tgt.tx), tileToWorld(tgt.ty));
-      const ok = canPlaceAt(tgt.tileId) && wood >= (COST[buildType] || 1) && canModifyTile(tgt.tileId).ok;
-
-      ctx.save();
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = ok ? "rgba(110,255,170,0.55)" : "rgba(255,90,90,0.55)";
-      pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
-      ctx.restore();
-    }
-
-    function drawClaimsOverlay(ctx) {
-      claimsMap.forEach((claim) => {
-        const rect = getChunkWorldRect(claim.chunkX, claim.chunkY);
-        const centerX = (rect.x1 + rect.x2) / 2;
-        const centerY = (rect.y1 + rect.y2) / 2;
-        const dx = Math.abs(centerX - camera.x);
-        const dy = Math.abs(centerY - camera.y);
-        if (dx > 40 || dy > 28) return;
-
-        const p1 = worldToScreen(rect.x1, rect.y1);
-        const p2 = worldToScreen(rect.x2, rect.y2);
-        const w = p2.x - p1.x;
-        const h = p2.y - p1.y;
-
-        const isMine = claim.ownerUid === myUid;
-        const fill = isMine ? "rgba(80,150,255,0.10)" : "rgba(255,160,70,0.08)";
-        const stroke = isMine ? "rgba(80,150,255,0.70)" : "rgba(255,160,70,0.60)";
-
-        ctx.save();
-        ctx.fillStyle = fill;
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = 2;
-        ctx.fillRect(p1.x, p1.y, w, h);
-        ctx.strokeRect(p1.x, p1.y, w, h);
-        ctx.restore();
-      });
-    }
-
-    function drawClaimPreview(ctx) {
-      if (!claimPreviewActive) return;
-      const tgt = getTargetTile();
-      if (!tgt) return;
-
-      const { chunkX, chunkY } = getChunkFromTile(tgt.tx, tgt.ty);
-      const rect = getChunkWorldRect(chunkX, chunkY);
-      const p1 = worldToScreen(rect.x1, rect.y1);
-      const p2 = worldToScreen(rect.x2, rect.y2);
-      const w = p2.x - p1.x;
-      const h = p2.y - p1.y;
-      const existing = claimsMap.get(claimKey(chunkX, chunkY));
-
-      ctx.save();
-      ctx.fillStyle = existing ? "rgba(255,80,80,0.18)" : "rgba(80,180,255,0.18)";
-      ctx.strokeStyle = existing ? "rgba(255,80,80,0.80)" : "rgba(80,180,255,0.85)";
-      ctx.lineWidth = 2;
-      ctx.fillRect(p1.x, p1.y, w, h);
-      ctx.strokeRect(p1.x, p1.y, w, h);
-      ctx.restore();
-    }
-
-    function drawTool(ctx, x, y, dir, swing, mode = "axe") {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(dir + Math.PI / 2 + swing);
-
-      ctx.fillStyle = "#7c4f2b";
-      pRect(ctx, -1, -10, 2, 18);
-
-      ctx.fillStyle = "#c3c9d3";
-      if (mode === "pickaxe") pRect(ctx, -9, -9, 18, 3);
-      else pRect(ctx, 0, -7, 11, 6);
-
-      ctx.restore();
-    }
-
-    function drawChatBubble(ctx, x, y, text) {
-      if (!text) return;
-
-      ctx.save();
-      ctx.font = "bold 10px system-ui, Arial";
-      const padX = 6;
-      const w = Math.max(28, ctx.measureText(text).width + padX * 2);
-      const h = 18;
-      const boxX = x - w / 2;
-      const boxY = y - 34;
-
-      ctx.fillStyle = "rgba(0,0,0,0.60)";
-      ctx.fillRect(boxX, boxY, w, h);
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.strokeRect(boxX, boxY, w, h);
-
-      ctx.fillStyle = "#fff";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, x, boxY + h / 2 + 0.5);
-      ctx.restore();
-    }
-
-    function drawPlayerEntity(ctx, ent, time, isRemote = false) {
-      const pos = worldToScreen(ent.rx ?? ent.x, ent.ry ?? ent.y);
-      const bob = Math.sin(time * 6 + (isRemote ? 0.5 : 0)) * 0.7;
-
-      drawShadowCircle(ctx, pos.x, pos.y + 10, 14);
-
-      ctx.fillStyle = isRemote ? rgba(120, 220, 140, 0.95) : rgba(70, 150, 255, 0.95);
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y + bob, 10, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = rgba(255,255,255,0.25);
-      ctx.beginPath();
-      ctx.arc(pos.x - 3, pos.y - 3 + bob, 4, 0, Math.PI * 2);
-      ctx.fill();
-
-      const atk = ent.attack > 0 ? Math.sin(ent.attack * Math.PI) : 0;
-      const swing = -0.95 * atk;
-      const toolX = pos.x + Math.cos(ent.dir) * 14;
-      const toolY = pos.y + Math.sin(ent.dir) * 10 + bob;
-      drawTool(ctx, toolX, toolY, ent.dir, swing, ent.tool === TOOL.PICKAXE ? "pickaxe" : "axe");
-
-      ctx.font = "bold 10px system-ui, Arial";
-      ctx.textAlign = "center";
-      ctx.fillStyle = "rgba(0,0,0,0.45)";
-      ctx.fillText(ent.name || "Player", pos.x + 1, pos.y - 14 + 1);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.fillText(ent.name || "Player", pos.x, pos.y - 14);
-
-      const now = Date.now();
-      if ((ent.quickChatUntil || 0) > now && ent.quickChatText) {
-        drawChatBubble(ctx, pos.x, pos.y - 18, ent.quickChatText);
-      }
-    }
-
-    function drawToast(ctx) {
-      if (toast.t <= 0 || !toast.text) return;
-      const pos = worldToScreen(player.x, player.y);
-      ctx.save();
-      ctx.globalAlpha = clamp(toast.t, 0, 1);
-      ctx.font = "bold 12px system-ui, Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "bottom";
-      ctx.fillStyle = "rgba(0,0,0,0.35)";
-      ctx.fillText(toast.text, pos.x + 1, pos.y - 18 + 1);
-      ctx.fillStyle = "rgba(255,255,255,0.95)";
-      ctx.fillText(toast.text, pos.x, pos.y - 18);
-      ctx.restore();
-    }
-
-    function colorForTileType(tt) {
-      if (tt === T.WATER) return [20, 95, 170];
-      if (tt === T.SAND) return [210, 195, 120];
-      if (tt === T.GRASS) return [45, 160, 65];
-      if (tt === T.HILL) return [70, 135, 80];
-      return [120, 120, 130];
-    }
-
-    function updateMinimap() {
-      if (!minimapOn) return;
-
-      const w = mini.width;
-      const h = mini.height;
-      const img = mctx.createImageData(w, h);
-      const data = img.data;
-
-      for (let py = 0; py < h; py++) {
-        for (let px = 0; px < w; px++) {
-          const tx = Math.floor((px / w) * WORLD_SIZE);
-          const ty = Math.floor((py / h) * WORLD_SIZE);
-          const [r, g, b] = colorForTileType(tileMap[idxOf(tx, ty)]);
-          const i = (py * w + px) * 4;
-          data[i] = r;
-          data[i + 1] = g;
-          data[i + 2] = b;
-          data[i + 3] = 255;
-        }
-      }
-
-      mctx.putImageData(img, 0, 0);
-
-      claimsMap.forEach((claim) => {
-        const px = Math.floor(((claim.chunkX * CLAIM_SIZE) / WORLD_SIZE) * w);
-        const py = Math.floor(((claim.chunkY * CLAIM_SIZE) / WORLD_SIZE) * h);
-        const size = Math.max(2, Math.floor((CLAIM_SIZE / WORLD_SIZE) * w));
-        mctx.strokeStyle = claim.ownerUid === myUid
-          ? "rgba(80,150,255,0.9)"
-          : "rgba(255,160,70,0.9)";
-        mctx.lineWidth = 1;
-        mctx.strokeRect(px, py, size, size);
-      });
-
-      const cpx = Math.floor(((campfire.x + WORLD_HALF) / WORLD_SIZE) * w);
-      const cpy = Math.floor(((campfire.y + WORLD_HALF) / WORLD_SIZE) * h);
-      mctx.fillStyle = "rgba(255,140,80,0.95)";
-      mctx.beginPath();
-      mctx.arc(cpx, cpy, 3, 0, Math.PI * 2);
-      mctx.fill();
-
-      buildMap.forEach((_, tileId) => {
-        const tx = tileId % WORLD_SIZE;
-        const ty = (tileId / WORLD_SIZE) | 0;
-        const px = Math.floor((tx / WORLD_SIZE) * w);
-        const py = Math.floor((ty / WORLD_SIZE) * h);
-        mctx.fillStyle = "rgba(255,255,255,0.9)";
-        mctx.fillRect(px, py, 1, 1);
-      });
-
-      remotePlayers.forEach((rp) => {
-        const px = Math.floor((((rp.rx ?? rp.x) + WORLD_HALF) / WORLD_SIZE) * w);
-        const py = Math.floor((((rp.ry ?? rp.y) + WORLD_HALF) / WORLD_SIZE) * h);
-        mctx.fillStyle = "rgba(110,255,140,0.95)";
-        mctx.fillRect(px, py, 2, 2);
-      });
-
-      const ppx = Math.floor(((player.x + WORLD_HALF) / WORLD_SIZE) * w);
-      const ppy = Math.floor(((player.y + WORLD_HALF) / WORLD_SIZE) * h);
-      mctx.save();
-      mctx.translate(ppx, ppy);
-      mctx.rotate(player.dir);
-      mctx.fillStyle = "rgba(255,255,255,0.95)";
-      mctx.beginPath();
-      mctx.moveTo(0, -6);
-      mctx.lineTo(4, 4);
-      mctx.lineTo(-4, 4);
-      mctx.closePath();
-      mctx.fill();
-      mctx.restore();
-    }
-
-    function buildQuickChatWheel() {
-      quickChatCenter.innerHTML = "";
-      const cx = 165;
-      const cy = 165;
-      const radius = 120;
-
-      QUICK_CHAT_MESSAGES.forEach((msg, i) => {
-        const angle = (-Math.PI / 2) + (Math.PI * 2 * i / QUICK_CHAT_MESSAGES.length);
-        const x = cx + Math.cos(angle) * radius;
-        const y = cy + Math.sin(angle) * radius;
-
-        const btn = document.createElement("button");
-        btn.className = "chat-option";
-        btn.textContent = msg;
-        btn.style.left = `${x}px`;
-        btn.style.top = `${y}px`;
-
-        btn.addEventListener("click", async (e) => {
-          e.preventDefault();
-          await sendQuickChat(msg);
-          closeQuickChat();
-        });
-
-        quickChatCenter.appendChild(btn);
-      });
-    }
-
-    buildQuickChatWheel();
-
-    function openQuickChat() {
-      quickChatOpen = true;
-      quickChatWheel.classList.add("show");
-    }
-
-    function closeQuickChat() {
-      quickChatOpen = false;
-      quickChatWheel.classList.remove("show");
-    }
-
-    quickChatBackdrop.addEventListener("click", closeQuickChat);
-
-    let serverMeta = null;
-    let myUid = null;
-    let myName = null;
-    let myAvatar = DEFAULT_AVATAR;
-
-    let worldReady = false;
-    let canPlay = false;
-    let joinedPresence = false;
-    let leaveDone = false;
-    let actualPlayersCount = 0;
-
-    let remotePlayers = [];
-    const remotePlayersMap = new Map();
-
-    let unsubServer = null;
-    let unsubPlayers = null;
-    let unsubBuilds = null;
-    let unsubRemovedTrees = null;
-    let unsubRemovedBoulders = null;
-    let unsubClaims = null;
-
-    let lastNetSendAt = 0;
-    let lastHeartbeatAt = 0;
-    let lastServerSyncAt = 0;
-    let lastSentX = 99999;
-    let lastSentY = 99999;
-    let lastSentDir = 99999;
-
-    function normalizeName(name) {
-      return String(name || "").trim().toLowerCase().replace(/\s+/g, "_");
-    }
-
-    function getTimestampMs(ts) {
-      return ts?.toDate ? ts.toDate().getTime() : 0;
-    }
-
-    function getIsFresh(ts, timeout) {
-      const ms = getTimestampMs(ts);
-      return !!(ms && Date.now() - ms < timeout);
-    }
-
-    function updateServerInfo() {
-      if (!serverMeta) {
-        serverInfoEl.textContent = "Loading server...";
-        return;
-      }
-
-      const online = getIsFresh(serverMeta.lastHeartbeat, SERVER_TIMEOUT_MS);
-      serverInfoEl.textContent =
-        `${serverMeta.name || "Server"} • by ${serverMeta.createdByName || "Unknown"} • ${online ? "Online" : "Offline"} • Players: ${actualPlayersCount}/${serverMeta.maxPlayers || 8}`;
-    }
-
-    function getServerLight(nowMs) {
-      if (!serverMeta) return 1;
-      if (serverMeta.dayMode === "dayForever") return 1;
-      if (serverMeta.dayMode === "nightForever") return 0;
-
-      const SWITCH_EVERY = 180000;
-      const TRANSITION = 12000;
-      const start = getTimestampMs(serverMeta.createdAt) || Date.now();
-      const elapsed = Math.max(0, nowMs - start);
-      const phaseIndex = Math.floor(elapsed / SWITCH_EVERY);
-      const phaseTime = elapsed % SWITCH_EVERY;
-      const phaseIsNight = phaseIndex % 2 === 1;
-
-      if (phaseTime < TRANSITION) {
-        const t = easeOutQuint(phaseTime / TRANSITION);
-        const from = phaseIsNight ? 1 : 0;
-        const to = phaseIsNight ? 0 : 1;
-        return lerp(from, to, t);
-      }
-
-      return phaseIsNight ? 0 : 1;
-    }
-
-    function getTargetTile() {
-      let tx, ty;
-
-      if (!isCoarse && mouseAim) {
-        const ix = (mouseAim.x - view.ox) / view.scale;
-        const iy = (mouseAim.y - view.oy) / view.scale;
-        if (ix >= 0 && iy >= 0 && ix < INTERNAL_W && iy < INTERNAL_H) {
-          const wx = (ix - INTERNAL_W / 2) / PPU + camera.x;
-          const wy = (iy - INTERNAL_H / 2) / PPU + camera.y;
-          tx = worldToTile(wx);
-          ty = worldToTile(wy);
-        }
-      }
-
-      if (tx == null || ty == null) {
-        const wx = player.x + Math.cos(player.dir) * 2.0;
-        const wy = player.y + Math.sin(player.dir) * 2.0;
-        tx = worldToTile(wx);
-        ty = worldToTile(wy);
-      }
-
-      if (!inBounds(tx, ty)) return null;
-      return { tx, ty, tileId: idxOf(tx, ty) };
-    }
-
-    function getClaimForTile(tileId) {
-      const tx = tileId % WORLD_SIZE;
-      const ty = (tileId / WORLD_SIZE) | 0;
-      const { chunkX, chunkY } = getChunkFromTile(tx, ty);
-      return claimsMap.get(claimKey(chunkX, chunkY)) || null;
-    }
-
-    function canModifyTile(tileId) {
-      const claim = getClaimForTile(tileId);
-      if (!claim) return { ok: true, reason: "" };
-      if (claim.ownerUid === myUid) return { ok: true, reason: "" };
-      if (claim.access === "sharedBuild") return { ok: true, reason: "" };
-      return { ok: false, reason: `Claimed by ${claim.ownerName || "player"}` };
-    }
-
-    function canPlaceAt(tileId) {
-      const tx = tileId % WORLD_SIZE;
-      const ty = (tileId / WORLD_SIZE) | 0;
-      if (!inBounds(tx, ty)) return false;
-      if (tileMap[tileId] === T.WATER) return false;
-
-      const cTx = worldToTile(campfire.x);
-      const cTy = worldToTile(campfire.y);
-      if (tx === cTx && ty === cTy) return false;
-
-      const wx = tileToWorld(tx);
-      const wy = tileToWorld(ty);
-      if (buildMap.has(tileId)) return false;
-      if (tileOccupiedByCollider(wx, wy, 0.48)) return false;
-      return true;
-    }
-
-    async function placeBuild(tileId) {
-      const perm = canModifyTile(tileId);
-      if (!perm.ok) {
-        showToast(perm.reason, 1.1);
-        audio.beep(180, 0.10, 0.04);
-        return false;
-      }
-
-      const cost = COST[buildType] || 1;
-      if (wood < cost) {
-        showToast("Not enough wood", 1.0);
-        audio.beep(180, 0.10, 0.04);
-        return false;
-      }
-
-      if (!canPlaceAt(tileId)) {
-        showToast("Can't place here", 1.0);
-        audio.beep(180, 0.10, 0.04);
-        return false;
-      }
-
-      wood -= cost;
-      buildMap.set(tileId, { type: buildType, rot: buildRot });
-
-      if (buildType === BUILD.WALL || buildType === BUILD.WINDOW) {
-        const tx = tileId % WORLD_SIZE;
-        const ty = (tileId / WORLD_SIZE) | 0;
-        addColliderRect(tileToWorld(tx), tileToWorld(ty), 0.48, 0.48, buildType === BUILD.WINDOW ? "build_window" : "build_wall");
-      }
-
-      const tx = tileId % WORLD_SIZE;
-      const ty = (tileId / WORLD_SIZE) | 0;
-      spawnParticles("build", tileToWorld(tx), tileToWorld(ty), 10);
-      minimapDirty = true;
-      audio.beep(560, 0.05, 0.04);
-
-      try {
-        await setDoc(doc(db, "servers", serverId, "builds", String(tileId)), {
-          tileId,
-          type: buildType,
-          rot: buildRot,
-          updatedAt: serverTimestamp(),
-          updatedBy: myUid,
-        });
-      } catch (e) {
-        console.error("placeBuild sync error:", e);
-      }
-
-      return true;
-    }
-
-    async function removeBuild(tileId) {
-      const perm = canModifyTile(tileId);
-      if (!perm.ok) {
-        showToast(perm.reason, 1.1);
-        audio.beep(180, 0.10, 0.04);
-        return false;
-      }
-
-      const b = buildMap.get(tileId);
-      if (!b) {
-        showToast("No block here", 0.7);
-        audio.beep(180, 0.10, 0.04);
-        return false;
-      }
-
-      const back = Math.max(1, Math.floor((COST[b.type] || 1) * 0.5));
-      wood += back;
-      buildMap.delete(tileId);
-      rebuildBuildColliders();
-
-      const tx = tileId % WORLD_SIZE;
-      const ty = (tileId / WORLD_SIZE) | 0;
-      spawnParticles("chips", tileToWorld(tx), tileToWorld(ty), 8);
-      showToast(`Removed (+${back} wood)`, 0.9);
-      minimapDirty = true;
-      audio.beep(320, 0.06, 0.04);
-
-      try {
-        await deleteDoc(doc(db, "servers", serverId, "builds", String(tileId)));
-      } catch (e) {
-        console.error("removeBuild sync error:", e);
-      }
-
-      return true;
-    }
-
-    async function chopNearestTree() {
-      let best = null;
-      let bestD = 3.2 * 3.2;
-      for (const t of trees) {
-        if (t.removed) continue;
-        const d = dist2(player.x, player.y, t.x, t.y);
-        if (d < bestD) {
-          bestD = d;
-          best = t;
-        }
-      }
-      if (!best) return;
-
-      const perm = canModifyTile(best.tileId);
-      if (!perm.ok) {
-        showToast(perm.reason, 1.1);
-        audio.beep(180, 0.10, 0.04);
-        return;
-      }
-
-      best.hp -= 1;
-      spawnParticles("chips", best.x, best.y, 12);
-      audio.beep(240, 0.05, 0.04);
-
-      if (best.hp <= 0) {
-        best.removed = true;
-        removedTrees.add(best.tileId);
-        const i = colliders.indexOf(best.collider);
-        if (i !== -1) colliders.splice(i, 1);
-
-        wood += 1;
-        showToast("+1 wood", 0.7);
-        minimapDirty = true;
-        audio.beep(720, 0.04, 0.04);
-
-        try {
-          await setDoc(doc(db, "servers", serverId, "removedTrees", String(best.tileId)), {
-            tileId: best.tileId,
-            removedAt: serverTimestamp(),
-            removedBy: myUid,
-          });
-        } catch (e) {
-          console.error("tree sync error:", e);
-        }
-      }
-    }
-
-    async function mineNearestBoulder() {
-      let best = null;
-      let bestD = 3.3 * 3.3;
-      for (const b of boulders) {
-        if (b.removed) continue;
-        const d = dist2(player.x, player.y, b.x, b.y);
-        if (d < bestD) {
-          bestD = d;
-          best = b;
-        }
-      }
-      if (!best) return;
-
-      const perm = canModifyTile(best.tileId);
-      if (!perm.ok) {
-        showToast(perm.reason, 1.1);
-        audio.beep(180, 0.10, 0.04);
-        return;
-      }
-
-      best.hp -= 1;
-      spawnParticles("chips", best.x, best.y, 10);
-      audio.beep(best.type === "coal" ? 520 : 680, 0.06, 0.04);
-
-      if (best.hp <= 0) {
-        best.removed = true;
-        removedBoulders.add(best.tileId);
-        const i = colliders.indexOf(best.collider);
-        if (i !== -1) colliders.splice(i, 1);
-
-        if (best.type === "coal") {
-          coal += 1;
-          stone += 1;
-          showToast("+coal +stone", 0.8);
-        } else {
-          stone += 1;
-          showToast("+1 stone", 0.8);
-        }
-
-        minimapDirty = true;
-        audio.beep(760, 0.04, 0.04);
-
-        try {
-          await setDoc(doc(db, "servers", serverId, "removedBoulders", String(best.tileId)), {
-            tileId: best.tileId,
-            removedAt: serverTimestamp(),
-            removedBy: myUid,
-          });
-        } catch (e) {
-          console.error("boulder sync error:", e);
-        }
-      }
-    }
-
-    async function claimTargetChunk() {
-      const tgt = getTargetTile();
-      if (!tgt) return;
-
-      const { chunkX, chunkY } = getChunkFromTile(tgt.tx, tgt.ty);
-      const key = claimKey(chunkX, chunkY);
-      const existing = claimsMap.get(key);
-
-      if (existing) {
-        if (existing.ownerUid === myUid) showToast("This territory is already yours", 1.0);
-        else showToast(`Claimed by ${existing.ownerName || "player"}`, 1.1);
-        audio.beep(180, 0.10, 0.04);
-        return;
-      }
-
-      try {
-        await setDoc(doc(db, "servers", serverId, "claims", key), {
-          chunkX,
-          chunkY,
-          ownerUid: myUid,
-          ownerName: myName,
-          access: "visitOnly",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        });
-
-        showToast("Territory claimed (visitOnly)", 1.0);
-        minimapDirty = true;
-        audio.beep(640, 0.08, 0.04);
-      } catch (e) {
-        console.error("claimTargetChunk error:", e);
-      }
-    }
-
-    async function toggleClaimAccessAtTarget() {
-      const tgt = getTargetTile();
-      if (!tgt) return;
-
-      const claim = getClaimForTile(tgt.tileId);
-      if (!claim) {
-        showToast("No claim here", 0.9);
-        audio.beep(180, 0.10, 0.04);
-        return;
-      }
-
-      if (claim.ownerUid !== myUid) {
-        showToast("Only owner can edit claim", 1.0);
-        audio.beep(180, 0.10, 0.04);
-        return;
-      }
-
-      const newAccess = claim.access === "sharedBuild" ? "visitOnly" : "sharedBuild";
-
-      try {
-        await updateDoc(doc(db, "servers", serverId, "claims", claimKey(claim.chunkX, claim.chunkY)), {
-          access: newAccess,
-          updatedAt: serverTimestamp(),
-        });
-        showToast(`Claim: ${newAccess}`, 1.0);
-        audio.beep(700, 0.05, 0.04);
-      } catch (e) {
-        console.error("toggleClaimAccessAtTarget error:", e);
-      }
-    }
-
-    async function sendQuickChat(text) {
-      if (!text || !myUid) return;
-      const until = Date.now() + QUICK_CHAT_VISIBLE_MS;
-      player.quickChatText = text;
-      player.quickChatUntil = until;
-
-      try {
-        await setDoc(doc(db, "servers", serverId, "players", myUid), {
-          quickChatText: text,
-          quickChatUntil: until,
-          lastActive: serverTimestamp(),
-        }, { merge: true });
-      } catch (e) {
-        console.error("sendQuickChat error:", e);
-      }
-    }
-
-    async function doAction() {
-      if (!canPlay || quickChatOpen) return;
-      audio.resume();
-
-      if (claimPreviewActive) {
-        await claimTargetChunk();
-        claimPreviewActive = false;
-        return;
-      }
-
-      if (player.attackCooldown > 0) return;
-
-      player.attack = 0.0001;
-      player.attackCooldown = 0.34;
-
-      if (buildMode) {
-        const tgt = getTargetTile();
-        if (!tgt) return;
-        await placeBuild(tgt.tileId);
-        return;
-      }
-
-      if (currentTool === TOOL.PICKAXE) await mineNearestBoulder();
-      else await chopNearestTree();
-    }
-
-    async function doRemoveAction() {
-      if (!canPlay || quickChatOpen) return;
-
-      if (claimPreviewActive) {
-        claimPreviewActive = false;
-        showToast("Claim preview cancelled", 0.8);
-        return;
-      }
-
-      if (!buildMode) return;
-      const tgt = getTargetTile();
-      if (!tgt) return;
-      await removeBuild(tgt.tileId);
-    }
-
-    window.addEventListener("mousedown", async (e) => {
-      if (e.button === 0) await doAction();
-      if (e.button === 2) await doRemoveAction();
-    });
-
-    window.addEventListener("contextmenu", (e) => e.preventDefault());
-
-    if (actionBtn) {
-      const tap = async (e) => {
-        e.preventDefault();
-        await doAction();
-      };
-      actionBtn.addEventListener("click", tap);
-      actionBtn.addEventListener("touchstart", tap, { passive: false });
-    }
-
-    function setMinimap(v) {
-      minimapOn = v;
-      miniWrap.style.display = minimapOn ? "block" : "none";
-      if (minimapOn) minimapDirty = true;
-    }
-
-    window.addEventListener("keydown", async (e) => {
-      audio.resume();
-
-      if (e.code === "Digit1") {
-        currentTool = TOOL.AXE;
-        showToast("Tool: Axe", 0.8);
-        audio.beep(700, 0.04, 0.04);
-      }
-
-      if (e.code === "Digit2") {
-        currentTool = TOOL.PICKAXE;
-        showToast("Tool: Pickaxe", 0.8);
-        audio.beep(700, 0.04, 0.04);
-      }
-
-      if (e.code === "KeyB") {
-        buildMode = !buildMode;
-        if (buildMode) claimPreviewActive = false;
-        showToast(buildMode ? "Build mode ON" : "Build mode OFF", 0.9);
-        audio.beep(700, 0.04, 0.04);
-      }
-
-      if (e.code === "KeyM") {
-        setMinimap(!minimapOn);
-        audio.beep(700, 0.04, 0.04);
-      }
-
-      if (e.code === "KeyV" && !e.repeat) {
-        claimPreviewActive = !claimPreviewActive;
-        if (claimPreviewActive) buildMode = false;
-        showToast(claimPreviewActive ? "Claim preview ON" : "Claim preview OFF", 0.9);
-        audio.beep(700, 0.04, 0.04);
-      }
-
-      if (e.code === "KeyG") {
-        await toggleClaimAccessAtTarget();
-      }
-
-      if (e.code === "KeyQ" && !e.repeat) {
-        openQuickChat();
-      }
-
-      if (e.code === "Escape") {
-        closeQuickChat();
-        claimPreviewActive = false;
-      }
-
-      if (buildMode) {
-        if (e.code === "Digit3") { buildType = BUILD.FLOOR; showToast("Build: Floor", 0.8); }
-        if (e.code === "Digit4") { buildType = BUILD.WALL; showToast("Build: Wall", 0.8); }
-        if (e.code === "Digit5") { buildType = BUILD.DOOR; showToast("Build: Door", 0.8); }
-        if (e.code === "Digit6") { buildType = BUILD.WINDOW; showToast("Build: Window", 0.8); }
-        if (e.code === "Digit7") { buildType = BUILD.ROOF; showToast("Build: Roof", 0.8); }
-        if (e.code === "KeyR") { buildRot = (buildRot + 1) & 3; showToast("Rotate", 0.6); }
-        if (e.code === "KeyX") await doRemoveAction();
-      }
-    });
-
-    window.addEventListener("keyup", (e) => {
-      if (e.code === "KeyQ") closeQuickChat();
-    });
-
-    function setupServerWorldSeed(seed) {
-      setSeed(seed);
-      generateWorld();
-      player.x = campfire.x + 1.4;
-      player.y = campfire.y + 1.2;
-      camera.x = player.x;
-      camera.y = player.y;
-      worldReady = true;
-      minimapDirty = true;
-    }
-
-    async function ensureServerAccess(user) {
-      myUid = user.uid;
-      myName = user.displayName || "Player";
-      player.name = myName;
-
-      const userSnap = await getDoc(doc(db, "users", myUid));
-      myAvatar = userSnap.exists() ? (userSnap.data().avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
-      player.avatar = myAvatar;
-
-      const serverSnap = await getDoc(doc(db, "servers", serverId));
-      if (!serverSnap.exists()) throw new Error("Server not found.");
-
-      serverMeta = { id: serverSnap.id, ...serverSnap.data() };
-      updateServerInfo();
-
-      const isCreator = serverMeta.createdByUid === myUid;
-      const allowed = Array.isArray(serverMeta.allowedUsersNormalized) ? serverMeta.allowedUsersNormalized : [];
-      const meNorm = normalizeName(myName);
-
-      if (serverMeta.visibility === "private" && !isCreator && !allowed.includes(meNorm)) {
-        throw new Error("You are not allowed to join this private server.");
-      }
-
-      if (!serverMeta.worldSeed) {
-        await updateDoc(doc(db, "servers", serverId), {
-          worldSeed: "pine-" + Date.now(),
-          updatedAt: serverTimestamp(),
-        });
-        serverMeta.worldSeed = "pine-" + Date.now();
-      }
-
-      setupServerWorldSeed(serverMeta.worldSeed);
-    }
-
-    async function safeSetServerPresence(extra = {}) {
-      const now = performance.now();
-      if (now - lastServerSyncAt < 2500) return;
-      lastServerSyncAt = now;
-
-      try {
-        await updateDoc(doc(db, "servers", serverId), {
-          lastHeartbeat: serverTimestamp(),
-          playerCount: actualPlayersCount,
-          status: actualPlayersCount > 0 ? "online" : "offline",
-          updatedAt: serverTimestamp(),
-          ...extra,
-        });
-      } catch (e) {
-        console.error("safeSetServerPresence error:", e);
-      }
-    }
-
-    async function writePlayerState(force = false) {
-      if (!canPlay || !myUid || !joinedPresence) return;
-
-      const now = performance.now();
-      const movedEnough =
-        Math.abs(player.x - lastSentX) > 0.08 ||
-        Math.abs(player.y - lastSentY) > 0.08 ||
-        Math.abs(player.dir - lastSentDir) > 0.08;
-
-      if (!force && !movedEnough && now - lastNetSendAt < 150) return;
-
-      lastNetSendAt = now;
-      lastSentX = player.x;
-      lastSentY = player.y;
-      lastSentDir = player.dir;
-
-      try {
-        await setDoc(doc(db, "servers", serverId, "players", myUid), {
-          uid: myUid,
-          name: myName,
-          avatar: myAvatar || DEFAULT_AVATAR,
-          x: player.x,
-          y: player.y,
-          dir: player.dir,
-          tool: currentTool,
-          quickChatText: player.quickChatText || "",
-          quickChatUntil: player.quickChatUntil || 0,
-          lastActive: serverTimestamp(),
-          joinedAt: serverTimestamp(),
-        }, { merge: true });
-      } catch (e) {
-        console.error("writePlayerState error:", e);
-      }
-    }
-
-    async function joinServer(user) {
-      await ensureServerAccess(user);
-
-      await setDoc(doc(db, "servers", serverId, "players", myUid), {
-        uid: myUid,
-        name: myName,
-        avatar: myAvatar || DEFAULT_AVATAR,
-        x: player.x,
-        y: player.y,
-        dir: player.dir,
-        tool: currentTool,
-        quickChatText: "",
-        quickChatUntil: 0,
-        lastActive: serverTimestamp(),
-        joinedAt: serverTimestamp(),
-      }, { merge: true });
-
-      try {
-        await updateDoc(doc(db, "servers", serverId), {
-          playerCount: increment(1),
-          lastHeartbeat: serverTimestamp(),
-          status: "online",
-          updatedAt: serverTimestamp(),
-        });
-      } catch (e) {
-        console.error("join server increment error:", e);
-      }
-
-      joinedPresence = true;
-      canPlay = true;
-      loadingBox.style.display = "none";
-
-      unsubServer = onSnapshot(doc(db, "servers", serverId), (snap) => {
-        if (!snap.exists()) {
-          showErr("Server was deleted.");
-          return;
-        }
-        serverMeta = { id: snap.id, ...snap.data() };
-        updateServerInfo();
-
-        if (serverMeta.worldSeed && seedStr !== serverMeta.worldSeed) {
-          setupServerWorldSeed(serverMeta.worldSeed);
-        }
-      });
-
-      unsubPlayers = onSnapshot(collection(db, "servers", serverId, "players"), (snapshot) => {
-        const fresh = [];
-        remotePlayers = [];
-
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data) return;
-
-          if (getIsFresh(data.lastActive, PLAYER_TIMEOUT_MS)) fresh.push({ id: d.id, ...data });
-
-          if (d.id === myUid) return;
-          if (!getIsFresh(data.lastActive, PLAYER_TIMEOUT_MS)) return;
-
-          const existing = remotePlayersMap.get(d.id) || {
-            id: d.id,
-            rx: data.x || 0,
-            ry: data.y || 0,
-            x: data.x || 0,
-            y: data.y || 0,
-            dir: data.dir || 0,
-            tool: data.tool ?? TOOL.AXE,
-            name: data.name || "Player",
-            avatar: data.avatar || DEFAULT_AVATAR,
-            attack: 0,
-            quickChatText: "",
-            quickChatUntil: 0,
-          };
-
-          existing.x = data.x ?? existing.x;
-          existing.y = data.y ?? existing.y;
-          existing.dir = data.dir ?? existing.dir;
-          existing.tool = data.tool ?? existing.tool;
-          existing.name = data.name || existing.name;
-          existing.avatar = data.avatar || existing.avatar;
-          existing.quickChatText = data.quickChatText || "";
-          existing.quickChatUntil = Number(data.quickChatUntil || 0);
-
-          remotePlayersMap.set(d.id, existing);
-          remotePlayers.push(existing);
-        });
-
-        for (const key of [...remotePlayersMap.keys()]) {
-          if (!fresh.some((p) => p.id === key && key !== myUid)) {
-            remotePlayersMap.delete(key);
-          }
-        }
-
-        actualPlayersCount = fresh.length;
-        updateServerInfo();
-        minimapDirty = true;
-      });
-
-      unsubBuilds = onSnapshot(collection(db, "servers", serverId, "builds"), (snapshot) => {
-        buildMap = new Map();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data || typeof data.tileId !== "number") return;
-          buildMap.set(data.tileId, {
-            type: data.type || BUILD.WALL,
-            rot: (data.rot || 0) & 3,
-          });
-        });
-        rebuildBuildColliders();
-        minimapDirty = true;
-      });
-
-      unsubRemovedTrees = onSnapshot(collection(db, "servers", serverId, "removedTrees"), (snapshot) => {
-        removedTrees = new Set();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (typeof data.tileId === "number") removedTrees.add(data.tileId);
-        });
-        applyRemovedTreeSet();
-        minimapDirty = true;
-      });
-
-      unsubRemovedBoulders = onSnapshot(collection(db, "servers", serverId, "removedBoulders"), (snapshot) => {
-        removedBoulders = new Set();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (typeof data.tileId === "number") removedBoulders.add(data.tileId);
-        });
-        applyRemovedBoulderSet();
-        minimapDirty = true;
-      });
-
-      unsubClaims = onSnapshot(collection(db, "servers", serverId, "claims"), (snapshot) => {
-        claimsMap = new Map();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data) return;
-          claimsMap.set(d.id, {
-            chunkX: Number(data.chunkX || 0),
-            chunkY: Number(data.chunkY || 0),
-            ownerUid: data.ownerUid || "",
-            ownerName: data.ownerName || "Player",
-            access: data.access === "sharedBuild" ? "sharedBuild" : "visitOnly",
-          });
-        });
-        minimapDirty = true;
-      });
-
-      await writePlayerState(true);
-      await safeSetServerPresence();
-    }
-
-    async function leaveServer() {
-      if (leaveDone || !myUid || !joinedPresence) return;
-      leaveDone = true;
-
-      try {
-        await deleteDoc(doc(db, "servers", serverId, "players", myUid));
-      } catch (e) {
-        console.error("leave delete player error:", e);
-      }
-
-      try {
-        await updateDoc(doc(db, "servers", serverId), {
-          playerCount: increment(-1),
-          updatedAt: serverTimestamp(),
-        });
-      } catch (e) {
-        console.error("leave decrement error:", e);
-      }
-
-      try { if (unsubServer) unsubServer(); } catch {}
-      try { if (unsubPlayers) unsubPlayers(); } catch {}
-      try { if (unsubBuilds) unsubBuilds(); } catch {}
-      try { if (unsubRemovedTrees) unsubRemovedTrees(); } catch {}
-      try { if (unsubRemovedBoulders) unsubRemovedBoulders(); } catch {}
-      try { if (unsubClaims) unsubClaims(); } catch {}
-    }
-
-    leaveBtn.addEventListener("click", async () => {
-      await leaveServer();
-      location.href = "index.html";
-    });
-
-    window.addEventListener("pagehide", async () => {
-      try { await leaveServer(); } catch {}
-    });
-
-    document.addEventListener("visibilitychange", async () => {
-      if (document.visibilityState === "hidden") {
-        try { await leaveServer(); } catch {}
-      }
-    });
-
-    let last = performance.now();
-
-    function update(dt, timeSec) {
-      if (!worldReady) return;
-
-      let mx = 0;
-      let my = 0;
-      if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
-      if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
-      if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
-      if (keys["KeyD"] || keys["ArrowRight"]) mx += 1;
-
-      if (Math.abs(touchMoveX) > 0.05 || Math.abs(touchMoveY) > 0.05) {
-        mx += touchMoveX;
-        my += touchMoveY;
-      }
-
-      const len = Math.hypot(mx, my);
-
-      if (!isCoarse && mouseAim) {
-        const cx = innerWidth / 2;
-        const cy = innerHeight / 2;
-        const dx = mouseAim.x - cx;
-        const dy = mouseAim.y - cy;
-        if (Math.hypot(dx, dy) > 6) player.dir = Math.atan2(dy, dx);
-      } else if (len > 0.001) {
-        player.dir = Math.atan2(my, mx);
-      }
-
-      const speed = 7.8;
-      if (!quickChatOpen && len > 0.001) {
-        const nx = clamp(player.x + (mx / Math.max(1, len)) * speed * dt, -WORLD_HALF + 1, WORLD_HALF - 1);
-        if (!isBlocked(nx, player.y, player.r)) player.x = nx;
-
-        const ny = clamp(player.y + (my / Math.max(1, len)) * speed * dt, -WORLD_HALF + 1, WORLD_HALF - 1);
-        if (!isBlocked(player.x, ny, player.r)) player.y = ny;
-      }
-
-      const tx = worldToTile(player.x);
-      const ty = worldToTile(player.y);
-      if (inBounds(tx, ty) && tileMap[idxOf(tx, ty)] === T.WATER) {
-        player.x += Math.cos(player.dir + Math.PI) * 0.12;
-        player.y += Math.sin(player.dir + Math.PI) * 0.12;
-      }
-
-      if (player.attackCooldown > 0) player.attackCooldown -= dt;
-      if (player.attack > 0) {
-        player.attack += dt * 3.2;
-        if (player.attack >= 1) player.attack = 0;
-      }
-
-      for (const pt of particles) {
-        pt.life -= dt;
-        pt.x += pt.vx * dt;
-        pt.y += pt.vy * dt;
-        pt.vx *= 0.90;
-        pt.vy *= 0.90;
-        if (pt.type === "chips") pt.vy += 6.5 * dt;
-        if (pt.type === "build") pt.vy -= 1.5 * dt;
-      }
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        if (particles[i].life <= 0) particles.splice(i, 1);
-      }
-
-      if (toast.t > 0) toast.t -= dt;
-
-      for (const rp of remotePlayers) {
-        rp.rx = lerp(rp.rx ?? rp.x, rp.x, 0.18);
-        rp.ry = lerp(rp.ry ?? rp.y, rp.y, 0.18);
-      }
-
-      camera.x = lerp(camera.x, player.x, 0.12);
-      camera.y = lerp(camera.y, player.y, 0.12);
-
-      const now = performance.now();
-      if (now - lastHeartbeatAt > 3000) {
-        lastHeartbeatAt = now;
-        writePlayerState(true);
-        safeSetServerPresence({
-          lastHeartbeat: serverTimestamp(),
-          status: actualPlayersCount > 0 ? "online" : "offline",
-          playerCount: actualPlayersCount,
-        });
-      } else {
-        writePlayerState(false);
-      }
-
-      minimapTimer += dt;
-      if (minimapOn && (minimapDirty || minimapTimer >= 0.35)) {
-        minimapTimer = 0;
-        minimapDirty = false;
-        updateMinimap();
-      }
-
-      hudEl.innerHTML =
-        `Wood: ${wood} | Stone: ${stone} | Coal: ${coal}` +
-        `<div class="small">Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"} | Players here: ${actualPlayersCount}` +
-        `${buildMode ? ` | Block: ${buildType.toUpperCase()} (3-7)` : ` | Axe=1 Pickaxe=2`}` +
-        ` | Claims: V preview, G access | Quick chat: hold Q | Minimap: M</div>`;
-    }
-
-    function render(timeSec) {
-      if (!worldReady) return;
-
-      const light = getServerLight(Date.now());
-      bctx.clearRect(0, 0, INTERNAL_W, INTERNAL_H);
-
-      drawTerrain(bctx, timeSec, light);
-
-      for (const b of boulders) {
-        if (b.removed) continue;
-        const dx = Math.abs(b.x - camera.x);
-        const dy = Math.abs(b.y - camera.y);
-        if (dx < 28 && dy < 18) drawBoulder(bctx, b, light);
-      }
-
-      drawClaimsOverlay(bctx);
-      drawBuilds(bctx, light);
-
-      for (const t of trees) {
-        if (t.removed) continue;
-        const dx = Math.abs(t.x - camera.x);
-        const dy = Math.abs(t.y - camera.y);
-        if (dx < 28 && dy < 18) drawTree(bctx, t, timeSec, light);
-      }
-
-      drawCampfire(bctx, timeSec, light);
-
-      for (const pt of particles) {
-        const p = worldToScreen(pt.x, pt.y);
-        const a = clamp(pt.life / 0.75, 0, 1);
-        bctx.fillStyle = pt.type === "chips"
-          ? rgba(190, 120, 70, 0.85 * a)
-          : rgba(120, 255, 170, 0.65 * a);
-        bctx.fillRect((p.x | 0), (p.y | 0), 2, 2);
-      }
-
-      drawBuildGhost(bctx);
-      drawClaimPreview(bctx);
-
-      for (const rp of remotePlayers) drawPlayerEntity(bctx, rp, timeSec, true);
-      drawPlayerEntity(bctx, player, timeSec, false);
-      drawToast(bctx);
-
-      const night = 1 - light;
-      if (night > 0.001) {
-        bctx.fillStyle = rgba(10, 20, 40, 0.10 + 0.55 * night);
-        bctx.fillRect(0, 0, INTERNAL_W, INTERNAL_H);
-
-        const starA = 0.10 * night;
-        if (starA > 0.01) {
-          bctx.fillStyle = rgba(220, 240, 255, starA);
-          for (let i = 0; i < 24; i++) {
-            const sx = (hash2(i, 7, seedU32 + 60001) * INTERNAL_W) | 0;
-            const sy = (hash2(i, 13, seedU32 + 60007) * 120) | 0;
-            bctx.fillRect(sx, sy, 1, 1);
-          }
-        }
-      }
-
-      const screenW = innerWidth;
-      const screenH = innerHeight;
-      const scale = Math.max(1, Math.floor(Math.min(screenW / INTERNAL_W, screenH / INTERNAL_H)));
-      const drawW = INTERNAL_W * scale;
-      const drawH = INTERNAL_H * scale;
-      const ox = ((screenW - drawW) / 2) | 0;
-      const oy = ((screenH - drawH) / 2) | 0;
-
-      view.scale = scale;
-      view.ox = ox;
-      view.oy = oy;
-
-      gctx.clearRect(0, 0, screenW, screenH);
-      gctx.imageSmoothingEnabled = false;
-      gctx.drawImage(buffer, 0, 0, INTERNAL_W, INTERNAL_H, ox, oy, drawW, drawH);
-    }
-
-    function loop(now) {
-      const dt = Math.min(0.033, (now - last) / 1000);
-      last = now;
-      const timeSec = now / 1000;
-
-      update(dt, timeSec);
-      render(timeSec);
-      requestAnimationFrame(loop);
-    }
-
-    resize();
-    window.addEventListener("resize", resize);
-
-    onAuthStateChanged(auth, async (user) => {
-      try {
-        if (!user || !user.displayName) {
-          loadingBox.textContent = "Please sign in first.";
-          showErr("You must be signed in to play multiplayer.");
-          return;
-        }
-
-        await joinServer(user);
-        requestAnimationFrame(loop);
-      } catch (e) {
-        showErr(e.message || e);
-        loadingBox.textContent = e.message || "Failed to join server.";
-      }
-    });
-  </script>
+  <div id="quickChatWheel"><div id="quickChatBackdrop"></div><div id="quickChatCenter"></div><div id="quickChatHint">Hold Q → choose a safe quick message</div></div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, serverTimestamp, getDocs, query } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
+  authDomain: "pine-tycoon.firebaseapp.com",
+  projectId: "pine-tycoon",
+  storageBucket: "pine-tycoon.firebasestorage.app",
+  messagingSenderId: "949986190236",
+  appId: "1:949986190236:web:4f5d50078326f5c1981e59",
+  measurementId: "G-2DY6KSY4G7",
+};
+
+const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const serverId = new URLSearchParams(location.search).get("server");
+if (!serverId) throw new Error("Server ID is missing");
+
+const PLAYER_TIMEOUT_MS = 10000;
+const SERVER_TIMEOUT_MS = 12000;
+const QUICK_CHAT_VISIBLE_MS = 4000;
+const CLAIM_SIZE = 16;
+const QUICK_CHAT_MESSAGES = ["Hello!","Bye!","How are you?","Follow me!","Need help!","Thanks!","Sorry!","Good luck!",";)",":D",":(",":3"];
+
+const errBox = document.getElementById("errBox");
+const loadingBox = document.getElementById("loadingBox");
+const hudEl = document.getElementById("hud");
+const serverInfoEl = document.getElementById("serverInfo");
+const leaveBtn = document.getElementById("leaveBtn");
+const audioBtn = document.getElementById("audioBtn");
+const miniWrap = document.getElementById("minimapWrap");
+const mini = document.getElementById("minimap");
+const mctx = mini.getContext("2d");
+const gameCanvas = document.getElementById("game");
+const gctx = gameCanvas.getContext("2d");
+const movePad = document.getElementById("movePad");
+const moveStick = document.getElementById("moveStick");
+const actionBtn = document.getElementById("actionBtn");
+const quickChatWheel = document.getElementById("quickChatWheel");
+const quickChatCenter = document.getElementById("quickChatCenter");
+const quickChatBackdrop = document.getElementById("quickChatBackdrop");
+
+function showErr(msg){ errBox.style.display = "block"; errBox.textContent = String(msg); console.error(msg); }
+window.addEventListener("error", e => showErr("JS ERROR:\n" + (e.message || e.error || e)));
+window.addEventListener("unhandledrejection", e => showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
+
+const audio = {
+  ctx:null, muted:true,
+  ensure(){ if(this.ctx) return; const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return; this.ctx = new AC(); },
+  resume(){ this.ensure(); if(this.ctx && this.ctx.state === "suspended") this.ctx.resume(); },
+  beep(freq=440,dur=.08,vol=.03){ if(this.muted) return; this.resume(); if(!this.ctx) return; const t=this.ctx.currentTime; const osc=this.ctx.createOscillator(); const gain=this.ctx.createGain(); osc.type="triangle"; osc.frequency.setValueAtTime(freq,t); gain.gain.setValueAtTime(vol,t); gain.gain.exponentialRampToValueAtTime(.0001,t+dur); osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t+dur); },
+  toggle(){ this.muted=!this.muted; if(!this.muted) this.beep(700,.06,.04); audioBtn.textContent=this.muted?"Audio: Off":"Audio: On"; }
+};
+audioBtn.addEventListener("click",()=>audio.toggle());
+window.addEventListener("pointerdown",()=>audio.resume(),{once:true,capture:true});
+window.addEventListener("keydown",()=>audio.resume(),{once:true,capture:true});
+
+const isCoarse = matchMedia("(pointer:coarse)").matches;
+const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp = (a,b,t)=>a+(b-a)*t;
+const dist2 = (ax,ay,bx,by)=>{ const dx=ax-bx, dy=ay-by; return dx*dx+dy*dy; };
+const rgba = (r,g,b,a)=>`rgba(${r},${g},${b},${a})`;
+const easeOutQuint = (t)=>1-Math.pow(1-t,5);
+const getTimestampMs = (ts)=>ts?.toDate ? ts.toDate().getTime() : 0;
+const getIsFresh = (ts, timeout)=>{ const ms=getTimestampMs(ts); return !!(ms && Date.now()-ms<timeout); };
+
+const INTERNAL_W = 512, INTERNAL_H = 288;
+const buffer = document.createElement("canvas"); buffer.width = INTERNAL_W; buffer.height = INTERNAL_H;
+const bctx = buffer.getContext("2d"); bctx.imageSmoothingEnabled = false; gctx.imageSmoothingEnabled = false;
+const view = { scale:1, ox:0, oy:0 };
+const PPU = 16, WORLD_HALF = 160, WORLD_SIZE = WORLD_HALF * 2;
+const T = { WATER:0, SAND:1, GRASS:2, HILL:3, ROCK:4 };
+const BUILD = { FLOOR:"floor", WALL:"wall", DOOR:"door", WINDOW:"window", ROOF:"roof" };
+const TOOL = { AXE:0, PICKAXE:1 };
+const COST = { floor:1, wall:2, door:3, window:3, roof:2 };
+const tileMap = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
+const heightMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
+const moistMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
+const riverMask = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
+const idxOf = (tx,ty)=>ty*WORLD_SIZE+tx;
+const inBounds = (tx,ty)=>tx>=0 && ty>=0 && tx<WORLD_SIZE && ty<WORLD_SIZE;
+const worldToTile = (wx)=>Math.floor(wx + WORLD_HALF);
+const tileToWorld = (tx)=>(tx - WORLD_HALF) + .5;
+const claimKey = (chunkX,chunkY)=>`${chunkX}_${chunkY}`;
+
+function getChunkFromTile(tx,ty){ return { chunkX: Math.floor(tx / CLAIM_SIZE), chunkY: Math.floor(ty / CLAIM_SIZE) }; }
+function getChunkWorldRect(chunkX,chunkY){ const startTx=chunkX*CLAIM_SIZE, startTy=chunkY*CLAIM_SIZE, endTx=startTx+CLAIM_SIZE-1, endTy=startTy+CLAIM_SIZE-1; return { x1: tileToWorld(startTx)-.5, y1: tileToWorld(startTy)-.5, x2: tileToWorld(endTx)+.5, y2: tileToWorld(endTy)+.5 }; }
+
+const colliders = [];
+function addColliderRect(x,y,hw,hh,tag=""){ const r={x,y,hw,hh,tag}; colliders.push(r); return r; }
+function circleRectCollide(px,py,pr,r){ const cx=clamp(px,r.x-r.hw,r.x+r.hw), cy=clamp(py,r.y-r.hh,r.y+r.hh); const dx=px-cx, dy=py-cy; return dx*dx+dy*dy<=pr*pr; }
+function isBlocked(px,py,pr){ return colliders.some(r=>circleRectCollide(px,py,pr,r)); }
+function tileOccupiedByCollider(wx,wy,pad=.48){ for(const r of colliders){ if(Math.abs(r.x-wx)<r.hw+pad && Math.abs(r.y-wy)<r.hh+pad) return true; } return false; }
+
+function xmur3(str){ let h=1779033703 ^ str.length; for(let i=0;i<str.length;i++){ h=Math.imul(h^str.charCodeAt(i),3432918353); h=(h<<13)|(h>>>19); } return function(){ h=Math.imul(h^(h>>>16),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16; return h>>>0; }; }
+function mulberry32(a){ return function(){ let t = a += 0x6D2B79F5; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const fade = (t)=>t*t*(3-2*t);
+function hash2(ix,iy,seedU32){ let h=seedU32 ^ (ix*374761393) ^ (iy*668265263); h=Math.imul(h^(h>>>13),1274126177); h^=(h>>>16); return (h>>>0)/4294967296; }
+function valueNoise2D(x,y,seedU32){ const x0=Math.floor(x), y0=Math.floor(y), x1=x0+1, y1=y0+1; const sx=fade(x-x0), sy=fade(y-y0); const n00=hash2(x0,y0,seedU32), n10=hash2(x1,y0,seedU32), n01=hash2(x0,y1,seedU32), n11=hash2(x1,y1,seedU32); return lerp(lerp(n00,n10,sx), lerp(n01,n11,sx), sy); }
+function fbm(x,y,seedU32,oct=5){ let v=0,amp=.55,freq=1,norm=0; for(let i=0;i<oct;i++){ v += valueNoise2D(x*freq,y*freq,seedU32+i*1013)*amp; norm += amp; amp *= .55; freq *= 2; } return v / norm; }
+
+let seedStr="", seedU32=0, rng=Math.random;
+function setSeed(str){ seedStr=str; const seedFn=xmur3(seedStr); seedU32=seedFn(); rng=mulberry32(seedU32); }
+
+let trees=[], boulders=[], particles=[], buildMap=new Map(), removedTrees=new Set(), removedBoulders=new Set(), claimsMap=new Map();
+const campfire = { x:0, y:0 };
+const player = { x:0, y:0, r:.6, dir:0, attack:0, attackCooldown:0, name:"You", avatar:DEFAULT_AVATAR, quickChatText:"", quickChatUntil:0 };
+const camera = { x:0, y:0 };
+let wood=0, stone=0, coal=0, currentTool=TOOL.AXE, buildMode=false, buildType=BUILD.WALL, buildRot=0, minimapOn=false, minimapDirty=true, minimapTimer=0, quickChatOpen=false, claimPreviewActive=false;
+const toast = { text:"", t:0 };
+const keys = {};
+document.addEventListener("keydown", e => keys[e.code]=true);
+document.addEventListener("keyup", e => keys[e.code]=false);
+let mouseAim = null;
+window.addEventListener("mousemove", e => mouseAim={x:e.clientX,y:e.clientY});
+window.addEventListener("mouseleave", ()=>mouseAim=null);
+let touchMoveX=0, touchMoveY=0;
+
+function setupMoveStick(pad,stick){ const stickRadius=30; let touchId=null; function reset(){ const rect=pad.getBoundingClientRect(), cx=rect.width/2, cy=rect.height/2; stick.style.left=(cx-stickRadius)+"px"; stick.style.top=(cy-stickRadius)+"px"; touchMoveX=0; touchMoveY=0; } function updateFromTouch(t){ const rect=pad.getBoundingClientRect(), cx=rect.width/2, cy=rect.height/2; let dx=t.clientX-(rect.left+cx), dy=t.clientY-(rect.top+cy); const maxR=rect.width/2-stickRadius; const d=Math.hypot(dx,dy); if(d>maxR){ dx*=maxR/d; dy*=maxR/d; } stick.style.left=(cx-stickRadius+dx)+"px"; stick.style.top=(cy-stickRadius+dy)+"px"; touchMoveX=dx/maxR; touchMoveY=dy/maxR; }
+  pad.addEventListener("touchstart",e=>{ e.preventDefault(); audio.resume(); const t=e.changedTouches[0]; touchId=t.identifier; updateFromTouch(t); },{passive:false});
+  pad.addEventListener("touchmove",e=>{ e.preventDefault(); if(touchId===null) return; for(const t of e.touches){ if(t.identifier===touchId){ updateFromTouch(t); break; } } },{passive:false});
+  function end(e){ if(touchId===null) return; for(const t of e.changedTouches){ if(t.identifier===touchId){ touchId=null; reset(); break; } } }
+  pad.addEventListener("touchend",end,{passive:false}); pad.addEventListener("touchcancel",end,{passive:false}); reset();
+}
+if(movePad && moveStick) setupMoveStick(movePad,moveStick);
+
+function resize(){ const dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1)); gameCanvas.width=Math.floor(innerWidth*dpr); gameCanvas.height=Math.floor(innerHeight*dpr); gctx.setTransform(dpr,0,0,dpr,0,0); }
+function worldToScreen(wx,wy){ return { x:(wx-camera.x)*PPU + INTERNAL_W/2, y:(wy-camera.y)*PPU + INTERNAL_H/2 }; }
+function pRect(ctx,x,y,w,h){ ctx.fillRect((x|0),(y|0),(w|0),(h|0)); }
+function drawShadowCircle(ctx,x,y,r){ ctx.fillStyle="rgba(0,0,0,.30)"; ctx.beginPath(); ctx.ellipse(x,y,r*1.15,r*.7,0,0,Math.PI*2); ctx.fill(); }
+function spawnParticles(type,x,y,count=10){ for(let i=0;i<count;i++){ const a=Math.random()*Math.PI*2, sp=2.5+Math.random()*4.5; particles.push({type,x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:.35+Math.random()*.45}); } }
+function showToast(text,seconds=1){ toast.text=text; toast.t=seconds; }
+
+function clearWorldGeometry(){ colliders.length=0; trees=[]; boulders=[]; particles=[]; riverMask.fill(0); }
+function classifyTiles(){ for(let ty=0;ty<WORLD_SIZE;ty++){ for(let tx=0;tx<WORLD_SIZE;tx++){ const id=idxOf(tx,ty), h=heightMap[id]; let tt=T.GRASS; if(h<.24) tt=T.WATER; else if(h<.29) tt=T.SAND; else if(h<.72) tt=T.GRASS; else if(h<.84) tt=T.HILL; else tt=T.ROCK; tileMap[id]=tt; } } }
+function buildBaseNoise(){ const ox=rng()*1000, oy=rng()*1000, mx=rng()*1000, my=rng()*1000, elevScale=.045, moistScale=.06; for(let ty=0;ty<WORLD_SIZE;ty++){ for(let tx=0;tx<WORLD_SIZE;tx++){ const wx=tx-WORLD_HALF, wy=ty-WORLD_HALF, nx=wx*elevScale+ox, ny=wy*elevScale+oy; let h=fbm(nx,ny,seedU32,5); const r=Math.sqrt(wx*wx+wy*wy)/WORLD_HALF, edge=clamp(1-(r*r)*.85,0,1); h=h*.90+edge*.18; h=clamp(h,0,1); const mnx=wx*moistScale+mx, mny=wy*moistScale+my, m=fbm(mnx,mny,seedU32+99991,4); heightMap[idxOf(tx,ty)] = h; moistMap[idxOf(tx,ty)] = m; } } }
+function carveRivers(){ const flow=new Uint16Array(WORLD_SIZE*WORLD_SIZE); function lowestNeighbor(tx,ty){ let bestTx=tx,bestTy=ty,bestH=heightMap[idxOf(tx,ty)]; for(let oy=-1;oy<=1;oy++){ for(let ox=-1;ox<=1;ox++){ if(ox===0&&oy===0) continue; const nx=tx+ox, ny=ty+oy; if(!inBounds(nx,ny)) continue; const nh=heightMap[idxOf(nx,ny)]; if(nh<bestH){ bestH=nh; bestTx=nx; bestTy=ny; } } } return {tx:bestTx, ty:bestTy}; }
+  const sources=[]; for(let i=0,tries=0;i<10&&tries<5000;tries++){ const tx=10+((rng()*(WORLD_SIZE-20))|0), ty=10+((rng()*(WORLD_SIZE-20))|0), id=idxOf(tx,ty), h=heightMap[id], m=moistMap[id]; if(h<.74||tileMap[id]===T.ROCK||m<.42) continue; sources.push({tx,ty}); i++; }
+  for(const s of sources){ let tx=s.tx, ty=s.ty; const visited=new Set(); for(let step=0;step<2400;step++){ const id=idxOf(tx,ty); flow[id]=Math.min(65535,flow[id]+25); if(heightMap[id]<.26) break; const key=(tx<<16)|ty; if(visited.has(key)) break; visited.add(key); const nb=lowestNeighbor(tx,ty); if(nb.tx===tx&&nb.ty===ty) break; tx=nb.tx; ty=nb.ty; } }
+  for(let ty=1;ty<WORLD_SIZE-1;ty++){ for(let tx=1;tx<WORLD_SIZE-1;tx++){ const id=idxOf(tx,ty), f=flow[id]; if(f<60) continue; let w=1; if(f>220) w=2; if(f>520) w=3; for(let oy=-w;oy<=w;oy++){ for(let ox=-w;ox<=w;ox++){ const nx=tx+ox, ny=ty+oy; if(!inBounds(nx,ny)) continue; if(ox*ox+oy*oy>w*w) continue; const nid=idxOf(nx,ny); if(heightMap[nid]>.94) continue; riverMask[nid]=1; } } } }
+  for(let i=0;i<tileMap.length;i++) if(riverMask[i]) tileMap[i]=T.WATER;
+  for(let ty=1;ty<WORLD_SIZE-1;ty++){ for(let tx=1;tx<WORLD_SIZE-1;tx++){ const id=idxOf(tx,ty); if(tileMap[id]===T.WATER) continue; let nearWater=false; for(let oy=-1;oy<=1;oy++){ for(let ox=-1;ox<=1;ox++){ if(ox===0&&oy===0) continue; const nx=tx+ox, ny=ty+oy; if(!inBounds(nx,ny)) continue; if(tileMap[idxOf(nx,ny)]===T.WATER){ nearWater=true; break; } } if(nearWater) break; } if(nearWater && heightMap[id]<.34) tileMap[id]=T.SAND; } }
+}
+function pickCampfireSpot(){ let best={tx:WORLD_HALF,ty:WORLD_HALF,score:-1}; for(let tries=0;tries<2500;tries++){ const wx=(rng()*2-1)*40, wy=(rng()*2-1)*40, tx=worldToTile(wx), ty=worldToTile(wy); if(!inBounds(tx,ty)) continue; const id=idxOf(tx,ty), tt=tileMap[id]; if(tt===T.WATER) continue; const h=heightMap[id], m=moistMap[id]; let nearWater=0; for(let oy=-2;oy<=2;oy++){ for(let ox=-2;ox<=2;ox++){ const nx=tx+ox, ny=ty+oy; if(!inBounds(nx,ny)) continue; if(tileMap[idxOf(nx,ny)]===T.WATER) nearWater++; } } const score=(tt===T.GRASS?2:1)+(m*1.4)+(nearWater*.03)+(1-Math.abs(h-.55))*.6; if(score>best.score) best={tx,ty,score}; } campfire.x=tileToWorld(best.tx); campfire.y=tileToWorld(best.ty); }
+const nearCamp = (wx,wy)=>dist2(wx,wy,campfire.x,campfire.y) < 14*14;
+function createTreeAtTile(tx,ty){ const tileId=idxOf(tx,ty), wx=tileToWorld(tx), wy=tileToWorld(ty), jx=(hash2(tx,ty,seedU32+7)-.5)*.35, jy=(hash2(tx,ty,seedU32+9)-.5)*.35, kindRoll=hash2(tx,ty,seedU32+17), kind=kindRoll<.58?0:kindRoll<.88?1:2, scale=.90+hash2(tx,ty,seedU32+19)*.55, trunk=.90+hash2(tx,ty,seedU32+23)*.70, hueVar=hash2(tx,ty,seedU32+29), baseHP=3+(hash2(tx,ty,seedU32+31)<.25?1:0), x=wx+jx, y=wy+jy; trees.push({tileId,x,y,hp:baseHP,removed:false,kind,scale,trunk,hueVar,sway:hash2(tx,ty,seedU32+41)*Math.PI*2, collider:addColliderRect(x,y,.80,.80,"tree")}); }
+function createBoulderAtTile(tx,ty,type){ const tileId=idxOf(tx,ty), wx=tileToWorld(tx), wy=tileToWorld(ty), jx=(hash2(tx,ty,seedU32+111)-.5)*.28, jy=(hash2(tx,ty,seedU32+113)-.5)*.28, size=type==="coal"?.95+hash2(tx,ty,seedU32+115)*1.2:.80+hash2(tx,ty,seedU32+117)*1.1, hp=type==="coal"?4:3, x=wx+jx, y=wy+jy; boulders.push({tileId,x,y,size,hp,type,removed:false, collider:addColliderRect(x,y,size*.80,size*.80,"boulder")}); }
+function rebuildBuildColliders(){ for(let i=colliders.length-1;i>=0;i--){ const tag=colliders[i].tag||""; if(tag.startsWith("build_")) colliders.splice(i,1); } buildMap.forEach((v,tileId)=>{ if(v.type!==BUILD.WALL && v.type!==BUILD.WINDOW) return; const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0; addColliderRect(tileToWorld(tx),tileToWorld(ty),.48,.48,v.type===BUILD.WINDOW?"build_window":"build_wall"); }); }
+function spawnDecor(){ trees=[]; boulders=[]; colliders.length=0; for(let ty=1;ty<WORLD_SIZE-1;ty++){ for(let tx=1;tx<WORLD_SIZE-1;tx++){ const id=idxOf(tx,ty), tt=tileMap[id], h=heightMap[id], m=moistMap[id], wx=tileToWorld(tx), wy=tileToWorld(ty); if(nearCamp(wx,wy)) continue; if(tt===T.GRASS||tt===T.HILL){ const forest=clamp((m-.45)*1.6,0,1), hillPenalty=tt===T.HILL?.55:1, chance=.14*forest*hillPenalty; if(hash2(tx,ty,seedU32+424242)<chance) createTreeAtTile(tx,ty); } if(tt===T.HILL||tt===T.ROCK){ const rocky=tt===T.ROCK?1:clamp((h-.70)*2,0,1); if(hash2(tx,ty,seedU32+888888)<.060*rocky){ const coalChance=(tt===T.ROCK?.35:.18) * (.50+.50*rocky); const isCoal=hash2(tx,ty,seedU32+999001)<coalChance; createBoulderAtTile(tx,ty,isCoal?"coal":"stone"); } } } } rebuildBuildColliders(); }
+function applyRemovedTreeSet(){ for(const t of trees){ if(removedTrees.has(t.tileId) && !t.removed){ t.removed=true; const i=colliders.indexOf(t.collider); if(i!==-1) colliders.splice(i,1); } } }
+function applyRemovedBoulderSet(){ for(const b of boulders){ if(removedBoulders.has(b.tileId) && !b.removed){ b.removed=true; const i=colliders.indexOf(b.collider); if(i!==-1) colliders.splice(i,1); } } }
+function generateWorld(){ clearWorldGeometry(); buildBaseNoise(); classifyTiles(); carveRivers(); pickCampfireSpot(); spawnDecor(); applyRemovedTreeSet(); applyRemovedBoulderSet(); rebuildBuildColliders(); minimapDirty=true; }
+
+function tileColor(tt,h,m,time,tx,ty,light){ const day=.62+.38*light; if(tt===T.WATER){ const depth=clamp((.28-h)*4,0,1), wave=.06*Math.sin(time*2.2+tx*.35+ty*.22)+.04*Math.sin(time*3.1+tx*.18-ty*.29); const baseR=lerp(18,24,1-depth), baseG=lerp(70,125,1-depth), baseB=lerp(125,185,1-depth), a=clamp(.62+wave,.50,.75); return rgba((baseR*day)|0,(baseG*day)|0,(baseB*day)|0,a); } if(tt===T.SAND) return rgba((205*day)|0,(190*day)|0,(120*day)|0,1); if(tt===T.GRASS){ const wet=clamp((m-.40)*1.3,0,1); let r=35+(wet*10)|0, g=150+(wet*35)|0, b=45+(wet*12)|0; return rgba((r*day)|0,(g*day)|0,(b*day)|0,1); } if(tt===T.HILL) return rgba((70*day)|0,(135*day)|0,(70*day)|0,1); return rgba((110*day)|0,(112*day)|0,(120*day)|0,1); }
+function drawTerrain(ctx,time,light){ const halfW=INTERNAL_W/(2*PPU), halfH=INTERNAL_H/(2*PPU), minX=Math.floor(camera.x-halfW-2), maxX=Math.floor(camera.x+halfW+2), minY=Math.floor(camera.y-halfH-2), maxY=Math.floor(camera.y+halfH+2); for(let wy=minY;wy<=maxY;wy++){ for(let wx=minX;wx<=maxX;wx++){ const tx=worldToTile(wx), ty=worldToTile(wy); if(!inBounds(tx,ty)) continue; const id=idxOf(tx,ty), pos=worldToScreen(wx,wy); ctx.fillStyle=tileColor(tileMap[id],heightMap[id],moistMap[id],time,tx,ty,light); pRect(ctx,pos.x,pos.y,PPU+1,PPU+1); const speck=hash2(tx,ty,seedU32+12345); if((tileMap[id]===T.GRASS||tileMap[id]===T.HILL)&&speck<.35){ ctx.fillStyle="rgba(0,0,0,.06)"; pRect(ctx,pos.x+((speck*11)|0), pos.y+(((speck*19)|0)%12),2,2); } } } }
+function drawTree(ctx,t,time,light){ const pos=worldToScreen(t.x,t.y), s=t.scale, trunkH=PPU*(1.05*t.trunk)*s; drawShadowCircle(ctx,pos.x,pos.y+PPU*.40,PPU*.78*s); const sway=Math.sin(time*1.6+t.sway)*.06; ctx.save(); ctx.translate(pos.x,pos.y); ctx.translate(0,PPU*.25*s); ctx.rotate(sway); ctx.translate(0,-PPU*.25*s); ctx.fillStyle="#6b4625"; pRect(ctx,-2*s,-trunkH*.10,4*s,trunkH); const hv=t.hueVar, base={r:(22+hv*22)|0,g:(110+hv*70)|0,b:(30+hv*18)|0}, hi={r:(40+hv*22)|0,g:(165+hv*60)|0,b:(55+hv*20)|0}, deep={r:(16+hv*12)|0,g:(85+hv*55)|0,b:(22+hv*12)|0}; const dayMul=.62+.38*light, cBase=rgba((base.r*dayMul)|0,(base.g*dayMul)|0,(base.b*dayMul)|0,.98), cHi=rgba((hi.r*dayMul)|0,(hi.g*dayMul)|0,(hi.b*dayMul)|0,.45), cDeep=rgba((deep.r*dayMul)|0,(deep.g*dayMul)|0,(deep.b*dayMul)|0,.98);
+  const tri=(topY,baseY,w,col)=>{ ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(0,topY); ctx.lineTo(w,baseY); ctx.lineTo(-w,baseY); ctx.closePath(); ctx.fill(); };
+  const blob=(cx,cy,rx,ry,col)=>{ ctx.fillStyle=col; ctx.beginPath(); ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.fill(); };
+  if(t.kind===0||t.kind===2){ const tall=t.kind===2?1.14:1; tri(-PPU*1.70*s*tall,-PPU*.15*s,PPU*1.05*s,cDeep); tri(-PPU*1.25*s*tall,-PPU*.35*s,PPU*.88*s,cDeep); tri(-PPU*.85*s*tall,-PPU*.55*s,PPU*.72*s,cDeep); tri(-PPU*1.60*s*tall,-PPU*.15*s,PPU*.92*s,cBase); tri(-PPU*1.15*s*tall,-PPU*.35*s,PPU*.78*s,cBase); tri(-PPU*.75*s*tall,-PPU*.55*s,PPU*.62*s,cBase); tri(-PPU*1.48*s*tall,-PPU*.20*s,PPU*.55*s,cHi); }
+  else { blob(0,-PPU*1.40*s,PPU*.70*s,PPU*.55*s,cBase); blob(-PPU*.40*s,-PPU*.95*s,PPU*.85*s,PPU*.65*s,cBase); blob(PPU*.42*s,-PPU*.95*s,PPU*.85*s,PPU*.65*s,cBase); blob(0,-PPU*.55*s,PPU*1.10*s,PPU*.78*s,cDeep); blob(-PPU*.30*s,-PPU*1.25*s,PPU*.42*s,PPU*.32*s,cHi); blob(PPU*.25*s,-PPU*1.00*s,PPU*.55*s,PPU*.40*s,cHi); }
+  ctx.restore();
+}
+function drawBoulder(ctx,b,light){ const pos=worldToScreen(b.x,b.y), s=b.size*PPU; drawShadowCircle(ctx,pos.x,pos.y+s*.24,s*.55); const dayMul=.62+.38*light; ctx.fillStyle=b.type==="coal"?rgba((50*dayMul)|0,(52*dayMul)|0,(60*dayMul)|0,.96):rgba((92*dayMul)|0,(95*dayMul)|0,(105*dayMul)|0,.96); ctx.beginPath(); ctx.moveTo(pos.x-s*.60,pos.y); ctx.lineTo(pos.x-s*.15,pos.y-s*.50); ctx.lineTo(pos.x+s*.55,pos.y-s*.15); ctx.lineTo(pos.x+s*.35,pos.y+s*.52); ctx.lineTo(pos.x-s*.38,pos.y+s*.45); ctx.closePath(); ctx.fill(); }
+function drawCampfire(ctx,time,light){ const pos=worldToScreen(campfire.x,campfire.y); for(let i=0;i<6;i++){ const a=i*(Math.PI/3), px=pos.x+Math.cos(a)*PPU*1, py=pos.y+Math.sin(a)*PPU*.75; ctx.fillStyle=rgba(90,92,100,.95); ctx.beginPath(); ctx.arc(px,py,4,0,Math.PI*2); ctx.fill(); } drawShadowCircle(ctx,pos.x,pos.y+8,12); const flick=1+Math.sin(time*10)*.18; ctx.fillStyle=rgba(255,110,42,.95); ctx.beginPath(); ctx.moveTo(pos.x,pos.y-22*flick); ctx.quadraticCurveTo(pos.x+12,pos.y-6,pos.x,pos.y+12); ctx.quadraticCurveTo(pos.x-12,pos.y-6,pos.x,pos.y-22*flick); ctx.fill(); ctx.fillStyle=rgba(255,210,90,.95); ctx.beginPath(); ctx.moveTo(pos.x,pos.y-14*flick); ctx.quadraticCurveTo(pos.x+9,pos.y-3,pos.x,pos.y+9); ctx.quadraticCurveTo(pos.x-9,pos.y-3,pos.x,pos.y-14*flick); ctx.fill(); const night=1-light; const g=ctx.createRadialGradient(pos.x,pos.y,14,pos.x,pos.y,92); g.addColorStop(0,rgba(255,120,60,.18+.30*night)); g.addColorStop(1,"rgba(0,0,0,0)"); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(pos.x,pos.y,92,0,Math.PI*2); ctx.fill(); }
+function drawBuildTile(ctx,tx,ty,type,rot,light){ const pos=worldToScreen(tileToWorld(tx),tileToWorld(ty)), x=pos.x, y=pos.y, shade=.65+.35*light; if(type===BUILD.FLOOR){ ctx.fillStyle=rgba((120*shade)|0,(85*shade)|0,(50*shade)|0,.95); pRect(ctx,x,y,PPU+1,PPU+1); ctx.fillStyle="rgba(0,0,0,.10)"; for(let i=0;i<4;i++) pRect(ctx,x+i*4,y,1,PPU+1); return; } if(type===BUILD.WALL){ drawShadowCircle(ctx,x+PPU/2,y+PPU*.95,10); ctx.fillStyle=rgba((110*shade)|0,(75*shade)|0,(45*shade)|0,.98); pRect(ctx,x,y,PPU+1,PPU+1); ctx.fillStyle="rgba(0,0,0,.10)"; for(let r=0;r<4;r++) pRect(ctx,x,y+r*4+3,PPU+1,1); return; } if(type===BUILD.WINDOW){ drawShadowCircle(ctx,x+PPU/2,y+PPU*.95,10); ctx.fillStyle=rgba((110*shade)|0,(75*shade)|0,(45*shade)|0,.98); pRect(ctx,x,y,PPU+1,PPU+1); ctx.fillStyle=rgba((40*shade)|0,(55*shade)|0,(70*shade)|0,.90); pRect(ctx,x+4,y+4,PPU-8,PPU-8); ctx.fillStyle=rgba(120,170,255,.25); pRect(ctx,x+5,y+5,PPU-10,PPU-10); return; } if(type===BUILD.DOOR){ drawShadowCircle(ctx,x+PPU/2,y+PPU*.95,9); ctx.fillStyle=rgba((95*shade)|0,(65*shade)|0,(40*shade)|0,.98); pRect(ctx,x,y,PPU+1,PPU+1); ctx.fillStyle=rgba((135*shade)|0,(92*shade)|0,(55*shade)|0,.92); pRect(ctx,x+3,y+2,PPU-6,PPU-4); return; } if(type===BUILD.ROOF){ ctx.fillStyle=rgba((150*shade)|0,(55*shade)|0,(50*shade)|0,.95); pRect(ctx,x,y,PPU+1,PPU+1); ctx.fillStyle="rgba(0,0,0,.12)"; for(let r=0;r<4;r++) pRect(ctx,x+1,y+r*4+2,PPU-2,1); } }
+function drawBuilds(ctx,light){ const halfW=INTERNAL_W/(2*PPU), halfH=INTERNAL_H/(2*PPU), minTx=clamp(Math.floor(camera.x-halfW)+WORLD_HALF-4,0,WORLD_SIZE-1), maxTx=clamp(Math.floor(camera.x+halfW)+WORLD_HALF+4,0,WORLD_SIZE-1), minTy=clamp(Math.floor(camera.y-halfH)+WORLD_HALF-4,0,WORLD_SIZE-1), maxTy=clamp(Math.floor(camera.y+halfH)+WORLD_HALF+4,0,WORLD_SIZE-1); for(let ty=minTy;ty<=maxTy;ty++){ for(let tx=minTx;tx<=maxTx;tx++){ const tileId=idxOf(tx,ty), b=buildMap.get(tileId); if(!b) continue; drawBuildTile(ctx,tx,ty,b.type,b.rot|0,light); } } }
+function drawBuildGhost(ctx){ if(!buildMode) return; const tgt=getTargetTile(); if(!tgt) return; const pos=worldToScreen(tileToWorld(tgt.tx),tileToWorld(tgt.ty)); const ok=canPlaceAt(tgt.tileId)&&wood>=(COST[buildType]||1)&&canModifyTile(tgt.tileId).ok; ctx.save(); ctx.globalAlpha=.45; ctx.fillStyle=ok?"rgba(110,255,170,.55)":"rgba(255,90,90,.55)"; pRect(ctx,pos.x,pos.y,PPU+1,PPU+1); ctx.restore(); }
+function drawClaimPreview(ctx){ if(!claimPreviewActive) return; const tgt=getTargetTile(); if(!tgt) return; const {chunkX,chunkY}=getChunkFromTile(tgt.tx,tgt.ty), rect=getChunkWorldRect(chunkX,chunkY), p1=worldToScreen(rect.x1,rect.y1), p2=worldToScreen(rect.x2,rect.y2), w=p2.x-p1.x, h=p2.y-p1.y, existing=claimsMap.get(claimKey(chunkX,chunkY)); ctx.save(); ctx.fillStyle=existing?"rgba(255,80,80,.18)":"rgba(80,180,255,.18)"; ctx.strokeStyle=existing?"rgba(255,80,80,.80)":"rgba(80,180,255,.85)"; ctx.lineWidth=2; ctx.fillRect(p1.x,p1.y,w,h); ctx.strokeRect(p1.x,p1.y,w,h); ctx.restore(); }
+function drawClaimsOverlay(ctx){ claimsMap.forEach((claim)=>{ const rect=getChunkWorldRect(claim.chunkX,claim.chunkY); const centerX=(rect.x1+rect.x2)/2, centerY=(rect.y1+rect.y2)/2; if(Math.abs(centerX-camera.x)>40||Math.abs(centerY-camera.y)>28) return; const p1=worldToScreen(rect.x1,rect.y1), p2=worldToScreen(rect.x2,rect.y2), w=p2.x-p1.x, h=p2.y-p1.y; const isMine=claim.ownerUid===myUid, fill=isMine?"rgba(80,150,255,.10)":"rgba(255,160,70,.08)", stroke=isMine?"rgba(80,150,255,.70)":"rgba(255,160,70,.60)"; ctx.save(); ctx.fillStyle=fill; ctx.strokeStyle=stroke; ctx.lineWidth=2; ctx.fillRect(p1.x,p1.y,w,h); ctx.strokeRect(p1.x,p1.y,w,h); ctx.restore(); }); }
+function drawTool(ctx,x,y,dir,swing,mode="axe"){ ctx.save(); ctx.translate(x,y); ctx.rotate(dir+Math.PI/2+swing); ctx.fillStyle="#7c4f2b"; pRect(ctx,-1,-10,2,18); ctx.fillStyle="#c3c9d3"; if(mode==="pickaxe") pRect(ctx,-9,-9,18,3); else pRect(ctx,0,-7,11,6); ctx.restore(); }
+function drawChatBubble(ctx,x,y,text){ if(!text) return; ctx.save(); ctx.font="bold 10px system-ui, Arial"; const padX=6, w=Math.max(28,ctx.measureText(text).width+padX*2), h=18, boxX=x-w/2, boxY=y-34; ctx.fillStyle="rgba(0,0,0,.60)"; ctx.strokeStyle="rgba(255,255,255,.15)"; ctx.lineWidth=1; ctx.beginPath(); ctx.roundRect(boxX,boxY,w,h,8); ctx.fill(); ctx.stroke(); ctx.fillStyle="#fff"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.fillText(text,x,boxY+h/2+.5); ctx.restore(); }
+function drawPlayerEntity(ctx,ent,time,isRemote=false){ const pos=worldToScreen(ent.rx??ent.x,ent.ry??ent.y), bob=Math.sin(time*6 + (isRemote ? 0.5 : 0)) * 0.7; drawShadowCircle(ctx,pos.x,pos.y+10,14); ctx.fillStyle=isRemote?rgba(120,220,140,.95):rgba(70,150,255,.95); ctx.beginPath(); ctx.arc(pos.x,pos.y+bob,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle=rgba(255,255,255,.25); ctx.beginPath(); ctx.arc(pos.x-3,pos.y-3+bob,4,0,Math.PI*2); ctx.fill(); const atk=ent.attack>0?Math.sin(ent.attack*Math.PI):0, swing=-.95*atk, toolX=pos.x+Math.cos(ent.dir)*14, toolY=pos.y+Math.sin(ent.dir)*10+bob; drawTool(ctx,toolX,toolY,ent.dir,swing,ent.tool===TOOL.PICKAXE?"pickaxe":"axe"); ctx.font="bold 10px system-ui, Arial"; ctx.textAlign="center"; ctx.fillStyle="rgba(0,0,0,.45)"; ctx.fillText(ent.name||"Player",pos.x+1,pos.y-14+1); ctx.fillStyle="rgba(255,255,255,.95)"; ctx.fillText(ent.name||"Player",pos.x,pos.y-14); if((ent.quickChatUntil||0)>Date.now() && ent.quickChatText) drawChatBubble(ctx,pos.x,pos.y-18,ent.quickChatText); }
+function drawToast(ctx){ if(toast.t<=0||!toast.text) return; const pos=worldToScreen(player.x,player.y); ctx.save(); ctx.globalAlpha=clamp(toast.t,0,1); ctx.font="bold 12px system-ui, Arial"; ctx.textAlign="center"; ctx.textBaseline="bottom"; ctx.fillStyle="rgba(0,0,0,.35)"; ctx.fillText(toast.text,pos.x+1,pos.y-18+1); ctx.fillStyle="rgba(255,255,255,.95)"; ctx.fillText(toast.text,pos.x,pos.y-18); ctx.restore(); }
+function colorForTileType(tt){ if(tt===T.WATER) return [20,95,170]; if(tt===T.SAND) return [210,195,120]; if(tt===T.GRASS) return [45,160,65]; if(tt===T.HILL) return [70,135,80]; return [120,120,130]; }
+function updateMinimap(){ if(!minimapOn) return; const w=mini.width,h=mini.height,img=mctx.createImageData(w,h), data=img.data; for(let py=0;py<h;py++){ for(let px=0;px<w;px++){ const tx=Math.floor((px/w)*WORLD_SIZE), ty=Math.floor((py/h)*WORLD_SIZE), [r,g,b]=colorForTileType(tileMap[idxOf(tx,ty)]), i=(py*w+px)*4; data[i]=r; data[i+1]=g; data[i+2]=b; data[i+3]=255; } } mctx.putImageData(img,0,0);
+  claimsMap.forEach((claim)=>{ const px=Math.floor(((claim.chunkX*CLAIM_SIZE)/WORLD_SIZE)*w), py=Math.floor(((claim.chunkY*CLAIM_SIZE)/WORLD_SIZE)*h), size=Math.max(2,Math.floor((CLAIM_SIZE/WORLD_SIZE)*w)); mctx.strokeStyle=claim.ownerUid===myUid?"rgba(80,150,255,.9)":"rgba(255,160,70,.9)"; mctx.lineWidth=1; mctx.strokeRect(px,py,size,size); });
+  const cpx=Math.floor(((campfire.x+WORLD_HALF)/WORLD_SIZE)*w), cpy=Math.floor(((campfire.y+WORLD_HALF)/WORLD_SIZE)*h); mctx.fillStyle="rgba(255,140,80,.95)"; mctx.beginPath(); mctx.arc(cpx,cpy,3,0,Math.PI*2); mctx.fill();
+  buildMap.forEach((_,tileId)=>{ const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0, px=Math.floor((tx/WORLD_SIZE)*w), py=Math.floor((ty/WORLD_SIZE)*h); mctx.fillStyle="rgba(255,255,255,.9)"; mctx.fillRect(px,py,1,1); });
+  remotePlayers.forEach((rp)=>{ const px=Math.floor((((rp.rx??rp.x)+WORLD_HALF)/WORLD_SIZE)*w), py=Math.floor((((rp.ry??rp.y)+WORLD_HALF)/WORLD_SIZE)*h); mctx.fillStyle="rgba(110,255,140,.95)"; mctx.fillRect(px,py,2,2); });
+  const ppx=Math.floor(((player.x+WORLD_HALF)/WORLD_SIZE)*w), ppy=Math.floor(((player.y+WORLD_HALF)/WORLD_SIZE)*h); mctx.save(); mctx.translate(ppx,ppy); mctx.rotate(player.dir); mctx.fillStyle="rgba(255,255,255,.95)"; mctx.beginPath(); mctx.moveTo(0,-6); mctx.lineTo(4,4); mctx.lineTo(-4,4); mctx.closePath(); mctx.fill(); mctx.restore(); }
+
+function buildQuickChatWheel(){ quickChatCenter.innerHTML=""; const cx=165, cy=165, radius=120; QUICK_CHAT_MESSAGES.forEach((msg,i)=>{ const angle=(-Math.PI/2)+(Math.PI*2*i/ QUICK_CHAT_MESSAGES.length), x=cx+Math.cos(angle)*radius, y=cy+Math.sin(angle)*radius; const btn=document.createElement("button"); btn.className="chat-option"; btn.textContent=msg; btn.style.left=`${x}px`; btn.style.top=`${y}px`; btn.addEventListener("click",async(e)=>{ e.preventDefault(); await sendQuickChat(msg); closeQuickChat(); }); quickChatCenter.appendChild(btn); }); }
+buildQuickChatWheel();
+const openQuickChat = ()=>{ quickChatOpen=true; quickChatWheel.classList.add("show"); };
+const closeQuickChat = ()=>{ quickChatOpen=false; quickChatWheel.classList.remove("show"); };
+quickChatBackdrop.addEventListener("click", closeQuickChat);
+
+let serverMeta=null, myUid=null, myName=null, myAvatar=DEFAULT_AVATAR, worldReady=false, canPlay=false, joinedPresence=false, leaveDone=false, actualPlayersCount=0, remotePlayers=[];
+const remotePlayersMap=new Map();
+let unsubServer=null, unsubPlayers=null, unsubBuilds=null, unsubRemovedTrees=null, unsubRemovedBoulders=null, unsubClaims=null;
+let lastNetSendAt=0, lastHeartbeatAt=0, lastServerSyncAt=0, lastSentX=99999, lastSentY=99999, lastSentDir=99999;
+
+const normalizeName = (name)=>String(name||"").trim().toLowerCase().replace(/\s+/g,"_");
+function getServerLight(nowMs){ if(!serverMeta) return 1; if(serverMeta.dayMode==="dayForever") return 1; if(serverMeta.dayMode==="nightForever") return 0; const SWITCH_EVERY=180000, TRANSITION=12000, start=getTimestampMs(serverMeta.createdAt)||Date.now(), elapsed=Math.max(0,nowMs-start), phaseIndex=Math.floor(elapsed/SWITCH_EVERY), phaseTime=elapsed%SWITCH_EVERY, phaseIsNight=phaseIndex%2===1; if(phaseTime<TRANSITION){ const t=easeOutQuint(phaseTime/TRANSITION), from=phaseIsNight?1:0, to=phaseIsNight?0:1; return lerp(from,to,t); } return phaseIsNight?0:1; }
+function updateServerInfo(){ if(!serverMeta){ serverInfoEl.textContent="Loading server..."; return; } const online=getIsFresh(serverMeta.lastHeartbeat,SERVER_TIMEOUT_MS); serverInfoEl.textContent=`${serverMeta.name||"Server"} • by ${serverMeta.createdByName||"Unknown"} • ${online?"Online":"Offline"} • Players: ${actualPlayersCount}/${serverMeta.maxPlayers||8}`; }
+function getTargetTile(){ let tx,ty; if(!isCoarse&&mouseAim){ const ix=(mouseAim.x-view.ox)/view.scale, iy=(mouseAim.y-view.oy)/view.scale; if(ix>=0&&iy>=0&&ix<INTERNAL_W&&iy<INTERNAL_H){ const wx=(ix-INTERNAL_W/2)/PPU+camera.x, wy=(iy-INTERNAL_H/2)/PPU+camera.y; tx=worldToTile(wx); ty=worldToTile(wy); } } if(tx==null||ty==null){ const wx=player.x+Math.cos(player.dir)*2, wy=player.y+Math.sin(player.dir)*2; tx=worldToTile(wx); ty=worldToTile(wy); } if(!inBounds(tx,ty)) return null; return {tx,ty,tileId:idxOf(tx,ty)}; }
+function getClaimForTile(tileId){ const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0, {chunkX,chunkY}=getChunkFromTile(tx,ty); return claimsMap.get(claimKey(chunkX,chunkY))||null; }
+function canModifyTile(tileId){ const claim=getClaimForTile(tileId); if(!claim) return {ok:true,reason:""}; if(claim.ownerUid===myUid) return {ok:true,reason:""}; if(claim.access==="sharedBuild") return {ok:true,reason:""}; return {ok:false, reason:`Claimed by ${claim.ownerName||"player"}`}; }
+function canPlaceAt(tileId){ const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0; if(!inBounds(tx,ty)) return false; if(tileMap[tileId]===T.WATER) return false; const cTx=worldToTile(campfire.x), cTy=worldToTile(campfire.y); if(tx===cTx && ty===cTy) return false; const wx=tileToWorld(tx), wy=tileToWorld(ty); if(buildMap.has(tileId)) return false; if(tileOccupiedByCollider(wx,wy,.48)) return false; return true; }
+
+async function placeBuild(tileId){ const perm=canModifyTile(tileId); if(!perm.ok){ showToast(perm.reason,1.1); audio.beep(180,.10,.04); return false; } const cost=COST[buildType]||1; if(wood<cost){ showToast("Not enough wood",1); audio.beep(180,.10,.04); return false; } if(!canPlaceAt(tileId)){ showToast("Can't place here",1); audio.beep(180,.10,.04); return false; }
+  wood-=cost; buildMap.set(tileId,{type:buildType,rot:buildRot}); if(buildType===BUILD.WALL||buildType===BUILD.WINDOW){ const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0; addColliderRect(tileToWorld(tx),tileToWorld(ty),.48,.48,buildType===BUILD.WINDOW?"build_window":"build_wall"); }
+  const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0; spawnParticles("build",tileToWorld(tx),tileToWorld(ty),10); minimapDirty=true; audio.beep(560,.05,.04);
+  try{ await setDoc(doc(db,"servers",serverId,"builds",String(tileId)), { tileId, type:buildType, rot:buildRot, updatedAt:serverTimestamp(), updatedBy:myUid }); }catch(e){ console.error(e); }
+  return true; }
+
+async function removeBuild(tileId){ const perm=canModifyTile(tileId); if(!perm.ok){ showToast(perm.reason,1.1); audio.beep(180,.10,.04); return false; } const b=buildMap.get(tileId); if(!b){ showToast("No block here",.7); audio.beep(180,.10,.04); return false; } const back=Math.max(1,Math.floor((COST[b.type]||1)*.5)); wood+=back; buildMap.delete(tileId); rebuildBuildColliders(); const tx=tileId%WORLD_SIZE, ty=(tileId/WORLD_SIZE)|0; spawnParticles("chips",tileToWorld(tx),tileToWorld(ty),8); showToast(`Removed (+${back} wood)`,.9); minimapDirty=true; audio.beep(320,.06,.04); try{ await deleteDoc(doc(db,"servers",serverId,"builds",String(tileId))); }catch(e){ console.error(e); } return true; }
+
+async function chopNearestTree(){ let best=null, bestD=3.2*3.2; for(const t of trees){ if(t.removed) continue; const d=dist2(player.x,player.y,t.x,t.y); if(d<bestD){ bestD=d; best=t; } } if(!best) return; const perm=canModifyTile(best.tileId); if(!perm.ok){ showToast(perm.reason,1.1); audio.beep(180,.10,.04); return; } best.hp-=1; spawnParticles("chips",best.x,best.y,12); audio.beep(240,.05,.04); if(best.hp<=0){ best.removed=true; removedTrees.add(best.tileId); const i=colliders.indexOf(best.collider); if(i!==-1) colliders.splice(i,1); wood+=1; showToast("+1 wood",.7); minimapDirty=true; audio.beep(720,.04,.04); try{ await setDoc(doc(db,"servers",serverId,"removedTrees",String(best.tileId)), { tileId:best.tileId, removedAt:serverTimestamp(), removedBy:myUid }); }catch(e){ console.error(e); } } }
+async function mineNearestBoulder(){ let best=null, bestD=3.3*3.3; for(const b of boulders){ if(b.removed) continue; const d=dist2(player.x,player.y,b.x,b.y); if(d<bestD){ bestD=d; best=b; } } if(!best) return; const perm=canModifyTile(best.tileId); if(!perm.ok){ showToast(perm.reason,1.1); audio.beep(180,.10,.04); return; } best.hp-=1; spawnParticles("chips",best.x,best.y,10); audio.beep(best.type==="coal"?520:680,.06,.04); if(best.hp<=0){ best.removed=true; removedBoulders.add(best.tileId); const i=colliders.indexOf(best.collider); if(i!==-1) colliders.splice(i,1); if(best.type==="coal"){ coal+=1; stone+=1; showToast("+coal +stone",.8); } else { stone+=1; showToast("+1 stone",.8); } minimapDirty=true; audio.beep(760,.04,.04); try{ await setDoc(doc(db,"servers",serverId,"removedBoulders",String(best.tileId)), { tileId:best.tileId, removedAt:serverTimestamp(), removedBy:myUid }); }catch(e){ console.error(e); } } }
+async function claimTargetChunk(){ const tgt=getTargetTile(); if(!tgt) return; const {chunkX,chunkY}=getChunkFromTile(tgt.tx,tgt.ty), key=claimKey(chunkX,chunkY), existing=claimsMap.get(key); if(existing){ if(existing.ownerUid===myUid) showToast("This territory is already yours",1); else showToast(`Claimed by ${existing.ownerName||"player"}`,1.1); audio.beep(180,.10,.04); return; } try{ await setDoc(doc(db,"servers",serverId,"claims",key), { chunkX, chunkY, ownerUid:myUid, ownerName:myName, access:"visitOnly", createdAt:serverTimestamp(), updatedAt:serverTimestamp() }); showToast("Territory claimed (visitOnly)",1); minimapDirty=true; audio.beep(640,.08,.04); }catch(e){ console.error(e); } }
+async function toggleClaimAccessAtTarget(){ const tgt=getTargetTile(); if(!tgt) return; const claim=getClaimForTile(tgt.tileId); if(!claim){ showToast("No claim here",.9); audio.beep(180,.10,.04); return; } if(claim.ownerUid!==myUid){ showToast("Only owner can edit claim",1); audio.beep(180,.10,.04); return; } const newAccess=claim.access==="sharedBuild"?"visitOnly":"sharedBuild"; try{ await updateDoc(doc(db,"servers",serverId,"claims",claimKey(claim.chunkX,claim.chunkY)), { access:newAccess, updatedAt:serverTimestamp() }); showToast(`Claim: ${newAccess}`,1); audio.beep(700,.05,.04); }catch(e){ console.error(e); } }
+async function sendQuickChat(text){ if(!text||!myUid) return; const until=Date.now()+QUICK_CHAT_VISIBLE_MS; player.quickChatText=text; player.quickChatUntil=until; try{ await setDoc(doc(db,"servers",serverId,"players",myUid), { quickChatText:text, quickChatUntil:until, lastActive:serverTimestamp() }, { merge:true }); }catch(e){ console.error(e); } }
+async function doAction(){ if(!canPlay||quickChatOpen) return; audio.resume(); if(claimPreviewActive){ await claimTargetChunk(); claimPreviewActive=false; return; } if(player.attackCooldown>0) return; player.attack=.0001; player.attackCooldown=.34; if(buildMode){ const tgt=getTargetTile(); if(!tgt) return; await placeBuild(tgt.tileId); return; } if(currentTool===TOOL.PICKAXE) await mineNearestBoulder(); else await chopNearestTree(); }
+async function doRemoveAction(){ if(!canPlay||quickChatOpen) return; if(claimPreviewActive){ claimPreviewActive=false; showToast("Claim preview cancelled",.8); return; } if(!buildMode) return; const tgt=getTargetTile(); if(!tgt) return; await removeBuild(tgt.tileId); }
+window.addEventListener("mousedown", async (e)=>{ if(e.button===0) await doAction(); if(e.button===2) await doRemoveAction(); });
+window.addEventListener("contextmenu", e=>e.preventDefault());
+if(actionBtn){ const tap=async (e)=>{ e.preventDefault(); await doAction(); }; actionBtn.addEventListener("click",tap); actionBtn.addEventListener("touchstart",tap,{passive:false}); }
+const setMinimap = (v)=>{ minimapOn=v; miniWrap.style.display=minimapOn?"block":"none"; if(minimapOn) minimapDirty=true; };
+
+window.addEventListener("keydown", async (e)=>{
+  audio.resume();
+  if(e.code==="Digit1"){ currentTool=TOOL.AXE; showToast("Tool: Axe",.8); audio.beep(700,.04,.04); }
+  if(e.code==="Digit2"){ currentTool=TOOL.PICKAXE; showToast("Tool: Pickaxe",.8); audio.beep(700,.04,.04); }
+  if(e.code==="KeyB"){ buildMode=!buildMode; if(buildMode) claimPreviewActive=false; showToast(buildMode?"Build mode ON":"Build mode OFF",.9); audio.beep(700,.04,.04); }
+  if(e.code==="KeyM"){ setMinimap(!minimapOn); audio.beep(700,.04,.04); }
+  if(e.code==="KeyV"&&!e.repeat){ claimPreviewActive=!claimPreviewActive; if(claimPreviewActive) buildMode=false; showToast(claimPreviewActive?"Claim preview ON":"Claim preview OFF",.9); audio.beep(700,.04,.04); }
+  if(e.code==="KeyG") await toggleClaimAccessAtTarget();
+  if(e.code==="KeyQ"&&!e.repeat) openQuickChat();
+  if(e.code==="Escape"){ closeQuickChat(); claimPreviewActive=false; }
+  if(buildMode){
+    if(e.code==="Digit3"){ buildType=BUILD.FLOOR; showToast("Build: Floor",.8); }
+    if(e.code==="Digit4"){ buildType=BUILD.WALL; showToast("Build: Wall",.8); }
+    if(e.code==="Digit5"){ buildType=BUILD.DOOR; showToast("Build: Door",.8); }
+    if(e.code==="Digit6"){ buildType=BUILD.WINDOW; showToast("Build: Window",.8); }
+    if(e.code==="Digit7"){ buildType=BUILD.ROOF; showToast("Build: Roof",.8); }
+    if(e.code==="KeyR"){ buildRot=(buildRot+1)&3; showToast("Rotate",.6); }
+    if(e.code==="KeyX") await doRemoveAction();
+  }
+});
+window.addEventListener("keyup", (e)=>{ if(e.code==="KeyQ") closeQuickChat(); });
+
+async function safeSetServerPresence(force=false){ if(!serverMeta||!myUid) return; const now=performance.now(); if(!force && now-lastServerSyncAt<2500) return; lastServerSyncAt=now; try{ await updateDoc(doc(db,"servers",serverId), { lastHeartbeat:serverTimestamp(), playerCount:actualPlayersCount, status:actualPlayersCount>0?"online":"offline", updatedAt:serverTimestamp() }); }catch(e){ console.error(e); } }
+
+async function leaveServer(){ if(leaveDone||!myUid||!joinedPresence) return; leaveDone=true; try{ await deleteDoc(doc(db,"servers",serverId,"players",myUid)); }catch(e){ console.error(e); }
+  try{ const snap=await getDocs(query(collection(db,"servers",serverId,"players"))); let active=0; snap.forEach((d)=>{ const data=d.data(), ts=data?.lastActive?.toDate ? data.lastActive.toDate().getTime() : 0; if(ts && Date.now()-ts<PLAYER_TIMEOUT_MS) active++; }); await updateDoc(doc(db,"servers",serverId), { playerCount:active, status:active>0?"online":"offline", updatedAt:serverTimestamp(), lastHeartbeat:serverTimestamp() }); }catch(e){ console.error(e); }
+}
+
+async function writePlayerState(force=false){ if(!canPlay||!myUid||!joinedPresence) return; const now=performance.now(); const movedEnough=Math.abs(player.x-lastSentX)>.08 || Math.abs(player.y-lastSentY)>.08 || Math.abs(player.dir-lastSentDir)>.08; if(!force && !movedEnough && now-lastNetSendAt<150) return; lastNetSendAt=now; lastSentX=player.x; lastSentY=player.y; lastSentDir=player.dir; try{ await setDoc(doc(db,"servers",serverId,"players",myUid), { uid:myUid, name:myName, avatar:myAvatar||DEFAULT_AVATAR, x:player.x, y:player.y, dir:player.dir, tool:currentTool, quickChatText:player.quickChatText||"", quickChatUntil:player.quickChatUntil||0, lastActive:serverTimestamp(), joinedAt:serverTimestamp() }, { merge:true }); }catch(e){ console.error(e); } }
+
+async function joinServer(user){ myUid=user.uid; myName=user.displayName||"Player"; player.name=myName; const userSnap=await getDoc(doc(db,"users",myUid)); myAvatar=userSnap.exists() ? (userSnap.data().avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR; player.avatar=myAvatar;
+  const serverSnap=await getDoc(doc(db,"servers",serverId)); if(!serverSnap.exists()) throw new Error("Server not found."); serverMeta={ id:serverSnap.id, ...serverSnap.data() };
+  const isCreator=serverMeta.createdByUid===myUid, allowed=Array.isArray(serverMeta.allowedUsersNormalized)?serverMeta.allowedUsersNormalized:[], meNorm=normalizeName(myName); if(serverMeta.visibility==="private" && !isCreator && !allowed.includes(meNorm)) throw new Error("You are not allowed to join this private server.");
+  const online=getIsFresh(serverMeta.lastHeartbeat,SERVER_TIMEOUT_MS); if(!isCreator && online && Number(serverMeta.playerCount||0)>=Number(serverMeta.maxPlayers||8)) throw new Error("Server is full.");
+  if(!serverMeta.worldSeed){ const newSeed="pine-"+Date.now(); await updateDoc(doc(db,"servers",serverId), { worldSeed:newSeed }); serverMeta.worldSeed=newSeed; }
+  setSeed(serverMeta.worldSeed); generateWorld(); player.x=campfire.x+1.4; player.y=campfire.y+1.2; camera.x=player.x; camera.y=player.y;
+  await setDoc(doc(db,"servers",serverId,"players",myUid), { uid:myUid, name:myName, avatar:myAvatar||DEFAULT_AVATAR, x:player.x, y:player.y, dir:player.dir, tool:currentTool, quickChatText:"", quickChatUntil:0, lastActive:serverTimestamp(), joinedAt:serverTimestamp() });
+  joinedPresence=true; canPlay=true; worldReady=true; loadingBox.style.display="none"; await safeSetServerPresence(true); updateServerInfo(); await writePlayerState(true);
+
+  unsubServer = onSnapshot(doc(db,"servers",serverId), (snap)=>{ if(!snap.exists()){ showErr("Server was deleted."); return; } serverMeta={ id:snap.id, ...snap.data() }; updateServerInfo(); });
+  unsubPlayers = onSnapshot(collection(db,"servers",serverId,"players"), (snapshot)=>{ remotePlayers=[]; actualPlayersCount=0; const seen=new Set(); snapshot.forEach((d)=>{ const data=d.data(); if(!getIsFresh(data?.lastActive,PLAYER_TIMEOUT_MS)) return; actualPlayersCount++; if(d.id===myUid) return; seen.add(d.id); const existing=remotePlayersMap.get(d.id) || { id:d.id, rx:data.x||0, ry:data.y||0, x:data.x||0, y:data.y||0, dir:data.dir||0, tool:data.tool??TOOL.AXE, name:data.name||"Player", avatar:data.avatar||DEFAULT_AVATAR, attack:0, quickChatText:"", quickChatUntil:0 };
+    existing.x=data.x??existing.x; existing.y=data.y??existing.y; existing.dir=data.dir??existing.dir; existing.tool=data.tool??existing.tool; existing.name=data.name||existing.name; existing.avatar=data.avatar||existing.avatar; existing.quickChatText=data.quickChatText||""; existing.quickChatUntil=data.quickChatUntil||0; remotePlayersMap.set(d.id,existing); remotePlayers.push(existing); });
+    for(const key of [...remotePlayersMap.keys()]) if(!seen.has(key)) remotePlayersMap.delete(key); updateServerInfo(); minimapDirty=true; });
+  unsubBuilds = onSnapshot(collection(db,"servers",serverId,"builds"), (snapshot)=>{ buildMap=new Map(); snapshot.forEach((d)=>{ const data=d.data(); if(!data||typeof data.tileId!=="number") return; buildMap.set(data.tileId,{ type:data.type||BUILD.WALL, rot:(data.rot||0)&3 }); }); rebuildBuildColliders(); minimapDirty=true; });
+  unsubRemovedTrees = onSnapshot(collection(db,"servers",serverId,"removedTrees"), (snapshot)=>{ removedTrees=new Set(); snapshot.forEach((d)=>{ const data=d.data(); if(typeof data.tileId === "number") removedTrees.add(data.tileId); }); applyRemovedTreeSet(); minimapDirty=true; });
+  unsubRemovedBoulders = onSnapshot(collection(db,"servers",serverId,"removedBoulders"), (snapshot)=>{ removedBoulders=new Set(); snapshot.forEach((d)=>{ const data=d.data(); if(typeof data.tileId === "number") removedBoulders.add(data.tileId); }); applyRemovedBoulderSet(); minimapDirty=true; });
+  unsubClaims = onSnapshot(collection(db,"servers",serverId,"claims"), (snapshot)=>{ claimsMap=new Map(); snapshot.forEach((d)=>{ const data=d.data(); if(!data) return; claimsMap.set(claimKey(Number(data.chunkX||0), Number(data.chunkY||0)), { chunkX:Number(data.chunkX||0), chunkY:Number(data.chunkY||0), ownerUid:data.ownerUid||"", ownerName:data.ownerName||"Player", access:data.access==="sharedBuild"?"sharedBuild":"visitOnly" }); }); minimapDirty=true; });
+}
+
+leaveBtn.addEventListener("click", async ()=>{ await leaveServer(); location.href="index.html"; });
+window.addEventListener("pagehide", async ()=>{ try{ await leaveServer(); }catch{} });
+window.addEventListener("beforeunload", async ()=>{ try{ await leaveServer(); }catch{} });
+
+let last=performance.now();
+function update(dt,timeSec){ if(!worldReady) return; let mx=0,my=0; if(keys["KeyW"]||keys["ArrowUp"]) my-=1; if(keys["KeyS"]||keys["ArrowDown"]) my+=1; if(keys["KeyA"]||keys["ArrowLeft"]) mx-=1; if(keys["KeyD"]||keys["ArrowRight"]) mx+=1; if(Math.abs(touchMoveX)>.05||Math.abs(touchMoveY)>.05){ mx+=touchMoveX; my+=touchMoveY; } const len=Math.hypot(mx,my);
+  if(!isCoarse&&mouseAim){ const cx=innerWidth/2, cy=innerHeight/2, dx=mouseAim.x-cx, dy=mouseAim.y-cy; if(Math.hypot(dx,dy)>6) player.dir=Math.atan2(dy,dx); } else if(len>.001) player.dir=Math.atan2(my,mx);
+  const speed=7.8; if(len>.001){ const nx=clamp(player.x+(mx/Math.max(1,len))*speed*dt,-WORLD_HALF+1,WORLD_HALF-1); if(!isBlocked(nx,player.y,player.r)) player.x=nx; const ny=clamp(player.y+(my/Math.max(1,len))*speed*dt,-WORLD_HALF+1,WORLD_HALF-1); if(!isBlocked(player.x,ny,player.r)) player.y=ny; }
+  const tx=worldToTile(player.x), ty=worldToTile(player.y); if(inBounds(tx,ty)&&tileMap[idxOf(tx,ty)]===T.WATER){ player.x+=Math.cos(player.dir+Math.PI)*.12; player.y+=Math.sin(player.dir+Math.PI)*.12; }
+  if(player.attackCooldown>0) player.attackCooldown-=dt; if(player.attack>0){ player.attack+=dt*3.2; if(player.attack>=1) player.attack=0; }
+  if(player.quickChatUntil && Date.now()>player.quickChatUntil){ player.quickChatUntil=0; player.quickChatText=""; }
+  for(const pt of particles){ pt.life-=dt; pt.x+=pt.vx*dt; pt.y+=pt.vy*dt; pt.vx*=.90; pt.vy*=.90; if(pt.type==="chips") pt.vy+=6.5*dt; if(pt.type==="build") pt.vy-=1.5*dt; } for(let i=particles.length-1;i>=0;i--) if(particles[i].life<=0) particles.splice(i,1);
+  if(toast.t>0) toast.t-=dt; for(const rp of remotePlayers){ rp.rx=lerp(rp.rx??rp.x,rp.x,.18); rp.ry=lerp(rp.ry??rp.y,rp.y,.18); }
+  camera.x=lerp(camera.x,player.x,.12); camera.y=lerp(camera.y,player.y,.12);
+  const now=performance.now(); if(now-lastHeartbeatAt>3000){ lastHeartbeatAt=now; writePlayerState(true); safeSetServerPresence(true); } else writePlayerState(false);
+  minimapTimer+=dt; if(minimapOn&&(minimapDirty||minimapTimer>=.35)){ minimapTimer=0; minimapDirty=false; updateMinimap(); }
+  hudEl.innerHTML = `Wood: ${wood} | Stone: ${stone} | Coal: ${coal}<div class="small">Tool: ${currentTool===TOOL.PICKAXE?"Pickaxe":"Axe"} | Build: ${buildMode?"ON":"OFF"} | Players here: ${actualPlayersCount}${buildMode?` | Block: ${buildType.toUpperCase()} (3-7)`:` | Axe=1 Pickaxe=2`} | Remove: X / Right Click | Minimap: M | Quick chat: hold Q | Claim: V | Claim access: G</div>`;
+}
+function render(timeSec){ if(!worldReady) return; const light=getServerLight(Date.now()); bctx.clearRect(0,0,INTERNAL_W,INTERNAL_H); drawTerrain(bctx,timeSec,light); for(const b of boulders){ if(b.removed) continue; if(Math.abs(b.x-camera.x)<28&&Math.abs(b.y-camera.y)<18) drawBoulder(bctx,b,light); } drawClaimsOverlay(bctx); drawBuilds(bctx,light); for(const t of trees){ if(t.removed) continue; if(Math.abs(t.x-camera.x)<28&&Math.abs(t.y-camera.y)<18) drawTree(bctx,t,timeSec,light); } drawCampfire(bctx,timeSec,light); for(const pt of particles){ const p=worldToScreen(pt.x,pt.y), a=clamp(pt.life/.75,0,1); bctx.fillStyle=pt.type==="chips"?rgba(190,120,70,.85*a):rgba(120,255,170,.65*a); bctx.fillRect((p.x|0),(p.y|0),2,2); } drawBuildGhost(bctx); drawClaimPreview(bctx); for(const rp of remotePlayers) drawPlayerEntity(bctx,rp,timeSec,true); drawPlayerEntity(bctx,player,timeSec,false); drawToast(bctx); const night=1-light; if(night>.001){ bctx.fillStyle=rgba(10,20,40,.10+.55*night); bctx.fillRect(0,0,INTERNAL_W,INTERNAL_H); const starA=.10*night; if(starA>.01){ bctx.fillStyle=rgba(220,240,255,starA); for(let i=0;i<24;i++){ const sx=(hash2(i,7,seedU32+60001)*INTERNAL_W)|0, sy=(hash2(i,13,seedU32+60007)*120)|0; bctx.fillRect(sx,sy,1,1); } } }
+  const screenW=innerWidth, screenH=innerHeight, scale=Math.max(1,Math.floor(Math.min(screenW/INTERNAL_W,screenH/INTERNAL_H))), drawW=INTERNAL_W*scale, drawH=INTERNAL_H*scale, ox=((screenW-drawW)/2)|0, oy=((screenH-drawH)/2)|0; view.scale=scale; view.ox=ox; view.oy=oy; gctx.clearRect(0,0,screenW,screenH); gctx.imageSmoothingEnabled=false; gctx.drawImage(buffer,0,0,INTERNAL_W,INTERNAL_H,ox,oy,drawW,drawH); }
+function loop(now){ const dt=Math.min(.033,(now-last)/1000); last=now; const timeSec=now/1000; update(dt,timeSec); render(timeSec); requestAnimationFrame(loop); }
+
+resize(); window.addEventListener("resize", resize);
+onAuthStateChanged(auth, async (user)=>{ try{ if(!user||!user.displayName){ loadingBox.textContent="Please sign in first."; showErr("You must be signed in to play multiplayer."); return; } await joinServer(user); requestAnimationFrame(loop); }catch(e){ console.error(e); showErr(e.message||e); loadingBox.textContent=e.message||"Failed to join server."; } });
+</script>
 </body>
 </html>
