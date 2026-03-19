@@ -61,7 +61,10 @@
       flex-wrap: wrap;
     }
 
-    main { flex: 1; padding: 20px; }
+    main {
+      flex: 1;
+      padding: 20px;
+    }
 
     footer {
       text-align: center;
@@ -177,7 +180,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      max-width: 700px;
+      max-width: 760px;
     }
 
     .user-avatar,
@@ -277,8 +280,7 @@
     }
 
     .user-result:last-child,
-    .comment:last-child,
-    .server-card:last-child { border-bottom: none; }
+    .comment:last-child { border-bottom: none; }
 
     .user-result-avatar {
       width: 40px;
@@ -1072,6 +1074,26 @@
       return Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
     }
 
+    async function resolveUserName(user) {
+      if (!user) return null;
+
+      const authName = String(user.displayName || "").trim();
+      if (authName) return authName;
+
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const dbName = snap.exists() ? String(snap.data()?.name || "").trim() : "";
+        if (dbName) return dbName;
+      } catch (e) {
+        console.error("resolveUserName error:", e);
+      }
+
+      const emailName = String(user.email || "").split("@")[0].trim();
+      if (emailName) return emailName;
+
+      return "Player";
+    }
+
     function escapeHtml(str) {
       return String(str).replace(/[&<>"']/g, (c) => {
         return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c);
@@ -1127,9 +1149,11 @@
 
     profileOverlay.addEventListener("click", () => closeModal(profileModal));
     profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
+
     createServerOverlay.addEventListener("click", () => closeModal(createServerModal));
     closeCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
     cancelCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
+
     editServerOverlay.addEventListener("click", () => closeModal(editServerModal));
     closeEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
     cancelEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
@@ -1145,10 +1169,13 @@
       profileStatus.textContent = isOnline ? "Online" : "Offline";
       profileLast.textContent = last ? "Last active: " + last.toLocaleString("uk-UA") : "";
       profileBio.textContent = u.bio && u.bio.trim() ? u.bio.trim() : "No bio yet.";
+
       openModal(profileModal);
     }
 
     function updateCommentUI() {
+      if (!commentForm || !commentInfo) return;
+
       if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
         commentForm.style.display = "block";
         commentInfo.textContent = "You can post comments as " + currentUserName + ".";
@@ -1262,6 +1289,7 @@
         item.appendChild(wrapper);
         item.appendChild(nameSpan);
         item.addEventListener("click", () => showMiniProfile(f.friendUid));
+
         friendsListDiv.appendChild(item);
       });
     }
@@ -1344,6 +1372,7 @@
 
       friendsList = [];
       renderFriends();
+
       if (!uid) return;
 
       const friendsColRef = collection(db, "users", uid, "friends");
@@ -1352,6 +1381,7 @@
         (snapshot) => {
           friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
           renderFriends();
+
           const term = userSearchInput.value.trim();
           if (term) renderUserResults(term);
         },
@@ -1371,6 +1401,7 @@
       friendRequestsIncoming = [];
       friendRequestsOutgoing = [];
       renderFriendRequests();
+
       if (!uid) return;
 
       friendReqUnsub = onSnapshot(
@@ -1378,6 +1409,7 @@
         (snapshot) => {
           friendRequestsIncoming = [];
           friendRequestsOutgoing = [];
+
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (!data || data.status !== "pending") return;
@@ -1575,8 +1607,8 @@
 
     function buildAvatarGrid(selectedUrl) {
       avatarGrid.innerHTML = "";
-      const allowed = getAllowedAvatarsFor(currentUserName);
 
+      const allowed = getAllowedAvatarsFor(currentUserName);
       avatarHint.textContent = isSpecialUser(currentUserName)
         ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
         : "Choose an avatar and write a short bio (max 200 chars).";
@@ -1634,6 +1666,7 @@
 
       try {
         await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio }, { merge: true });
+
         currentUserAvatar = safeSelected;
         currentUserBio = bio;
         avatarImg.src = currentUserAvatar;
@@ -1784,6 +1817,7 @@
 
       editingServerId = server.id;
       editServerMsg.textContent = "";
+
       editServerNameInput.value = server.name || "";
       editServerDescInput.value = server.description || "";
       editServerMaxPlayersInput.value = String(server.maxPlayers || 8);
@@ -1864,6 +1898,7 @@
       const sorted = filtered.sort((a, b) => {
         const aOnline = getServerOnlineState(a) ? 1 : 0;
         const bOnline = getServerOnlineState(b) ? 1 : 0;
+
         if (bOnline !== aOnline) return bOnline - aOnline;
 
         const byPlayers = Number(b.playerCount || 0) - Number(a.playerCount || 0);
@@ -1898,6 +1933,7 @@
         if (index === 0 && displayedPlayers > 0) {
           badges.push('<span class="badge">Most active</span>');
         }
+
         if (full) {
           badges.push('<span class="badge full">Full</span>');
         }
@@ -1921,6 +1957,7 @@
           </div>
 
           <div class="server-badges">${badges.join("")}</div>
+
           <div class="server-description">${escapeHtml(server.description || "No description.")}</div>
 
           <div class="server-meta-grid">
@@ -1938,7 +1975,9 @@
         });
 
         const editBtn = card.querySelector(".edit-server-btn");
-        if (editBtn) editBtn.addEventListener("click", () => openEditServer(server));
+        if (editBtn) {
+          editBtn.addEventListener("click", () => openEditServer(server));
+        }
 
         multiplayerList.appendChild(card);
       });
@@ -1969,17 +2008,20 @@
     }
 
     serverSearchInput?.addEventListener("input", renderServers);
+
     clearServerSearchBtn?.addEventListener("click", () => {
       serverSearchInput.value = "";
       renderServers();
     });
 
-    refreshServersBtn.addEventListener("click", () => renderServers());
+    refreshServersBtn.addEventListener("click", () => {
+      renderServers();
+    });
 
     onAuthStateChanged(auth, async (user) => {
-      if (user && user.displayName) {
-        currentUserName = user.displayName;
+      if (user) {
         currentUserUid = user.uid;
+        currentUserName = await resolveUserName(user);
 
         welcomeText.textContent = "Welcome " + currentUserName;
         userNameDisplay.textContent = currentUserName;
@@ -1988,7 +2030,13 @@
         signupLink.style.display = "none";
         logoutBtn.style.display = "inline-block";
 
+        await setDoc(doc(db, "users", user.uid), {
+          name: currentUserName,
+          lastActive: serverTimestamp(),
+        }, { merge: true });
+
         await loadMyProfile(user.uid);
+
         openEditProfileBtn.style.display = "inline-block";
         adminSection.style.display = currentUserName === "davyd3102" ? "block" : "none";
 
