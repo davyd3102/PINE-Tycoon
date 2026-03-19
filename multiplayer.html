@@ -39,7 +39,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.35);
       user-select: none;
       pointer-events: none;
-      max-width: min(960px, calc(100vw - 20px));
+      max-width: min(980px, calc(100vw - 20px));
     }
 
     #hud .small {
@@ -89,7 +89,9 @@
       font-weight: 700;
     }
 
-    .top-btn:hover { transform: scale(1.04); }
+    .top-btn:hover {
+      transform: scale(1.04);
+    }
 
     #minimapWrap {
       position: fixed;
@@ -192,7 +194,7 @@
       transform: translateY(-50%);
       text-align: center;
       background: rgba(0,0,0,0.70);
-      max-width: 480px;
+      max-width: 520px;
       margin: 0 auto;
     }
 
@@ -227,7 +229,7 @@
 
     .chat-option {
       position: absolute;
-      width: 96px;
+      width: 98px;
       height: 40px;
       border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.16);
@@ -365,6 +367,26 @@
     const QUICK_CHAT_VISIBLE_MS = 4000;
     const CLAIM_SIZE = 16;
 
+    async function resolveUserName(user) {
+      if (!user) return null;
+
+      const authName = String(user.displayName || "").trim();
+      if (authName) return authName;
+
+      try {
+        const snap = await getDoc(doc(db, "users", user.uid));
+        const dbName = snap.exists() ? String(snap.data()?.name || "").trim() : "";
+        if (dbName) return dbName;
+      } catch (e) {
+        console.error("resolveUserName error:", e);
+      }
+
+      const emailName = String(user.email || "").split("@")[0].trim();
+      if (emailName) return emailName;
+
+      return "Player";
+    }
+
     const QUICK_CHAT_MESSAGES = [
       "Hello!",
       "Bye!",
@@ -484,6 +506,7 @@
       const startTy = chunkY * CLAIM_SIZE;
       const endTx = startTx + CLAIM_SIZE - 1;
       const endTy = startTy + CLAIM_SIZE - 1;
+
       return {
         x1: tileToWorld(startTx) - 0.5,
         y1: tileToWorld(startTy) - 0.5,
@@ -596,6 +619,7 @@
     let claimsMap = new Map();
 
     const campfire = { x: 0, y: 0 };
+
     const player = {
       x: 0,
       y: 0,
@@ -625,9 +649,13 @@
     let claimPreviewActive = false;
 
     const toast = { text: "", t: 0 };
+
     const keys = {};
     document.addEventListener("keydown", (e) => keys[e.code] = true);
-    document.addEventListener("keyup", (e) => keys[e.code] = false);
+    document.addEventListener("keyup", (e) => {
+      keys[e.code] = false;
+      if (e.code === "KeyQ") closeQuickChat();
+    });
 
     let mouseAim = null;
     window.addEventListener("mousemove", (e) => { mouseAim = { x: e.clientX, y: e.clientY }; });
@@ -810,6 +838,7 @@
       function lowestNeighbor(tx, ty) {
         let bestTx = tx, bestTy = ty;
         let bestH = heightMap[idxOf(tx, ty)];
+
         for (let oy = -1; oy <= 1; oy++) {
           for (let ox = -1; ox <= 1; ox++) {
             if (ox === 0 && oy === 0) continue;
@@ -935,7 +964,12 @@
           }
         }
 
-        const score = (tt === T.GRASS ? 2.0 : 1.0) + (m * 1.4) + (nearWater * 0.03) + (1.0 - Math.abs(h - 0.55)) * 0.6;
+        const score =
+          (tt === T.GRASS ? 2.0 : 1.0) +
+          (m * 1.4) +
+          (nearWater * 0.03) +
+          (1.0 - Math.abs(h - 0.55)) * 0.6;
+
         if (score > best.score) best = { tx, ty, score };
       }
 
@@ -959,6 +993,7 @@
       const trunk = 0.90 + hash2(tx, ty, seedU32 + 23) * 0.70;
       const hueVar = hash2(tx, ty, seedU32 + 29);
       const baseHP = 3 + (hash2(tx, ty, seedU32 + 31) < 0.25 ? 1 : 0);
+
       const x = wx + jx;
       const y = wy + jy;
 
@@ -1137,6 +1172,7 @@
 
           const id = idxOf(tx, ty);
           const pos = worldToScreen(wx, wy);
+
           ctx.fillStyle = tileColor(tileMap[id], heightMap[id], moistMap[id], time, tx, ty, light);
           pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
 
@@ -1154,6 +1190,7 @@
       const s = t.scale;
       const trunkH = PPU * (1.05 * t.trunk) * s;
       drawShadowCircle(ctx, pos.x, pos.y + PPU * 0.40, PPU * 0.78 * s);
+
       const sway = Math.sin(time * 1.6 + t.sway) * 0.06;
 
       ctx.save();
@@ -1247,8 +1284,8 @@
       }
 
       drawShadowCircle(ctx, pos.x, pos.y + 8, 12);
-      const flick = 1 + Math.sin(time * 10) * 0.18;
 
+      const flick = 1 + Math.sin(time * 10) * 0.18;
       ctx.fillStyle = rgba(255, 110, 42, 0.95);
       ctx.beginPath();
       ctx.moveTo(pos.x, pos.y - 22 * flick);
@@ -1348,7 +1385,9 @@
       if (!tgt) return;
 
       const pos = worldToScreen(tileToWorld(tgt.tx), tileToWorld(tgt.ty));
-      const ok = canPlaceAt(tgt.tileId) && wood >= (COST[buildType] || 1) && canModifyTile(tgt.tileId).ok;
+      const ok = canPlaceAt(tgt.tileId) &&
+        wood >= (COST[buildType] || 1) &&
+        canModifyTile(tgt.tileId).ok;
 
       ctx.save();
       ctx.globalAlpha = 0.45;
@@ -1357,9 +1396,34 @@
       ctx.restore();
     }
 
+    function drawClaimPreview(ctx) {
+      if (!claimPreviewActive) return;
+      const tgt = getTargetTile();
+      if (!tgt) return;
+
+      const { chunkX, chunkY } = getChunkFromTile(tgt.tx, tgt.ty);
+      const rect = getChunkWorldRect(chunkX, chunkY);
+      const p1 = worldToScreen(rect.x1, rect.y1);
+      const p2 = worldToScreen(rect.x2, rect.y2);
+
+      const w = p2.x - p1.x;
+      const h = p2.y - p1.y;
+      const key = claimKey(chunkX, chunkY);
+      const existing = claimsMap.get(key);
+
+      ctx.save();
+      ctx.fillStyle = existing ? "rgba(255,80,80,0.18)" : "rgba(80,180,255,0.18)";
+      ctx.strokeStyle = existing ? "rgba(255,80,80,0.80)" : "rgba(80,180,255,0.85)";
+      ctx.lineWidth = 2;
+      ctx.fillRect(p1.x, p1.y, w, h);
+      ctx.strokeRect(p1.x, p1.y, w, h);
+      ctx.restore();
+    }
+
     function drawClaimsOverlay(ctx) {
       claimsMap.forEach((claim) => {
         const rect = getChunkWorldRect(claim.chunkX, claim.chunkY);
+
         const centerX = (rect.x1 + rect.x2) / 2;
         const centerY = (rect.y1 + rect.y2) / 2;
         const dx = Math.abs(centerX - camera.x);
@@ -1383,28 +1447,6 @@
         ctx.strokeRect(p1.x, p1.y, w, h);
         ctx.restore();
       });
-    }
-
-    function drawClaimPreview(ctx) {
-      if (!claimPreviewActive) return;
-      const tgt = getTargetTile();
-      if (!tgt) return;
-
-      const { chunkX, chunkY } = getChunkFromTile(tgt.tx, tgt.ty);
-      const rect = getChunkWorldRect(chunkX, chunkY);
-      const p1 = worldToScreen(rect.x1, rect.y1);
-      const p2 = worldToScreen(rect.x2, rect.y2);
-      const w = p2.x - p1.x;
-      const h = p2.y - p1.y;
-      const existing = claimsMap.get(claimKey(chunkX, chunkY));
-
-      ctx.save();
-      ctx.fillStyle = existing ? "rgba(255,80,80,0.18)" : "rgba(80,180,255,0.18)";
-      ctx.strokeStyle = existing ? "rgba(255,80,80,0.80)" : "rgba(80,180,255,0.85)";
-      ctx.lineWidth = 2;
-      ctx.fillRect(p1.x, p1.y, w, h);
-      ctx.strokeRect(p1.x, p1.y, w, h);
-      ctx.restore();
     }
 
     function drawTool(ctx, x, y, dir, swing, mode = "axe") {
@@ -1434,9 +1476,16 @@
       const boxY = y - 34;
 
       ctx.fillStyle = "rgba(0,0,0,0.60)";
-      ctx.fillRect(boxX, boxY, w, h);
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
-      ctx.strokeRect(boxX, boxY, w, h);
+      ctx.lineWidth = 1;
+      if (ctx.roundRect) {
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, w, h, 8);
+        ctx.fill();
+        ctx.stroke();
+      } else {
+        ctx.fillRect(boxX, boxY, w, h);
+      }
 
       ctx.fillStyle = "#fff";
       ctx.textAlign = "center";
@@ -1657,17 +1706,6 @@
       return !!(ms && Date.now() - ms < timeout);
     }
 
-    function updateServerInfo() {
-      if (!serverMeta) {
-        serverInfoEl.textContent = "Loading server...";
-        return;
-      }
-
-      const online = getIsFresh(serverMeta.lastHeartbeat, SERVER_TIMEOUT_MS);
-      serverInfoEl.textContent =
-        `${serverMeta.name || "Server"} • by ${serverMeta.createdByName || "Unknown"} • ${online ? "Online" : "Offline"} • Players: ${actualPlayersCount}/${serverMeta.maxPlayers || 8}`;
-    }
-
     function getServerLight(nowMs) {
       if (!serverMeta) return 1;
       if (serverMeta.dayMode === "dayForever") return 1;
@@ -1691,12 +1729,24 @@
       return phaseIsNight ? 0 : 1;
     }
 
+    function updateServerInfo() {
+      if (!serverMeta) {
+        serverInfoEl.textContent = "Loading server...";
+        return;
+      }
+
+      const online = getIsFresh(serverMeta.lastHeartbeat, SERVER_TIMEOUT_MS);
+      serverInfoEl.textContent =
+        `${serverMeta.name || "Server"} • by ${serverMeta.createdByName || "Unknown"} • ${online ? "Online" : "Offline"} • Players: ${actualPlayersCount}/${serverMeta.maxPlayers || 8}`;
+    }
+
     function getTargetTile() {
       let tx, ty;
 
       if (!isCoarse && mouseAim) {
         const ix = (mouseAim.x - view.ox) / view.scale;
         const iy = (mouseAim.y - view.oy) / view.scale;
+
         if (ix >= 0 && iy >= 0 && ix < INTERNAL_W && iy < INTERNAL_H) {
           const wx = (ix - INTERNAL_W / 2) / PPU + camera.x;
           const wy = (iy - INTERNAL_H / 2) / PPU + camera.y;
@@ -1728,12 +1778,17 @@
       if (!claim) return { ok: true, reason: "" };
       if (claim.ownerUid === myUid) return { ok: true, reason: "" };
       if (claim.access === "sharedBuild") return { ok: true, reason: "" };
-      return { ok: false, reason: `Claimed by ${claim.ownerName || "player"}` };
+
+      return {
+        ok: false,
+        reason: `Claimed by ${claim.ownerName || "player"}`,
+      };
     }
 
     function canPlaceAt(tileId) {
       const tx = tileId % WORLD_SIZE;
       const ty = (tileId / WORLD_SIZE) | 0;
+
       if (!inBounds(tx, ty)) return false;
       if (tileMap[tileId] === T.WATER) return false;
 
@@ -1743,8 +1798,10 @@
 
       const wx = tileToWorld(tx);
       const wy = tileToWorld(ty);
+
       if (buildMap.has(tileId)) return false;
       if (tileOccupiedByCollider(wx, wy, 0.48)) return false;
+
       return true;
     }
 
@@ -1838,6 +1895,7 @@
     async function chopNearestTree() {
       let best = null;
       let bestD = 3.2 * 3.2;
+
       for (const t of trees) {
         if (t.removed) continue;
         const d = dist2(player.x, player.y, t.x, t.y);
@@ -1846,6 +1904,7 @@
           best = t;
         }
       }
+
       if (!best) return;
 
       const perm = canModifyTile(best.tileId);
@@ -1885,6 +1944,7 @@
     async function mineNearestBoulder() {
       let best = null;
       let bestD = 3.3 * 3.3;
+
       for (const b of boulders) {
         if (b.removed) continue;
         const d = dist2(player.x, player.y, b.x, b.y);
@@ -1893,6 +1953,7 @@
           best = b;
         }
       }
+
       if (!best) return;
 
       const perm = canModifyTile(best.tileId);
@@ -2003,6 +2064,7 @@
 
     async function sendQuickChat(text) {
       if (!text || !myUid) return;
+
       const until = Date.now() + QUICK_CHAT_VISIBLE_MS;
       player.quickChatText = text;
       player.quickChatUntil = until;
@@ -2134,89 +2196,129 @@
         if (e.code === "Digit5") { buildType = BUILD.DOOR; showToast("Build: Door", 0.8); }
         if (e.code === "Digit6") { buildType = BUILD.WINDOW; showToast("Build: Window", 0.8); }
         if (e.code === "Digit7") { buildType = BUILD.ROOF; showToast("Build: Roof", 0.8); }
-        if (e.code === "KeyR") { buildRot = (buildRot + 1) & 3; showToast("Rotate", 0.6); }
-        if (e.code === "KeyX") await doRemoveAction();
+
+        if (e.code === "KeyR") {
+          buildRot = (buildRot + 1) & 3;
+          showToast("Rotate", 0.6);
+        }
+
+        if (e.code === "KeyX") {
+          await doRemoveAction();
+        }
       }
     });
 
-    window.addEventListener("keyup", (e) => {
-      if (e.code === "KeyQ") closeQuickChat();
-    });
-
-    function setupServerWorldSeed(seed) {
-      setSeed(seed);
-      generateWorld();
-      player.x = campfire.x + 1.4;
-      player.y = campfire.y + 1.2;
-      camera.x = player.x;
-      camera.y = player.y;
-      worldReady = true;
-      minimapDirty = true;
+    function setupScreenView() {
+      const screenW = innerWidth;
+      const screenH = innerHeight;
+      const scale = Math.max(1, Math.floor(Math.min(screenW / INTERNAL_W, screenH / INTERNAL_H)));
+      const drawW = INTERNAL_W * scale;
+      const drawH = INTERNAL_H * scale;
+      const ox = ((screenW - drawW) / 2) | 0;
+      const oy = ((screenH - drawH) / 2) | 0;
+      view.scale = scale;
+      view.ox = ox;
+      view.oy = oy;
+      return { scale, drawW, drawH, ox, oy };
     }
 
-    async function ensureServerAccess(user) {
-      myUid = user.uid;
-      myName = user.displayName || "Player";
-      player.name = myName;
+    function render(time) {
+      const nowMs = Date.now();
+      const light = getServerLight(nowMs);
 
-      const userSnap = await getDoc(doc(db, "users", myUid));
-      myAvatar = userSnap.exists() ? (userSnap.data().avatar || DEFAULT_AVATAR) : DEFAULT_AVATAR;
-      player.avatar = myAvatar;
+      bctx.clearRect(0, 0, INTERNAL_W, INTERNAL_H);
 
-      const serverSnap = await getDoc(doc(db, "servers", serverId));
-      if (!serverSnap.exists()) throw new Error("Server not found.");
+      drawTerrain(bctx, time, light);
 
-      serverMeta = { id: serverSnap.id, ...serverSnap.data() };
-      updateServerInfo();
-
-      const isCreator = serverMeta.createdByUid === myUid;
-      const allowed = Array.isArray(serverMeta.allowedUsersNormalized) ? serverMeta.allowedUsersNormalized : [];
-      const meNorm = normalizeName(myName);
-
-      if (serverMeta.visibility === "private" && !isCreator && !allowed.includes(meNorm)) {
-        throw new Error("You are not allowed to join this private server.");
+      for (const b of boulders) {
+        if (b.removed) continue;
+        const dx = Math.abs(b.x - camera.x);
+        const dy = Math.abs(b.y - camera.y);
+        if (dx < 28 && dy < 18) drawBoulder(bctx, b, light);
       }
 
-      if (!serverMeta.worldSeed) {
-        const generatedSeed = "pine-" + Date.now();
-        await updateDoc(doc(db, "servers", serverId), {
-          worldSeed: generatedSeed,
-          updatedAt: serverTimestamp(),
-        });
-        serverMeta.worldSeed = generatedSeed;
+      drawBuilds(bctx, light);
+
+      for (const t of trees) {
+        if (t.removed) continue;
+        const dx = Math.abs(t.x - camera.x);
+        const dy = Math.abs(t.y - camera.y);
+        if (dx < 28 && dy < 18) drawTree(bctx, t, time, light);
       }
 
-      setupServerWorldSeed(serverMeta.worldSeed);
+      drawCampfire(bctx, time, light);
+      drawClaimsOverlay(bctx);
+      drawBuildGhost(bctx);
+      drawClaimPreview(bctx);
+
+      for (const rp of remotePlayers) {
+        drawPlayerEntity(bctx, rp, time, true);
+      }
+
+      drawPlayerEntity(bctx, player, time, false);
+
+      for (const pt of particles) {
+        const p = worldToScreen(pt.x, pt.y);
+        const a = clamp(pt.life / 0.75, 0, 1);
+        bctx.fillStyle = pt.type === "chips"
+          ? rgba(190, 120, 70, 0.85 * a)
+          : rgba(120, 255, 170, 0.65 * a);
+        bctx.fillRect((p.x | 0), (p.y | 0), 2, 2);
+      }
+
+      drawToast(bctx);
+
+      const night = 1 - light;
+      if (night > 0.001) {
+        bctx.fillStyle = rgba(10, 20, 40, 0.10 + 0.55 * night);
+        bctx.fillRect(0, 0, INTERNAL_W, INTERNAL_H);
+      }
+
+      const { drawW, drawH, ox, oy } = setupScreenView();
+      gctx.clearRect(0, 0, innerWidth, innerHeight);
+      gctx.imageSmoothingEnabled = false;
+      gctx.drawImage(buffer, 0, 0, INTERNAL_W, INTERNAL_H, ox, oy, drawW, drawH);
     }
 
-    async function safeSetServerPresence(extra = {}) {
-      const now = performance.now();
-      if (now - lastServerSyncAt < 2500) return;
+    let serverMetaDoc = null;
+    let myPlayerDoc = null;
+
+    function getActualPlayersCountFromDocs(arr) {
+      const now = Date.now();
+      return arr.filter((p) => {
+        const last = p.lastActive?.toDate ? p.lastActive.toDate().getTime() : 0;
+        return last && now - last < PLAYER_TIMEOUT_MS;
+      }).length;
+    }
+
+    async function syncServerPresence(force = false) {
+      if (!serverMeta || !myUid) return;
+
+      const now = Date.now();
+      if (!force && now - lastServerSyncAt < 4000) return;
       lastServerSyncAt = now;
 
       try {
         await updateDoc(doc(db, "servers", serverId), {
           lastHeartbeat: serverTimestamp(),
-          playerCount: actualPlayersCount,
           status: actualPlayersCount > 0 ? "online" : "offline",
+          playerCount: actualPlayersCount,
           updatedAt: serverTimestamp(),
-          ...extra,
         });
       } catch (e) {
-        console.error("safeSetServerPresence error:", e);
+        console.error("syncServerPresence error:", e);
       }
     }
 
-    async function writePlayerState(force = false) {
-      if (!canPlay || !myUid || !joinedPresence) return;
+    async function syncMyPlayer(force = false) {
+      if (!myUid || !myName || !canPlay) return;
 
-      const now = performance.now();
-      const movedEnough =
-        Math.abs(player.x - lastSentX) > 0.08 ||
-        Math.abs(player.y - lastSentY) > 0.08 ||
-        Math.abs(player.dir - lastSentDir) > 0.08;
+      const now = Date.now();
+      const movedEnough = Math.abs(player.x - lastSentX) > 0.05 ||
+        Math.abs(player.y - lastSentY) > 0.05 ||
+        Math.abs(player.dir - lastSentDir) > 0.05;
 
-      if (!force && !movedEnough && now - lastNetSendAt < 150) return;
+      if (!force && !movedEnough && now - lastNetSendAt < 900) return;
 
       lastNetSendAt = now;
       lastSentX = player.x;
@@ -2232,18 +2334,183 @@
           y: player.y,
           dir: player.dir,
           tool: currentTool,
+          lastActive: serverTimestamp(),
           quickChatText: player.quickChatText || "",
           quickChatUntil: player.quickChatUntil || 0,
-          lastActive: serverTimestamp(),
-          joinedAt: serverTimestamp(),
         }, { merge: true });
       } catch (e) {
-        console.error("writePlayerState error:", e);
+        console.error("syncMyPlayer error:", e);
+      }
+    }
+
+    async function heartbeat() {
+      if (!myUid || !canPlay) return;
+      const now = Date.now();
+      if (now - lastHeartbeatAt < 4000) return;
+      lastHeartbeatAt = now;
+
+      try {
+        await setDoc(doc(db, "servers", serverId, "players", myUid), {
+          lastActive: serverTimestamp(),
+          name: myName,
+          avatar: myAvatar || DEFAULT_AVATAR,
+        }, { merge: true });
+      } catch (e) {
+        console.error("heartbeat player error:", e);
+      }
+
+      await syncServerPresence(true);
+    }
+
+    function subscribeServerData() {
+      unsubServer = onSnapshot(doc(db, "servers", serverId), (snap) => {
+        if (!snap.exists()) {
+          throw new Error("Server not found.");
+        }
+        serverMetaDoc = snap;
+        serverMeta = { id: snap.id, ...snap.data() };
+        updateServerInfo();
+      });
+
+      unsubPlayers = onSnapshot(collection(db, "servers", serverId, "players"), (snap) => {
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        actualPlayersCount = getActualPlayersCountFromDocs(docs);
+
+        const now = Date.now();
+        remotePlayers = [];
+
+        docs.forEach((p) => {
+          const last = p.lastActive?.toDate ? p.lastActive.toDate().getTime() : 0;
+          const fresh = last && now - last < PLAYER_TIMEOUT_MS;
+          if (!fresh) return;
+          if (p.id === myUid) {
+            myPlayerDoc = p;
+            return;
+          }
+
+          const prev = remotePlayersMap.get(p.id);
+          const obj = {
+            id: p.id,
+            name: p.name || "Player",
+            avatar: p.avatar || DEFAULT_AVATAR,
+            x: Number(p.x || 0),
+            y: Number(p.y || 0),
+            dir: Number(p.dir || 0),
+            rx: prev ? lerp(prev.rx ?? prev.x, Number(p.x || 0), 0.55) : Number(p.x || 0),
+            ry: prev ? lerp(prev.ry ?? prev.y, Number(p.y || 0), 0.55) : Number(p.y || 0),
+            tool: Number.isFinite(p.tool) ? p.tool : TOOL.AXE,
+            attack: 0,
+            quickChatText: p.quickChatText || "",
+            quickChatUntil: Number(p.quickChatUntil || 0),
+          };
+          remotePlayersMap.set(p.id, obj);
+          remotePlayers.push(obj);
+        });
+
+        syncServerPresence();
+        updateServerInfo();
+        minimapDirty = true;
+      });
+
+      unsubBuilds = onSnapshot(collection(db, "servers", serverId, "builds"), (snap) => {
+        buildMap = new Map();
+        snap.forEach((d) => {
+          const v = d.data();
+          buildMap.set(Number(v.tileId), {
+            type: v.type,
+            rot: Number(v.rot || 0) & 3,
+          });
+        });
+        rebuildBuildColliders();
+        minimapDirty = true;
+      });
+
+      unsubRemovedTrees = onSnapshot(collection(db, "servers", serverId, "removedTrees"), (snap) => {
+        removedTrees = new Set();
+        snap.forEach((d) => {
+          const v = d.data();
+          removedTrees.add(Number(v.tileId));
+        });
+        applyRemovedTreeSet();
+        minimapDirty = true;
+      });
+
+      unsubRemovedBoulders = onSnapshot(collection(db, "servers", serverId, "removedBoulders"), (snap) => {
+        removedBoulders = new Set();
+        snap.forEach((d) => {
+          const v = d.data();
+          removedBoulders.add(Number(v.tileId));
+        });
+        applyRemovedBoulderSet();
+        minimapDirty = true;
+      });
+
+      unsubClaims = onSnapshot(collection(db, "servers", serverId, "claims"), (snap) => {
+        claimsMap = new Map();
+        snap.forEach((d) => {
+          const v = d.data();
+          claimsMap.set(d.id, {
+            chunkX: Number(v.chunkX),
+            chunkY: Number(v.chunkY),
+            ownerUid: v.ownerUid,
+            ownerName: v.ownerName,
+            access: v.access || "visitOnly",
+          });
+        });
+        minimapDirty = true;
+      });
+    }
+
+    async function ensureServerAccess(user) {
+      const serverSnap = await getDoc(doc(db, "servers", serverId));
+      if (!serverSnap.exists()) throw new Error("Server not found.");
+
+      const server = serverSnap.data();
+      serverMeta = { id: serverSnap.id, ...server };
+
+      myUid = user.uid;
+      myName = await resolveUserName(user);
+      player.name = myName;
+
+      await setDoc(doc(db, "users", myUid), {
+        name: myName,
+        lastActive: serverTimestamp(),
+      }, { merge: true });
+
+      try {
+        const meSnap = await getDoc(doc(db, "users", myUid));
+        if (meSnap.exists()) {
+          const meData = meSnap.data();
+          myAvatar = meData.avatar || DEFAULT_AVATAR;
+          player.avatar = myAvatar;
+        }
+      } catch (e) {
+        console.error("load my avatar error:", e);
+      }
+
+      if (server.visibility === "private") {
+        const allowed = Array.isArray(server.allowedUsersNormalized) ? server.allowedUsersNormalized : [];
+        const me = normalizeName(myName);
+        const isCreator = server.createdByUid === myUid;
+        if (!isCreator && !allowed.includes(me)) {
+          throw new Error("This is a private server.");
+        }
       }
     }
 
     async function joinServer(user) {
       await ensureServerAccess(user);
+
+      if (!serverMeta.worldSeed) throw new Error("Server seed is missing.");
+
+      setSeed(serverMeta.worldSeed);
+      generateWorld();
+
+      player.x = campfire.x + 1.4;
+      player.y = campfire.y + 1.2;
+      player.dir = 0;
+      camera.x = player.x;
+      camera.y = player.y;
 
       await setDoc(doc(db, "servers", serverId, "players", myUid), {
         uid: myUid,
@@ -2255,186 +2522,57 @@
         tool: currentTool,
         quickChatText: "",
         quickChatUntil: 0,
-        lastActive: serverTimestamp(),
         joinedAt: serverTimestamp(),
+        lastActive: serverTimestamp(),
       }, { merge: true });
-
-      try {
-        await updateDoc(doc(db, "servers", serverId), {
-          lastHeartbeat: serverTimestamp(),
-          status: "online",
-          updatedAt: serverTimestamp(),
-        });
-      } catch (e) {
-        console.error("join server status error:", e);
-      }
 
       joinedPresence = true;
       canPlay = true;
+      worldReady = true;
       loadingBox.style.display = "none";
 
-      unsubServer = onSnapshot(doc(db, "servers", serverId), (snap) => {
-        if (!snap.exists()) {
-          showErr("Server was deleted.");
-          return;
-        }
-        serverMeta = { id: snap.id, ...snap.data() };
-        updateServerInfo();
-
-        if (serverMeta.worldSeed && seedStr !== serverMeta.worldSeed) {
-          setupServerWorldSeed(serverMeta.worldSeed);
-        }
-      });
-
-      unsubPlayers = onSnapshot(collection(db, "servers", serverId, "players"), (snapshot) => {
-        const fresh = [];
-        remotePlayers = [];
-
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data) return;
-
-          if (getIsFresh(data.lastActive, PLAYER_TIMEOUT_MS)) fresh.push({ id: d.id, ...data });
-
-          if (d.id === myUid) return;
-          if (!getIsFresh(data.lastActive, PLAYER_TIMEOUT_MS)) return;
-
-          const existing = remotePlayersMap.get(d.id) || {
-            id: d.id,
-            rx: data.x || 0,
-            ry: data.y || 0,
-            x: data.x || 0,
-            y: data.y || 0,
-            dir: data.dir || 0,
-            tool: data.tool ?? TOOL.AXE,
-            name: data.name || "Player",
-            avatar: data.avatar || DEFAULT_AVATAR,
-            attack: 0,
-            quickChatText: "",
-            quickChatUntil: 0,
-          };
-
-          existing.x = data.x ?? existing.x;
-          existing.y = data.y ?? existing.y;
-          existing.dir = data.dir ?? existing.dir;
-          existing.tool = data.tool ?? existing.tool;
-          existing.name = data.name || existing.name;
-          existing.avatar = data.avatar || existing.avatar;
-          existing.quickChatText = data.quickChatText || "";
-          existing.quickChatUntil = Number(data.quickChatUntil || 0);
-
-          remotePlayersMap.set(d.id, existing);
-          remotePlayers.push(existing);
-        });
-
-        for (const key of [...remotePlayersMap.keys()]) {
-          if (!fresh.some((p) => p.id === key && key !== myUid)) {
-            remotePlayersMap.delete(key);
-          }
-        }
-
-        actualPlayersCount = fresh.length;
-        updateServerInfo();
-        minimapDirty = true;
-      });
-
-      unsubBuilds = onSnapshot(collection(db, "servers", serverId, "builds"), (snapshot) => {
-        buildMap = new Map();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data || typeof data.tileId !== "number") return;
-          buildMap.set(data.tileId, {
-            type: data.type || BUILD.WALL,
-            rot: (data.rot || 0) & 3,
-          });
-        });
-        rebuildBuildColliders();
-        minimapDirty = true;
-      });
-
-      unsubRemovedTrees = onSnapshot(collection(db, "servers", serverId, "removedTrees"), (snapshot) => {
-        removedTrees = new Set();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (typeof data.tileId === "number") removedTrees.add(data.tileId);
-        });
-        applyRemovedTreeSet();
-        minimapDirty = true;
-      });
-
-      unsubRemovedBoulders = onSnapshot(collection(db, "servers", serverId, "removedBoulders"), (snapshot) => {
-        removedBoulders = new Set();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (typeof data.tileId === "number") removedBoulders.add(data.tileId);
-        });
-        applyRemovedBoulderSet();
-        minimapDirty = true;
-      });
-
-      unsubClaims = onSnapshot(collection(db, "servers", serverId, "claims"), (snapshot) => {
-        claimsMap = new Map();
-        snapshot.forEach((d) => {
-          const data = d.data();
-          if (!data) return;
-          claimsMap.set(d.id, {
-            chunkX: Number(data.chunkX || 0),
-            chunkY: Number(data.chunkY || 0),
-            ownerUid: data.ownerUid || "",
-            ownerName: data.ownerName || "Player",
-            access: data.access === "sharedBuild" ? "sharedBuild" : "visitOnly",
-          });
-        });
-        minimapDirty = true;
-      });
-
-      await writePlayerState(true);
-      await safeSetServerPresence();
+      subscribeServerData();
+      await syncServerPresence(true);
+      await syncMyPlayer(true);
     }
 
     async function leaveServer() {
-      if (leaveDone || !myUid || !joinedPresence) return;
+      if (leaveDone) return;
       leaveDone = true;
 
       try {
-        await deleteDoc(doc(db, "servers", serverId, "players", myUid));
+        if (myUid && joinedPresence) {
+          await deleteDoc(doc(db, "servers", serverId, "players", myUid));
+        }
       } catch (e) {
-        console.error("leave delete player error:", e);
+        console.error("leaveServer delete player error:", e);
       }
 
       try {
-        await updateDoc(doc(db, "servers", serverId), {
-          updatedAt: serverTimestamp(),
-        });
+        if (myUid) {
+          await updateDoc(doc(db, "servers", serverId), {
+            updatedAt: serverTimestamp(),
+          });
+        }
       } catch (e) {
-        console.error("leave status update error:", e);
+        console.error("leaveServer update server error:", e);
       }
-
-      try { if (unsubServer) unsubServer(); } catch {}
-      try { if (unsubPlayers) unsubPlayers(); } catch {}
-      try { if (unsubBuilds) unsubBuilds(); } catch {}
-      try { if (unsubRemovedTrees) unsubRemovedTrees(); } catch {}
-      try { if (unsubRemovedBoulders) unsubRemovedBoulders(); } catch {}
-      try { if (unsubClaims) unsubClaims(); } catch {}
     }
 
     leaveBtn.addEventListener("click", async () => {
-      await leaveServer();
+      try { await leaveServer(); } catch {}
       location.href = "index.html";
     });
 
-    window.addEventListener("pagehide", async () => {
-      try { await leaveServer(); } catch {}
-    });
-
+    window.addEventListener("pagehide", () => { leaveServer(); });
+    window.addEventListener("beforeunload", () => { leaveServer(); });
 
     let last = performance.now();
 
-    function update(dt, timeSec) {
+    function update(dt, time) {
       if (!worldReady) return;
 
-      let mx = 0;
-      let my = 0;
+      let mx = 0, my = 0;
       if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
       if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
       if (keys["KeyA"] || keys["ArrowLeft"]) mx -= 1;
@@ -2458,7 +2596,7 @@
       }
 
       const speed = 7.8;
-      if (!quickChatOpen && len > 0.001) {
+      if (len > 0.001) {
         const nx = clamp(player.x + (mx / Math.max(1, len)) * speed * dt, -WORLD_HALF + 1, WORLD_HALF - 1);
         if (!isBlocked(nx, player.y, player.r)) player.x = nx;
 
@@ -2488,29 +2626,14 @@
         if (pt.type === "chips") pt.vy += 6.5 * dt;
         if (pt.type === "build") pt.vy -= 1.5 * dt;
       }
-
       for (let i = particles.length - 1; i >= 0; i--) {
         if (particles[i].life <= 0) particles.splice(i, 1);
       }
 
       if (toast.t > 0) toast.t -= dt;
 
-      for (const rp of remotePlayers) {
-        rp.rx = lerp(rp.rx ?? rp.x, rp.x, 0.18);
-        rp.ry = lerp(rp.ry ?? rp.y, rp.y, 0.18);
-      }
-
       camera.x = lerp(camera.x, player.x, 0.12);
       camera.y = lerp(camera.y, player.y, 0.12);
-
-      const now = performance.now();
-      if (now - lastHeartbeatAt > 3000) {
-        lastHeartbeatAt = now;
-        writePlayerState(true);
-        safeSetServerPresence();
-      } else {
-        writePlayerState(false);
-      }
 
       minimapTimer += dt;
       if (minimapOn && (minimapDirty || minimapTimer >= 0.35)) {
@@ -2519,96 +2642,28 @@
         updateMinimap();
       }
 
+      syncMyPlayer(false);
+      heartbeat();
+
       hudEl.innerHTML =
-        `Wood: ${wood} | Stone: ${stone} | Coal: ${coal}` +
-        `<div class="small">Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"} | Players here: ${actualPlayersCount}` +
-        `${buildMode ? ` | Block: ${buildType.toUpperCase()} (3-7)` : ` | Axe=1 Pickaxe=2`}` +
-        ` | Claims: V preview, G access | Quick chat: hold Q | Minimap: M</div>`;
-    }
-
-    function render(timeSec) {
-      if (!worldReady) return;
-
-      const light = getServerLight(Date.now());
-      bctx.clearRect(0, 0, INTERNAL_W, INTERNAL_H);
-
-      drawTerrain(bctx, timeSec, light);
-
-      for (const b of boulders) {
-        if (b.removed) continue;
-        const dx = Math.abs(b.x - camera.x);
-        const dy = Math.abs(b.y - camera.y);
-        if (dx < 28 && dy < 18) drawBoulder(bctx, b, light);
-      }
-
-      drawClaimsOverlay(bctx);
-      drawBuilds(bctx, light);
-
-      for (const t of trees) {
-        if (t.removed) continue;
-        const dx = Math.abs(t.x - camera.x);
-        const dy = Math.abs(t.y - camera.y);
-        if (dx < 28 && dy < 18) drawTree(bctx, t, timeSec, light);
-      }
-
-      drawCampfire(bctx, timeSec, light);
-
-      for (const pt of particles) {
-        const p = worldToScreen(pt.x, pt.y);
-        const a = clamp(pt.life / 0.75, 0, 1);
-        bctx.fillStyle = pt.type === "chips"
-          ? rgba(190, 120, 70, 0.85 * a)
-          : rgba(120, 255, 170, 0.65 * a);
-        bctx.fillRect((p.x | 0), (p.y | 0), 2, 2);
-      }
-
-      drawBuildGhost(bctx);
-      drawClaimPreview(bctx);
-
-      for (const rp of remotePlayers) drawPlayerEntity(bctx, rp, timeSec, true);
-      drawPlayerEntity(bctx, player, timeSec, false);
-      drawToast(bctx);
-
-      const night = 1 - light;
-      if (night > 0.001) {
-        bctx.fillStyle = rgba(10, 20, 40, 0.10 + 0.55 * night);
-        bctx.fillRect(0, 0, INTERNAL_W, INTERNAL_H);
-
-        const starA = 0.10 * night;
-        if (starA > 0.01) {
-          bctx.fillStyle = rgba(220, 240, 255, starA);
-          for (let i = 0; i < 24; i++) {
-            const sx = (hash2(i, 7, seedU32 + 60001) * INTERNAL_W) | 0;
-            const sy = (hash2(i, 13, seedU32 + 60007) * 120) | 0;
-            bctx.fillRect(sx, sy, 1, 1);
-          }
-        }
-      }
-
-      const screenW = innerWidth;
-      const screenH = innerHeight;
-      const scale = Math.max(1, Math.floor(Math.min(screenW / INTERNAL_W, screenH / INTERNAL_H)));
-      const drawW = INTERNAL_W * scale;
-      const drawH = INTERNAL_H * scale;
-      const ox = ((screenW - drawW) / 2) | 0;
-      const oy = ((screenH - drawH) / 2) | 0;
-
-      view.scale = scale;
-      view.ox = ox;
-      view.oy = oy;
-
-      gctx.clearRect(0, 0, screenW, screenH);
-      gctx.imageSmoothingEnabled = false;
-      gctx.drawImage(buffer, 0, 0, INTERNAL_W, INTERNAL_H, ox, oy, drawW, drawH);
+        `Wood: ${wood} | Stone: ${stone} | Coal: ${coal}`
+        + `<div class="small">Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"}`
+        + (buildMode ? ` | Block: ${buildType.toUpperCase()} (3-7) | Remove: X / Right Click` : ` | Axe=1 Pickaxe=2`)
+        + ` | Claims: V preview / G access`
+        + ` | Quick Chat: Q`
+        + ` | Minimap: M`
+        + ` | Audio: ${audio.muted ? "OFF" : "ON"}`
+        + `</div>`;
     }
 
     function loop(now) {
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
-      const timeSec = now / 1000;
+      const time = now / 1000;
 
-      update(dt, timeSec);
-      render(timeSec);
+      update(dt, time);
+      render(time);
+
       requestAnimationFrame(loop);
     }
 
@@ -2617,7 +2672,7 @@
 
     onAuthStateChanged(auth, async (user) => {
       try {
-        if (!user || !user.displayName) {
+        if (!user) {
           loadingBox.textContent = "Please sign in first.";
           showErr("You must be signed in to play multiplayer.");
           return;
@@ -2626,6 +2681,7 @@
         await joinServer(user);
         requestAnimationFrame(loop);
       } catch (e) {
+        console.error(e);
         showErr(e.message || e);
         loadingBox.textContent = e.message || "Failed to join server.";
       }
