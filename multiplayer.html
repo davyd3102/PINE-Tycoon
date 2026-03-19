@@ -2197,7 +2197,8 @@
       try {
         await updateDoc(doc(db, "servers", serverId), {
           lastHeartbeat: serverTimestamp(),
-          status: "online",
+          playerCount: actualPlayersCount,
+          status: actualPlayersCount > 0 ? "online" : "offline",
           updatedAt: serverTimestamp(),
           ...extra,
         });
