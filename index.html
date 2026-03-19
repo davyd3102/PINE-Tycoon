@@ -5,7 +5,6 @@
     <title>PINE Tycoon</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="style.css" />
     <link
       rel="icon"
       href="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
@@ -13,151 +12,6 @@
     />
 
     <style>
-
-
-      .btn {
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      }
-
-      .btn:hover {
-        box-shadow:
-          0 12px 22px rgba(0, 0, 0, 0.12),
-          0 3px 8px rgba(255, 170, 82, 0.14);
-      }
-
-      .main-logo {
-        box-shadow: var(--card-shadow-strong);
-      }
-
-      .welcome-text,
-      h1,
-      h2,
-      h3 {
-        text-shadow: 0 2px 10px rgba(255, 190, 115, 0.12);
-      }
-
-      footer {
-        background:
-          linear-gradient(180deg, rgba(44, 39, 36, 0.88), rgba(27, 24, 23, 0.96));
-        box-shadow: 0 -10px 28px rgba(0,0,0,0.16);
-      }
-
-      .sound-toggle {
-        position: fixed;
-        left: 16px;
-        bottom: 16px;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: 1px solid var(--button-text);
-        background: var(--card-bg);
-        color: var(--button-text);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-        z-index: 1100;
-        font-size: 20px;
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease,
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
-      }
-
-      .sound-toggle:hover {
-        transform: scale(1.08);
-        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.32);
-      }
-
-      body.dark-theme .sky-day {
-        filter: brightness(0.60) saturate(0.82);
-      }
-
-      body.dark-theme .sky-sunset {
-        opacity: 0.36;
-      }
-
-      body.dark-theme .sun,
-      body.dark-theme .sun-glow {
-        filter: brightness(0.82);
-      }
-
-      @keyframes sunsetFade {
-        0% {
-          opacity: 0.14;
-          filter: saturate(0.95);
-        }
-        50% {
-          opacity: 0.42;
-          filter: saturate(1.18);
-        }
-        100% {
-          opacity: 0.24;
-          filter: saturate(1.05);
-        }
-      }
-
-      @keyframes sunFloat {
-        0% {
-          transform: translate(0, 0) scale(1);
-        }
-        50% {
-          transform: translate(-10px, 26px) scale(1.04);
-        }
-        100% {
-          transform: translate(-24px, 52px) scale(0.98);
-        }
-      }
-
-      @keyframes cloudDrift {
-        0% {
-          transform: translateX(0);
-        }
-        100% {
-          transform: translateX(130vw);
-        }
-      }
-
-      @keyframes birdFly {
-        0% {
-          transform: translateX(0) translateY(0) scale(0.9);
-          opacity: 0;
-        }
-        8% {
-          opacity: 0.75;
-        }
-        30% {
-          transform: translateX(30vw) translateY(-6px) scale(0.96);
-        }
-        55% {
-          transform: translateX(62vw) translateY(8px) scale(1.02);
-        }
-        100% {
-          transform: translateX(120vw) translateY(-4px) scale(0.88);
-          opacity: 0;
-        }
-      }
-
-      @media (max-width: 700px) {
-        .sun {
-          width: 90px;
-          height: 90px;
-        }
-
-        .sun-glow {
-          width: 240px;
-          height: 240px;
-        }
-
-        .main-logo {
-          max-width: 90%;
-        }
-      }
       :root {
         --bg-color: #f4f4f4;
         --text-color: #000000;
@@ -166,6 +20,8 @@
         --button-bg: #ffffff;
         --button-text: rgb(56, 56, 55);
         --border-soft: #e1e1e1;
+        --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        --card-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.14);
       }
 
       body.dark-theme {
@@ -176,6 +32,10 @@
         --button-bg: transparent;
         --button-text: #ffffff;
         --border-soft: rgba(255, 255, 255, 0.18);
+      }
+
+      * {
+        box-sizing: border-box;
       }
 
       html,
@@ -204,6 +64,8 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
       }
 
       main {
@@ -214,8 +76,10 @@
       footer {
         text-align: center;
         padding: 10px;
-        background: var(--footer-bg);
+        background:
+          linear-gradient(180deg, rgba(44, 39, 36, 0.88), rgba(27, 24, 23, 0.96));
         color: #fff;
+        box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.16);
       }
 
       @keyframes fade-down {
@@ -258,22 +122,38 @@
           background 0.15s ease,
           color 0.15s ease,
           border-color 0.15s ease;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       }
 
       .btn:hover {
         transform: scale(1.07);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+        box-shadow:
+          0 12px 22px rgba(0, 0, 0, 0.12),
+          0 3px 8px rgba(255, 170, 82, 0.14);
       }
 
-      .main-nav {
-        display: flex;
-        gap: 8px;
+      .btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+        transform: none;
       }
 
-      .auth-buttons {
+      .main-nav,
+      .auth-buttons,
+      .row-actions {
         display: flex;
         align-items: center;
         gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .welcome-text,
+      h1,
+      h2,
+      h3 {
+        text-shadow: 0 2px 10px rgba(255, 190, 115, 0.12);
       }
 
       .welcome-text {
@@ -282,23 +162,46 @@
         font-weight: 600;
       }
 
+      .main-logo {
+        max-width: min(620px, 90%);
+        border-radius: 20px;
+        display: block;
+        margin-bottom: 20px;
+        box-shadow: var(--card-shadow-strong);
+      }
+
+      .user-panel,
+      #userSearchSection,
+      #commentsSection,
+      #adminSection,
+      #editProfileBox,
+      #multiplayerSection {
+        background: var(--card-bg);
+        padding: 12px 16px;
+        border-radius: 14px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 20px;
+        border: 1px solid var(--border-soft);
+      }
+
       .user-panel {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 10px 14px;
-        border-radius: 10px;
-        background: var(--card-bg);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        margin-bottom: 20px;
-        max-width: 520px;
+        max-width: 700px;
+      }
+
+      .user-avatar,
+      .profile-avatar,
+      .user-result-avatar,
+      .friend-avatar {
+        border-radius: 50%;
+        object-fit: cover;
       }
 
       .user-avatar {
         width: 48px;
         height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
       }
 
       .user-avatar-wrapper,
@@ -318,52 +221,83 @@
         border: 2px solid var(--card-bg);
       }
 
-      #userSearchSection {
-        margin-bottom: 24px;
-        max-width: 600px;
-        background: var(--card-bg);
-        padding: 12px 16px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      #userSearchSection,
+      #commentsSection,
+      #adminSection,
+      #editProfileBox,
+      #multiplayerSection {
+        max-width: 980px;
       }
 
-      #userSearchSection h2 { margin-top: 0; font-size: 20px; }
+      #userSearchSection h2,
+      #commentsSection h2,
+      #adminSection h2,
+      #editProfileBox h2,
+      #multiplayerSection h2 {
+        margin-top: 0;
+        font-size: 20px;
+      }
 
-      .user-search-box { display: flex; gap: 8px; margin-bottom: 10px; }
+      .user-search-box {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
 
-      .user-search-box input {
-        flex: 1;
-        padding: 6px 10px;
-        border-radius: 999px;
+      .user-search-box input,
+      #adminDeleteName,
+      #bioInput,
+      #commentForm textarea,
+      .server-form input,
+      .server-form textarea,
+      .server-form select {
+        width: 100%;
+        padding: 8px 10px;
+        border-radius: 10px;
         border: 1px solid var(--border-soft);
         font-size: 14px;
         background: #fff;
         color: #000;
       }
 
-      body.dark-theme .user-search-box input {
+      .user-search-box input {
+        flex: 1;
+      }
+
+      body.dark-theme .user-search-box input,
+      body.dark-theme #adminDeleteName,
+      body.dark-theme #bioInput,
+      body.dark-theme #commentForm textarea,
+      body.dark-theme .server-form input,
+      body.dark-theme .server-form textarea,
+      body.dark-theme .server-form select {
         background: #3c3636;
         color: #fff;
         border-color: #777;
       }
 
-      .user-search-results { min-height: 20px; }
+      .user-search-results {
+        min-height: 20px;
+      }
 
       .user-result {
         display: flex;
         align-items: flex-start;
         gap: 10px;
-        padding: 6px 0;
+        padding: 8px 0;
         border-bottom: 1px solid var(--border-soft);
       }
 
-      .user-result:last-child { border-bottom: none; }
+      .user-result:last-child,
+      .comment:last-child,
+      .server-card:last-child {
+        border-bottom: none;
+      }
 
       .user-result-avatar {
         width: 40px;
         height: 40px;
-        border-radius: 50%;
-        object-fit: cover;
       }
 
       .user-result-info {
@@ -383,13 +317,34 @@
       .user-result-status.online { color: #1bb31b; }
       .user-result-status.offline { color: #b39b1b; }
 
-      .user-result-last { font-size: 11px; color: #777; }
-      body.dark-theme .user-result-last { color: #ddd; }
+      .user-result-last,
+      .user-result-note,
+      .comment-date,
+      .comment-info,
+      .comment-empty,
+      .tiny,
+      .server-meta,
+      .server-description,
+      .server-empty,
+      .profile-status,
+      .profile-bio {
+        font-size: 12px;
+        color: #666;
+      }
 
-      .user-result-action { margin-top: 4px; }
-
-      .user-result-note { font-size: 12px; color: #666; }
-      body.dark-theme .user-result-note { color: #ddd; }
+      body.dark-theme .user-result-last,
+      body.dark-theme .user-result-note,
+      body.dark-theme .comment-date,
+      body.dark-theme .comment-info,
+      body.dark-theme .comment-empty,
+      body.dark-theme .tiny,
+      body.dark-theme .server-meta,
+      body.dark-theme .server-description,
+      body.dark-theme .server-empty,
+      body.dark-theme .profile-status,
+      body.dark-theme .profile-bio {
+        color: #ddd;
+      }
 
       #friendsBox,
       #friendRequestsBox {
@@ -398,37 +353,17 @@
         padding-top: 8px;
       }
 
-      #friendsBox h3,
-      #friendRequestsBox h3 { font-size: 16px; margin: 4px 0 4px; }
-
-      .friends-list .friend-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 4px 0;
-        cursor: pointer;
-      }
-
-      .friend-avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        object-fit: cover;
-      }
-
-      .friend-name { font-size: 14px; font-weight: 500; }
-
-      .friend-requests-title { font-size: 13px; font-weight: 600; margin-top: 4px; margin-bottom: 2px; }
-
+      .friend-item,
       .friend-requests-row {
         display: flex;
-        justify-content: space-between;
         align-items: center;
         gap: 8px;
-        padding: 4px 0;
+        padding: 6px 0;
       }
 
-      .friend-requests-text { font-size: 14px; }
+      .friend-requests-row {
+        justify-content: space-between;
+      }
 
       .friend-requests-actions {
         display: flex;
@@ -436,55 +371,35 @@
         flex-shrink: 0;
       }
 
-      #commentsSection {
-        margin-top: 20px;
-        max-width: 600px;
-        background: var(--card-bg);
-        padding: 12px 16px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      .friend-avatar {
+        width: 32px;
+        height: 32px;
       }
 
-      #commentsSection h2 { margin-top: 0; font-size: 20px; }
-
-      #commentsList { margin-top: 8px; margin-bottom: 10px; max-height: 300px; overflow-y: auto; }
-
-      .comment { padding: 6px 0; border-bottom: 1px solid var(--border-soft); }
-      .comment:last-child { border-bottom: none; }
-
-      .comment-author { font-weight: 600; font-size: 14px; }
-      .comment-text { font-size: 14px; margin: 2px 0; }
-      .comment-date { font-size: 11px; color: #777; }
-      body.dark-theme .comment-date { color: #ccc; }
-
-      .comment-empty { font-size: 14px; color: #666; }
-      body.dark-theme .comment-empty { color: #ddd; }
+      .friend-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
 
       #commentForm textarea {
-        width: 100%;
         min-height: 60px;
         resize: vertical;
-        padding: 6px 8px;
+      }
+
+      .comment {
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border-soft);
+      }
+
+      .comment-author {
+        font-weight: 600;
         font-size: 14px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-        background: #fff;
-        color: #000;
       }
 
-      body.dark-theme #commentForm textarea {
-        background: #3c3636;
-        color: #fff;
-        border-color: #777;
+      .comment-text {
+        font-size: 14px;
+        margin: 2px 0;
       }
-
-      #commentForm button { margin-top: 6px; }
-
-      .comment-info { font-size: 12px; color: #555; margin-top: 4px; }
-      body.dark-theme .comment-info { color: #ddd; }
-
-      .main-logo { max-width: 60%; border-radius: 20px; display: block; margin-bottom: 20px; }
 
       .theme-toggle {
         position: fixed;
@@ -503,76 +418,40 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
         z-index: 1100;
         font-size: 20px;
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease,
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
       }
 
       .theme-toggle:hover {
         transform: scale(1.08);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
       }
 
-      nav a {
-        position: static;
-        left: auto;
-      }
-
-      #adminSection {
-        max-width: 600px;
-        background: var(--card-bg);
-        padding: 12px 16px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        margin-bottom: 20px;
-      }
-
-      #adminSection h2 { margin-top: 0; }
-
-      #adminDeleteName {
-        width: 100%;
-        max-width: 300px;
-        padding: 6px 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin: 4px 0 6px;
-        box-sizing: border-box;
-      }
-
-      body.dark-theme #adminDeleteName {
-        background: #3c3636;
-        color: #fff;
-        border-color: #777;
-      }
-
-      /* ===== Mini profile modal ===== */
       .modal {
         position: fixed;
         inset: 0;
         display: none;
         z-index: 5000;
       }
-      .modal.show { display: block; }
+
+      .modal.show {
+        display: block;
+      }
 
       .modal-overlay {
         position: absolute;
         inset: 0;
-        background: rgba(0,0,0,0.45);
+        background: rgba(0, 0, 0, 0.45);
       }
 
       .modal-card {
         position: relative;
-        max-width: 520px;
+        max-width: 640px;
         width: calc(100% - 20px);
         margin: 80px auto 20px;
         background: var(--card-bg);
         color: var(--text-color);
-        border-radius: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
         padding: 14px 16px;
+        border: 1px solid var(--border-soft);
       }
 
       .modal-close {
@@ -590,8 +469,6 @@
       .profile-avatar {
         width: 70px;
         height: 70px;
-        border-radius: 50%;
-        object-fit: cover;
         border: 2px solid var(--border-soft);
       }
 
@@ -600,48 +477,9 @@
         font-size: 18px;
       }
 
-      .profile-status {
-        font-size: 12px;
-        margin-top: 2px;
-      }
-
-      .profile-bio {
-        margin-top: 10px;
-        font-size: 14px;
-        color: #666;
-        white-space: pre-wrap;
-      }
-      body.dark-theme .profile-bio { color: #ddd; }
-
-      /* ===== Edit profile box ===== */
-      #editProfileBox {
-        margin-bottom: 20px;
-        max-width: 600px;
-        background: var(--card-bg);
-        padding: 12px 16px;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        display: none;
-      }
-
-      #editProfileBox h2 { margin-top: 0; font-size: 20px; }
-
       #bioInput {
-        width: 100%;
         min-height: 60px;
         resize: vertical;
-        padding: 6px 8px;
-        font-size: 14px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        box-sizing: border-box;
-        background: #fff;
-        color: #000;
-      }
-      body.dark-theme #bioInput {
-        background: #3c3636;
-        color: #fff;
-        border-color: #777;
       }
 
       .avatar-grid {
@@ -660,8 +498,13 @@
         transition: transform 0.15s ease, border-color 0.15s ease;
       }
 
-      .avatar-option:hover { transform: scale(1.03); }
-      .avatar-option.selected { border-color: #1bb31b; }
+      .avatar-option:hover {
+        transform: scale(1.03);
+      }
+
+      .avatar-option.selected {
+        border-color: #1bb31b;
+      }
 
       .avatar-option img {
         width: 100%;
@@ -671,18 +514,124 @@
         display: block;
       }
 
-      .tiny {
-        font-size: 12px;
-        color: #777;
-      }
-      body.dark-theme .tiny { color: #ddd; }
-
-      .row-actions {
+      .server-actions-bar {
         display: flex;
         gap: 8px;
         align-items: center;
         flex-wrap: wrap;
-        margin-top: 8px;
+        margin-bottom: 12px;
+      }
+
+      .server-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .server-card {
+        border: 1px solid var(--border-soft);
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(255, 255, 255, 0.18);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      }
+
+      body.dark-theme .server-card {
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .server-top {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .server-name {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 0 0 2px;
+      }
+
+      .server-description {
+        font-size: 13px;
+        line-height: 1.45;
+        margin: 8px 0 10px;
+        white-space: pre-wrap;
+      }
+
+      .server-meta-grid {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        margin-bottom: 10px;
+      }
+
+      .server-badges {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin: 6px 0 8px;
+      }
+
+      .badge {
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        border: 1px solid var(--border-soft);
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      body.dark-theme .badge {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .badge.public { border-color: rgba(27, 179, 27, 0.35); }
+      .badge.private { border-color: rgba(255, 153, 0, 0.35); }
+      .badge.full { border-color: rgba(210, 40, 40, 0.35); }
+
+      .server-form {
+        display: grid;
+        gap: 10px;
+      }
+
+      .server-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 10px;
+      }
+
+      .server-form label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .server-form textarea {
+        min-height: 90px;
+        resize: vertical;
+      }
+
+      .status-line {
+        font-size: 13px;
+        min-height: 18px;
+      }
+
+      @media (max-width: 700px) {
+        .avatar-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+
+        .server-top,
+        header {
+          align-items: stretch;
+        }
+
+        .main-logo {
+          max-width: 90%;
+        }
       }
     </style>
   </head>
@@ -691,6 +640,7 @@
     <header class="fade-down">
       <nav class="main-nav">
         <a href="game.html" class="btn">Грати!</a>
+        <a href="#multiplayer" class="btn">Multiplayer</a>
         <a href="#blog" class="btn">Блог</a>
       </nav>
 
@@ -712,15 +662,15 @@
             class="user-avatar"
           />
         </div>
-        <div style="flex:1;">
+        <div style="flex: 1">
           <div><strong>Account:</strong></div>
           <div id="userNameDisplay">Guest</div>
-          <div id="myBioLine" class="tiny" style="margin-top:4px; display:none;"></div>
+          <div id="myBioLine" class="tiny" style="margin-top: 4px; display: none"></div>
         </div>
-        <button id="openEditProfile" class="btn" style="display:none;">Edit profile</button>
+        <button id="openEditProfile" class="btn" style="display: none">Edit profile</button>
       </div>
 
-      <section id="editProfileBox" class="fade-up delay-2">
+      <section id="editProfileBox" class="fade-up delay-2" style="display: none">
         <h2>Edit profile</h2>
         <p class="tiny" id="avatarHint">Choose an avatar and write a short bio (max 200 chars).</p>
 
@@ -760,7 +710,7 @@
 
         <div id="friendsBox">
           <h3>Your friends</h3>
-          <div id="friendsList" class="friends-list">
+          <div id="friendsList">
             <p class="comment-empty">Sign in to view friends.</p>
           </div>
         </div>
@@ -770,6 +720,24 @@
           <div id="friendRequestsList">
             <p class="comment-empty">No requests.</p>
           </div>
+        </div>
+      </section>
+
+      <section id="multiplayerSection" class="fade-up delay-2">
+        <h2 id="multiplayer">Multiplayer</h2>
+        <p class="comment-info">
+          Тут показуються сервери. Старий режим у <strong>game.html</strong> залишається локальним,
+          а мультиплеєр працює окремо через Firebase.
+        </p>
+
+        <div class="server-actions-bar">
+          <button id="openCreateServerBtn" class="btn">Create Server</button>
+          <button id="refreshServersBtn" class="btn">Refresh</button>
+          <span id="serverStatusLine" class="status-line tiny">Loading servers...</span>
+        </div>
+
+        <div id="multiplayerList" class="server-list">
+          <div class="server-empty">Loading servers...</div>
         </div>
       </section>
 
@@ -787,11 +755,9 @@
       </p>
 
       <h1 id="blog" class="fade-up delay-2">BLOG</h1>
+      <p class="fade-up delay-2">Updates will appear here.</p>
       <p class="fade-up delay-2">
-        Updates will appear here.
-      </p>
-      <p class="fade-up delay-2">
-        Accounts, friends, player search and developer comments are live.
+        Accounts, friends, player search, developer comments and multiplayer lobby are live.
       </p>
 
       <section id="commentsSection" class="fade-up delay-3">
@@ -832,7 +798,73 @@
           </div>
         </div>
 
-        <div id="profileBio" class="profile-bio">No bio yet.</div>
+        <div id="profileBio" class="profile-bio" style="margin-top: 10px">No bio yet.</div>
+      </div>
+    </div>
+
+    <div id="createServerModal" class="modal">
+      <div class="modal-overlay" id="createServerOverlay"></div>
+      <div class="modal-card">
+        <button class="btn modal-close" id="closeCreateServerBtn">✕</button>
+        <h2 style="margin-top: 0">Create Server</h2>
+        <p class="tiny">
+          Створи свій сервер, вибери максимальну кількість гравців, приватний список,
+          режим дня/ночі, назву та опис.
+        </p>
+
+        <div class="server-form">
+          <label>
+            Server name
+            <input id="serverNameInput" type="text" maxlength="40" placeholder="My PINE Server" />
+          </label>
+
+          <label>
+            Description
+            <textarea id="serverDescInput" maxlength="220" placeholder="Describe your server..."></textarea>
+          </label>
+
+          <div class="server-form-grid">
+            <label>
+              Max players
+              <select id="serverMaxPlayersInput">
+                <option value="2">2</option>
+                <option value="4">4</option>
+                <option value="6">6</option>
+                <option value="8" selected>8</option>
+                <option value="10">10</option>
+                <option value="12">12</option>
+              </select>
+            </label>
+
+            <label>
+              Visibility
+              <select id="serverVisibilityInput">
+                <option value="public" selected>Public</option>
+                <option value="private">Private</option>
+              </select>
+            </label>
+
+            <label>
+              World mode
+              <select id="serverDayModeInput">
+                <option value="auto" selected>Normal day/night</option>
+                <option value="dayForever">Day Forever</option>
+                <option value="nightForever">Night Forever</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Allowed usernames (comma separated, only for private)
+            <input id="serverAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" />
+          </label>
+
+          <div class="row-actions">
+            <button id="createServerSubmitBtn" class="btn">Create and Join</button>
+            <button id="cancelCreateServerBtn" class="btn">Cancel</button>
+            <span id="createServerMsg" class="tiny"></span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -852,7 +884,7 @@
         deleteDoc,
         getDocs,
         where,
-        getDoc
+        getDoc,
       } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
       const firebaseConfig = {
@@ -916,9 +948,26 @@
       const profileLast = document.getElementById("profileLast");
       const profileBio = document.getElementById("profileBio");
 
+      const openCreateServerBtn = document.getElementById("openCreateServerBtn");
+      const refreshServersBtn = document.getElementById("refreshServersBtn");
+      const multiplayerList = document.getElementById("multiplayerList");
+      const serverStatusLine = document.getElementById("serverStatusLine");
+
+      const createServerModal = document.getElementById("createServerModal");
+      const createServerOverlay = document.getElementById("createServerOverlay");
+      const closeCreateServerBtn = document.getElementById("closeCreateServerBtn");
+      const cancelCreateServerBtn = document.getElementById("cancelCreateServerBtn");
+      const createServerSubmitBtn = document.getElementById("createServerSubmitBtn");
+      const createServerMsg = document.getElementById("createServerMsg");
+      const serverNameInput = document.getElementById("serverNameInput");
+      const serverDescInput = document.getElementById("serverDescInput");
+      const serverMaxPlayersInput = document.getElementById("serverMaxPlayersInput");
+      const serverVisibilityInput = document.getElementById("serverVisibilityInput");
+      const serverDayModeInput = document.getElementById("serverDayModeInput");
+      const serverAllowedUsersInput = document.getElementById("serverAllowedUsersInput");
+
       const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
 
-      // 5 standard avatars (1 default + 4 public)
       const BASE_AVATARS = [
         DEFAULT_AVATAR,
         "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
@@ -927,13 +976,10 @@
         "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
       ];
 
-      // Exclusive avatars (visible only to specific users in editor)
       const EXCLUSIVE_AVATARS = [
-        // твої нові ексклюзивні
         "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
         "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
         "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
-        // ексклюзиви, які часто були в старому коді (якщо ти їх використовуєш)
         "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
         "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
         "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
@@ -941,7 +987,6 @@
 
       const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
       const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
-
       const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
 
       let currentUserName = null;
@@ -953,18 +998,44 @@
       let friendsList = [];
       let friendRequestsIncoming = [];
       let friendRequestsOutgoing = [];
+      let serversCache = [];
 
       let presenceInterval = null;
       let friendsUnsub = null;
       let friendReqUnsub = null;
+      let serversUnsub = null;
 
       const usersCol = collection(db, "users");
       const commentsCol = collection(db, "comments");
       const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
       const friendRequestsCol = collection(db, "friendRequests");
+      const serversCol = collection(db, "servers");
 
       function normalizeName(name) {
         return String(name || "").trim().toLowerCase().replace(/\s+/g, "_");
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, (c) => {
+          return (
+            {
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c] || c
+          );
+        });
+      }
+
+      function randomSeed() {
+        return Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
+      }
+
+      function formatDate(ts) {
+        const d = ts?.toDate ? ts.toDate() : ts instanceof Date ? ts : null;
+        return d ? d.toLocaleString("uk-UA") : "";
       }
 
       function isSpecialUser(name) {
@@ -979,14 +1050,6 @@
         return [...set];
       }
 
-      function escapeHtml(str) {
-        return String(str).replace(/[&<>"']/g, (c) => {
-          return (
-            { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c
-          );
-        });
-      }
-
       function computeOnline(u) {
         const now = new Date();
         const last = u?.lastActive?.toDate ? u.lastActive.toDate() : null;
@@ -994,11 +1057,19 @@
         return { isOnline, last };
       }
 
-      function openModal() { profileModal.classList.add("show"); }
-      function closeModal() { profileModal.classList.remove("show"); }
+      function openModal(modal) {
+        modal.classList.add("show");
+      }
 
-      profileOverlay.addEventListener("click", closeModal);
-      profileCloseBtn.addEventListener("click", closeModal);
+      function closeModal(modal) {
+        modal.classList.remove("show");
+      }
+
+      profileOverlay.addEventListener("click", () => closeModal(profileModal));
+      profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
+      createServerOverlay.addEventListener("click", () => closeModal(createServerModal));
+      closeCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
+      cancelCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
 
       function showMiniProfile(uid) {
         const u = usersCache.find((x) => x.id === uid);
@@ -1009,10 +1080,10 @@
         profileAvatar.src = u.avatar || DEFAULT_AVATAR;
         profileName.textContent = u.name || "Player";
         profileStatus.textContent = isOnline ? "Online" : "Offline";
-        profileLast.textContent = last ? ("Last active: " + last.toLocaleString("en-US")) : "";
-        profileBio.textContent = (u.bio && u.bio.trim()) ? u.bio.trim() : "No bio yet.";
+        profileLast.textContent = last ? "Last active: " + last.toLocaleString("uk-UA") : "";
+        profileBio.textContent = u.bio && u.bio.trim() ? u.bio.trim() : "No bio yet.";
 
-        openModal();
+        openModal(profileModal);
       }
 
       function updateCommentUI() {
@@ -1058,7 +1129,7 @@
           await setDoc(
             doc(db, "users", uid),
             {
-              name: name,
+              name,
               avatar: currentUserAvatar || DEFAULT_AVATAR,
               bio: currentUserBio || "",
               lastActive: serverTimestamp(),
@@ -1112,11 +1183,10 @@
           wrapper.className = "friend-avatar-wrapper";
           wrapper.appendChild(avatar);
 
-          let isOnline = false;
           const userData = usersCache.find((u) => u.id === f.friendUid);
-          if (userData && userData.lastActive?.toDate) {
-            const last = userData.lastActive.toDate();
-            if (now - last < ONLINE_TIMEOUT_MS) isOnline = true;
+          let isOnline = false;
+          if (userData?.lastActive?.toDate) {
+            isOnline = now - userData.lastActive.toDate() < ONLINE_TIMEOUT_MS;
           }
 
           if (isOnline) {
@@ -1131,8 +1201,8 @@
 
           item.appendChild(wrapper);
           item.appendChild(nameSpan);
-
           item.addEventListener("click", () => showMiniProfile(f.friendUid));
+
           friendsListDiv.appendChild(item);
         });
       }
@@ -1152,7 +1222,7 @@
 
         if (friendRequestsIncoming.length) {
           const title = document.createElement("div");
-          title.className = "friend-requests-title";
+          title.className = "tiny";
           title.textContent = "Incoming:";
           friendRequestsListDiv.appendChild(title);
 
@@ -1161,7 +1231,7 @@
             row.className = "friend-requests-row";
 
             const text = document.createElement("div");
-            text.className = "friend-requests-text";
+            text.className = "user-result-note";
             text.textContent = `${req.fromName || "Player"} wants to add you`;
 
             const actions = document.createElement("div");
@@ -1188,7 +1258,8 @@
 
         if (friendRequestsOutgoing.length) {
           const title2 = document.createElement("div");
-          title2.className = "friend-requests-title";
+          title2.className = "tiny";
+          title2.style.marginTop = "8px";
           title2.textContent = "Sent:";
           friendRequestsListDiv.appendChild(title2);
 
@@ -1197,7 +1268,7 @@
             row.className = "friend-requests-row";
 
             const text = document.createElement("div");
-            text.className = "friend-requests-text";
+            text.className = "user-result-note";
             text.textContent = `Request to ${req.toName || "player"} (pending)`;
 
             row.appendChild(text);
@@ -1207,7 +1278,11 @@
       }
 
       function subscribeFriendsFor(uid) {
-        if (friendsUnsub) { friendsUnsub(); friendsUnsub = null; }
+        if (friendsUnsub) {
+          friendsUnsub();
+          friendsUnsub = null;
+        }
+
         friendsList = [];
         renderFriends();
 
@@ -1219,6 +1294,7 @@
           (snapshot) => {
             friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
             renderFriends();
+
             const term = userSearchInput.value.trim();
             if (term) renderUserResults(term);
           },
@@ -1230,7 +1306,11 @@
       }
 
       function subscribeFriendRequestsFor(uid) {
-        if (friendReqUnsub) { friendReqUnsub(); friendReqUnsub = null; }
+        if (friendReqUnsub) {
+          friendReqUnsub();
+          friendReqUnsub = null;
+        }
+
         friendRequestsIncoming = [];
         friendRequestsOutgoing = [];
         renderFriendRequests();
@@ -1272,17 +1352,14 @@
           const fromAvatar = fromUser?.avatar || DEFAULT_AVATAR;
           const myAvatar = myUser?.avatar || currentUserAvatar || DEFAULT_AVATAR;
 
-          const myFriendRef = doc(db, "users", myUid, "friends", fromUid);
-          const theirFriendRef = doc(db, "users", fromUid, "friends", myUid);
-
           await Promise.all([
-            setDoc(myFriendRef, {
+            setDoc(doc(db, "users", myUid, "friends", fromUid), {
               friendUid: fromUid,
               friendName: fromName,
               friendAvatar: fromAvatar,
               createdAt: serverTimestamp(),
             }),
-            setDoc(theirFriendRef, {
+            setDoc(doc(db, "users", fromUid, "friends", myUid), {
               friendUid: myUid,
               friendName: myName,
               friendAvatar: myAvatar,
@@ -1331,7 +1408,10 @@
 
           let status = "Offline";
           let isOnline = false;
-          if (last && now - last < ONLINE_TIMEOUT_MS) { status = "Online"; isOnline = true; }
+          if (last && now - last < ONLINE_TIMEOUT_MS) {
+            status = "Online";
+            isOnline = true;
+          }
 
           let relation = "none";
           if (!currentUserUid) relation = "guest";
@@ -1347,7 +1427,6 @@
           avatarImg2.className = "user-result-avatar";
           avatarImg2.src = avatarUrl;
           avatarImg2.style.cursor = "pointer";
-          avatarImg2.title = "Open profile";
           avatarImg2.addEventListener("click", () => showMiniProfile(u.id));
 
           const infoDiv = document.createElement("div");
@@ -1356,7 +1435,6 @@
           const nameDiv = document.createElement("div");
           nameDiv.className = "user-result-name";
           nameDiv.textContent = name;
-          nameDiv.title = "Open profile";
           nameDiv.addEventListener("click", () => showMiniProfile(u.id));
 
           const statusDiv = document.createElement("div");
@@ -1369,36 +1447,29 @@
           if (last) {
             const lastDiv = document.createElement("div");
             lastDiv.className = "user-result-last";
-            lastDiv.textContent = "Last active: " + last.toLocaleString("en-US");
+            lastDiv.textContent = "Last active: " + last.toLocaleString("uk-UA");
             infoDiv.appendChild(lastDiv);
           }
 
           const actionDiv = document.createElement("div");
           actionDiv.className = "user-result-action";
 
+          const note = document.createElement("div");
+          note.className = "user-result-note";
+
           if (relation === "guest") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
             note.textContent = "Sign in to add friends.";
             actionDiv.appendChild(note);
           } else if (relation === "self") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
             note.textContent = "This is your account.";
             actionDiv.appendChild(note);
           } else if (relation === "friend") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
             note.textContent = "Already friends";
             actionDiv.appendChild(note);
           } else if (relation === "outgoing") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
             note.textContent = "Request sent";
             actionDiv.appendChild(note);
           } else if (relation === "incoming") {
-            const note = document.createElement("div");
-            note.className = "user-result-note";
             note.textContent = 'Incoming request (see "Friend requests")';
             actionDiv.appendChild(note);
           } else {
@@ -1421,8 +1492,7 @@
           alert("Sign in first to add friends.");
           return;
         }
-        if (!targetUser || !targetUser.id) return;
-        if (targetUser.id === currentUserUid) return;
+        if (!targetUser || !targetUser.id || targetUser.id === currentUserUid) return;
 
         if (friendsList.some((f) => f.friendUid === targetUser.id)) {
           alert((targetUser.name || "Player") + " is already your friend.");
@@ -1434,14 +1504,12 @@
           return;
         }
 
-        const toName = targetUser.name || "Player";
-
         try {
           await addDoc(friendRequestsCol, {
             fromUid: currentUserUid,
             fromName: currentUserName,
             toUid: targetUser.id,
-            toName: toName,
+            toName: targetUser.name || "Player",
             status: "pending",
             createdAt: serverTimestamp(),
           });
@@ -1451,12 +1519,10 @@
         }
       }
 
-      // ===== Edit profile (bio + avatar) =====
       function buildAvatarGrid(selectedUrl) {
         avatarGrid.innerHTML = "";
 
         const allowed = getAllowedAvatarsFor(currentUserName);
-        // серйозний хінт (і пояснення про ексклюзив)
         avatarHint.textContent = isSpecialUser(currentUserName)
           ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
           : "Choose an avatar and write a short bio (max 200 chars).";
@@ -1513,7 +1579,7 @@
         saveProfileMsg.textContent = "Saving...";
 
         try {
-          await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio: bio }, { merge: true });
+          await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio }, { merge: true });
 
           currentUserAvatar = safeSelected;
           currentUserBio = bio;
@@ -1536,6 +1602,243 @@
         }
       });
 
+      function applyTheme(theme) {
+        if (theme === "dark") document.body.classList.add("dark-theme");
+        else document.body.classList.remove("dark-theme");
+      }
+
+      applyTheme(localStorage.getItem("pineTheme") || "light");
+
+      themeToggleBtn.addEventListener("click", () => {
+        const isDark = document.body.classList.contains("dark-theme");
+        const newTheme = isDark ? "light" : "dark";
+        applyTheme(newTheme);
+        localStorage.setItem("pineTheme", newTheme);
+      });
+
+      function parseAllowedUsers(text) {
+        const raw = String(text || "")
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean);
+
+        const original = [...new Set(raw)];
+        const normalized = [...new Set(original.map((x) => normalizeName(x)).filter(Boolean))];
+
+        return { original, normalized };
+      }
+
+      function openCreateServer() {
+        if (!currentUserUid || !currentUserName) {
+          alert("Please sign in first.");
+          return;
+        }
+
+        createServerMsg.textContent = "";
+        serverNameInput.value = `${currentUserName}'s server`;
+        serverDescInput.value = "";
+        serverMaxPlayersInput.value = "8";
+        serverVisibilityInput.value = "public";
+        serverDayModeInput.value = "auto";
+        serverAllowedUsersInput.value = "";
+        openModal(createServerModal);
+      }
+
+      openCreateServerBtn.addEventListener("click", openCreateServer);
+
+      async function createServer() {
+        if (!currentUserUid || !currentUserName) {
+          createServerMsg.textContent = "Sign in first.";
+          return;
+        }
+
+        const name = serverNameInput.value.trim().slice(0, 40);
+        const description = serverDescInput.value.trim().slice(0, 220);
+        const maxPlayers = Number(serverMaxPlayersInput.value || 8);
+        const visibility = serverVisibilityInput.value === "private" ? "private" : "public";
+        const dayMode = ["auto", "dayForever", "nightForever"].includes(serverDayModeInput.value)
+          ? serverDayModeInput.value
+          : "auto";
+
+        if (!name) {
+          createServerMsg.textContent = "Type a server name.";
+          return;
+        }
+
+        const { original, normalized } = parseAllowedUsers(serverAllowedUsersInput.value);
+
+        if (visibility === "private" && !normalized.includes(normalizeName(currentUserName))) {
+          normalized.push(normalizeName(currentUserName));
+          original.push(currentUserName);
+        }
+
+        createServerMsg.textContent = "Creating server...";
+        createServerSubmitBtn.disabled = true;
+
+        try {
+          const docRef = await addDoc(serversCol, {
+            name,
+            description,
+            createdByUid: currentUserUid,
+            createdByName: currentUserName,
+            createdByAvatar: currentUserAvatar || DEFAULT_AVATAR,
+            maxPlayers,
+            playerCount: 0,
+            visibility,
+            allowedUsers: visibility === "private" ? original : [],
+            allowedUsersNormalized: visibility === "private" ? normalized : [],
+            dayMode,
+            status: "open",
+            worldSeed: randomSeed(),
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+
+          location.href = `multiplayer.html?server=${encodeURIComponent(docRef.id)}`;
+        } catch (err) {
+          console.error("Create server error:", err);
+          createServerMsg.textContent = "Error: " + (err.message || err);
+          createServerSubmitBtn.disabled = false;
+        }
+      }
+
+      createServerSubmitBtn.addEventListener("click", createServer);
+
+      function canJoinServer(server) {
+        if (!currentUserUid || !currentUserName) {
+          return { ok: false, reason: "Sign in required" };
+        }
+
+        const isCreator = server.createdByUid === currentUserUid;
+        const maxPlayers = Number(server.maxPlayers || 8);
+        const playerCount = Number(server.playerCount || 0);
+
+        if (!isCreator && playerCount >= maxPlayers) {
+          return { ok: false, reason: "Server full" };
+        }
+
+        if (server.status === "closed") {
+          return { ok: false, reason: "Server closed" };
+        }
+
+        if (server.visibility === "private") {
+          const allowed = Array.isArray(server.allowedUsersNormalized) ? server.allowedUsersNormalized : [];
+          const me = normalizeName(currentUserName);
+          if (!isCreator && !allowed.includes(me)) {
+            return { ok: false, reason: "Private server" };
+          }
+        }
+
+        return { ok: true, reason: "" };
+      }
+
+      function serverModeLabel(mode) {
+        if (mode === "dayForever") return "Day Forever";
+        if (mode === "nightForever") return "Night Forever";
+        return "Normal day/night";
+      }
+
+      function renderServers() {
+        multiplayerList.innerHTML = "";
+
+        const sorted = [...serversCache].sort((a, b) => {
+          const byPlayers = Number(b.playerCount || 0) - Number(a.playerCount || 0);
+          if (byPlayers !== 0) return byPlayers;
+
+          const bt = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
+          const at = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
+          return bt - at;
+        });
+
+        if (!sorted.length) {
+          multiplayerList.innerHTML = '<div class="server-empty">No servers yet. Create the first one.</div>';
+          return;
+        }
+
+        sorted.forEach((server, index) => {
+          const card = document.createElement("div");
+          card.className = "server-card";
+
+          const access = canJoinServer(server);
+          const full = Number(server.playerCount || 0) >= Number(server.maxPlayers || 8);
+
+          const badges = [];
+          badges.push(
+            `<span class="badge ${server.visibility === "private" ? "private" : "public"}">${
+              server.visibility === "private" ? "Private" : "Public"
+            }</span>`
+          );
+          badges.push(`<span class="badge">${escapeHtml(serverModeLabel(server.dayMode))}</span>`);
+          if (index === 0 && Number(server.playerCount || 0) > 0) {
+            badges.push('<span class="badge">Most active</span>');
+          }
+          if (full) {
+            badges.push('<span class="badge full">Full</span>');
+          }
+
+          card.innerHTML = `
+            <div class="server-top">
+              <div>
+                <div class="server-name">${escapeHtml(server.name || "Server")}</div>
+                <div class="server-meta">Created by: ${escapeHtml(server.createdByName || "Unknown")}</div>
+              </div>
+              <div class="row-actions">
+                <button class="btn join-server-btn" ${access.ok ? "" : "disabled"}>
+                  ${access.ok ? "Join" : escapeHtml(access.reason)}
+                </button>
+              </div>
+            </div>
+
+            <div class="server-badges">${badges.join("")}</div>
+
+            <div class="server-description">${escapeHtml(server.description || "No description.")}</div>
+
+            <div class="server-meta-grid">
+              <div class="server-meta"><strong>Players:</strong> ${Number(server.playerCount || 0)} / ${Number(server.maxPlayers || 8)}</div>
+              <div class="server-meta"><strong>World mode:</strong> ${escapeHtml(serverModeLabel(server.dayMode))}</div>
+              <div class="server-meta"><strong>Visibility:</strong> ${escapeHtml(server.visibility || "public")}</div>
+              <div class="server-meta"><strong>Created:</strong> ${escapeHtml(formatDate(server.createdAt) || "—")}</div>
+            </div>
+          `;
+
+          const joinBtn = card.querySelector(".join-server-btn");
+          joinBtn.addEventListener("click", () => {
+            if (!access.ok) return;
+            location.href = `multiplayer.html?server=${encodeURIComponent(server.id)}`;
+          });
+
+          multiplayerList.appendChild(card);
+        });
+      }
+
+      function subscribeServers() {
+        if (serversUnsub) {
+          serversUnsub();
+          serversUnsub = null;
+        }
+
+        serverStatusLine.textContent = "Loading servers...";
+
+        serversUnsub = onSnapshot(
+          serversCol,
+          (snapshot) => {
+            serversCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+            renderServers();
+            serverStatusLine.textContent = `Servers online: ${serversCache.length}`;
+          },
+          (error) => {
+            console.error("Servers load error:", error);
+            serverStatusLine.textContent = "Failed to load servers.";
+            multiplayerList.innerHTML = '<div class="server-empty">Failed to load servers.</div>';
+          }
+        );
+      }
+
+      refreshServersBtn.addEventListener("click", () => {
+        renderServers();
+        serverStatusLine.textContent = `Servers online: ${serversCache.length}`;
+      });
+
       onAuthStateChanged(auth, async (user) => {
         if (user && user.displayName) {
           const name = user.displayName;
@@ -1550,7 +1853,6 @@
           logoutBtn.style.display = "inline-block";
 
           await loadMyProfile(user.uid);
-
           openEditProfileBtn.style.display = "inline-block";
 
           if (name === "davyd3102") adminSection.style.display = "block";
@@ -1586,6 +1888,7 @@
         }
 
         updateCommentUI();
+        renderServers();
       });
 
       logoutBtn.addEventListener("click", async () => {
@@ -1620,17 +1923,12 @@
 
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            const text = data.text || "";
-            const author = data.author || "??";
-            const time = data.createdAt?.toDate ? data.createdAt.toDate() : null;
-            const timeStr = time ? time.toLocaleString("en-US") : "";
-
             const div = document.createElement("div");
             div.className = "comment";
             div.innerHTML = `
-              <div class="comment-author">${escapeHtml(author)}</div>
-              <div class="comment-text">${escapeHtml(text)}</div>
-              <div class="comment-date">${escapeHtml(timeStr)}</div>
+              <div class="comment-author">${escapeHtml(data.author || "??")}</div>
+              <div class="comment-text">${escapeHtml(data.text || "")}</div>
+              <div class="comment-date">${escapeHtml(formatDate(data.createdAt))}</div>
             `;
             commentsList.appendChild(div);
           });
@@ -1656,7 +1954,7 @@
           try {
             await addDoc(commentsCol, {
               author: currentUserName,
-              text: text,
+              text,
               createdAt: serverTimestamp(),
             });
             commentText.value = "";
@@ -1673,20 +1971,6 @@
           e.preventDefault();
           renderUserResults(userSearchInput.value);
         }
-      });
-
-      function applyTheme(theme) {
-        if (theme === "dark") document.body.classList.add("dark-theme");
-        else document.body.classList.remove("dark-theme");
-      }
-
-      applyTheme(localStorage.getItem("pineTheme") || "light");
-
-      themeToggleBtn.addEventListener("click", () => {
-        const isDark = document.body.classList.contains("dark-theme");
-        const newTheme = isDark ? "light" : "dark";
-        applyTheme(newTheme);
-        localStorage.setItem("pineTheme", newTheme);
       });
 
       if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
@@ -1708,19 +1992,13 @@
           try {
             const targets = usersCache.filter((u) => u.name === name);
 
-            if (!targets.length) {
-              adminDeleteStatus.textContent = "User not found in users collection.";
-            } else {
-              let deletedUsers = 0;
-              for (const u of targets) {
-                await deleteDoc(doc(db, "users", u.id));
-                deletedUsers++;
-              }
-              adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleting comments...`;
+            let deletedUsers = 0;
+            for (const u of targets) {
+              await deleteDoc(doc(db, "users", u.id));
+              deletedUsers++;
             }
 
-            const commentsRef = collection(db, "comments");
-            const qComm = query(commentsRef, where("author", "==", name));
+            const qComm = query(collection(db, "comments"), where("author", "==", name));
             const commSnap = await getDocs(qComm);
 
             let deletedComments = 0;
@@ -1729,7 +2007,7 @@
               deletedComments++;
             }
 
-            adminDeleteStatus.textContent += ` Deleted comments: ${deletedComments}.`;
+            adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleted comments: ${deletedComments}.`;
             adminDeleteName.value = "";
           } catch (err) {
             console.error("Admin delete error:", err);
@@ -1737,6 +2015,8 @@
           }
         });
       }
+
+      subscribeServers();
     </script>
   </body>
 </html>
