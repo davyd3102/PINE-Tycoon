@@ -4,171 +4,836 @@
   <meta charset="UTF-8" />
   <title>PINE Tycoon</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="icon" href="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png" type="image/png" />
+  <link
+    rel="icon"
+    href="https://learn.logikaschool.com/uploads/student/4796102/6974881531947.png"
+    type="image/png"
+  />
+
   <style>
-    :root{--bg:#f4f4f4;--text:#111;--card:#fff;--footer:#383837;--btn:#fff;--btnText:#383837;--border:#e1e1e1}
-    body.dark{--bg:#453d3d;--text:#fff;--card:#4f4747;--footer:#201c1c;--btn:transparent;--btnText:#fff;--border:rgba(255,255,255,.18)}
-    *{box-sizing:border-box} html,body{height:100%;margin:0} body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-    header{padding:8px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-    main{flex:1;padding:20px} footer{text-align:center;padding:10px;background:linear-gradient(180deg,rgba(44,39,36,.88),rgba(27,24,23,.96));color:#fff}
-    .btn{display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid var(--btnText);background:var(--btn);color:var(--btnText);text-decoration:none;cursor:pointer;transition:.15s;backdrop-filter:blur(6px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
-    .btn:hover{transform:scale(1.05);box-shadow:0 12px 22px rgba(0,0,0,.12),0 3px 8px rgba(255,170,82,.14)} .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-    .nav,.auth,.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .card{background:var(--card);padding:14px 16px;border-radius:14px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.08);margin-bottom:20px}
-    .user-panel{display:flex;gap:12px;align-items:center;max-width:700px}.user-avatar,.profile-avatar,.result-avatar,.friend-avatar{border-radius:50%;object-fit:cover}.user-avatar{width:48px;height:48px}
-    .muted,.tiny,.meta,.empty{font-size:12px;color:#666}.dark .muted,.dark .tiny,.dark .meta,.dark .empty{color:#ddd}
-    .search-box{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.search-box input,.form input,.form textarea,.form select{width:100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);font-size:14px;background:#fff;color:#000}
-    .search-box input{flex:1}.dark .search-box input,.dark .form input,.dark .form textarea,.dark .form select{background:#3c3636;color:#fff;border-color:#777}
-    .result{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)} .result:last-child,.comment:last-child{border-bottom:none}.result-avatar{width:40px;height:40px;cursor:pointer}
-    .result-name{font-weight:600;font-size:14px;cursor:pointer}.status{font-size:12px}.status.online{color:#1bb31b}.status.offline{color:#b39b1b}
-    .friend-item,.req-row{display:flex;gap:8px;align-items:center;padding:6px 0}.friend-item{cursor:pointer}.req-row{justify-content:space-between}.friend-actions{display:flex;gap:6px}.friend-avatar{width:32px;height:32px}
-    .logo{max-width:min(620px,90%);border-radius:20px;display:block;margin-bottom:20px;box-shadow:0 8px 24px rgba(0,0,0,.14)}
-    .server-list{display:grid;gap:12px}.server-card{border:1px solid var(--border);border-radius:16px;padding:14px;background:rgba(255,255,255,.18)} .dark .server-card{background:rgba(255,255,255,.04)}
-    .server-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}.server-name{font-size:18px;font-weight:700}.server-desc{font-size:13px;line-height:1.45;margin:8px 0 10px;white-space:pre-wrap;color:#666}.dark .server-desc{color:#ddd}
-    .server-grid{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:10px}.badges{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px}.badge{padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border);background:rgba(255,255,255,.25)} .dark .badge{background:rgba(255,255,255,.08)}
-    .badge.public,.badge.online{border-color:rgba(27,179,27,.35)} .badge.private{border-color:rgba(255,153,0,.35)} .badge.full{border-color:rgba(210,40,40,.35)} .badge.offline{border-color:rgba(180,180,180,.35);opacity:.85}
-    .modal{position:fixed;inset:0;display:none;z-index:5000}.modal.show{display:block}.overlay{position:absolute;inset:0;background:rgba(0,0,0,.45)} .modal-card{position:relative;max-width:680px;width:calc(100% - 20px);margin:80px auto 20px;background:var(--card);color:var(--text);border-radius:16px;border:1px solid var(--border);padding:14px 16px;box-shadow:0 10px 25px rgba(0,0,0,.25)}
-    .close{position:absolute;right:10px;top:10px}.profile-row{display:flex;gap:12px;align-items:center}.profile-avatar{width:70px;height:70px;border:2px solid var(--border)}.profile-name{font-size:18px;font-weight:700}
-    .avatar-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:8px 0}.avatar-option{border:2px solid transparent;border-radius:10px;padding:4px;cursor:pointer}.avatar-option.selected{border-color:#1bb31b}.avatar-option img{width:100%;aspect-ratio:1/1;border-radius:8px;object-fit:cover;display:block}
-    .theme{position:fixed;right:16px;bottom:16px;width:44px;height:44px;border-radius:50%;border:1px solid var(--btnText);background:var(--card);color:var(--btnText);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.25);z-index:1100;font-size:20px}
-    .theme:hover{transform:scale(1.08)} .form{display:grid;gap:10px}.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px} .form label{display:grid;gap:6px;font-size:13px;font-weight:600}
-    @media(max-width:700px){.avatar-grid{grid-template-columns:repeat(3,1fr)}}
+    :root {
+      --bg-color: #f4f4f4;
+      --text-color: #000000;
+      --card-bg: #ffffff;
+      --footer-bg: #383837;
+      --button-bg: #ffffff;
+      --button-text: rgb(56, 56, 55);
+      --border-soft: #e1e1e1;
+      --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --card-shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.14);
+    }
+
+    body.dark-theme {
+      --bg-color: rgb(69, 61, 61);
+      --text-color: #ffffff;
+      --card-bg: #4f4747;
+      --footer-bg: #201c1c;
+      --button-bg: transparent;
+      --button-text: #ffffff;
+      --border-soft: rgba(255, 255, 255, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-color);
+      color: var(--text-color);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      position: relative;
+      min-height: 56px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    main { flex: 1; padding: 20px; }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background: linear-gradient(180deg, rgba(44,39,36,0.88), rgba(27,24,23,0.96));
+      color: #fff;
+      box-shadow: 0 -10px 28px rgba(0,0,0,0.16);
+    }
+
+    @keyframes fade-down {
+      0% { opacity: 0; transform: translateY(-16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fade-scale {
+      0% { opacity: 0; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    .fade-down { opacity: 0; animation: fade-down 0.5s ease-out forwards; }
+    .fade-up { opacity: 0; animation: fade-up 0.6s ease-out forwards; }
+    .fade-scale { opacity: 0; animation: fade-scale 0.5s ease-out forwards; }
+
+    .delay-1 { animation-delay: 0.15s; }
+    .delay-2 { animation-delay: 0.3s; }
+    .delay-3 { animation-delay: 0.45s; }
+
+    .btn {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 14px;
+      border-radius: 999px;
+      border: 1px solid var(--button-text);
+      background: var(--button-bg);
+      color: var(--button-text);
+      text-decoration: none;
+      cursor: pointer;
+      transform: scale(1);
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease,
+        border-color 0.15s ease;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .btn:hover {
+      transform: scale(1.07);
+      box-shadow:
+        0 12px 22px rgba(0, 0, 0, 0.12),
+        0 3px 8px rgba(255, 170, 82, 0.14);
+    }
+
+    .btn:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .main-nav,
+    .auth-buttons,
+    .row-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .welcome-text,
+    h1,
+    h2,
+    h3 {
+      text-shadow: 0 2px 10px rgba(255, 190, 115, 0.12);
+    }
+
+    .welcome-text {
+      font-size: 18px;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .main-logo {
+      max-width: min(620px, 90%);
+      border-radius: 20px;
+      display: block;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow-strong);
+    }
+
+    .user-panel,
+    #userSearchSection,
+    #commentsSection,
+    #adminSection,
+    #editProfileBox,
+    #multiplayerSection {
+      background: var(--card-bg);
+      padding: 12px 16px;
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 20px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .user-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 700px;
+    }
+
+    .user-avatar,
+    .profile-avatar,
+    .user-result-avatar,
+    .friend-avatar {
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+    }
+
+    .user-avatar-wrapper,
+    .friend-avatar-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
+    .user-status-dot {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #1bb31b;
+      border: 2px solid var(--card-bg);
+    }
+
+    #userSearchSection,
+    #commentsSection,
+    #adminSection,
+    #editProfileBox,
+    #multiplayerSection {
+      max-width: 980px;
+    }
+
+    #userSearchSection h2,
+    #commentsSection h2,
+    #adminSection h2,
+    #editProfileBox h2,
+    #multiplayerSection h2 {
+      margin-top: 0;
+      font-size: 20px;
+    }
+
+    .user-search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .user-search-box input,
+    #adminDeleteName,
+    #bioInput,
+    #commentForm textarea,
+    .server-form input,
+    .server-form textarea,
+    .server-form select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border-soft);
+      font-size: 14px;
+      background: #fff;
+      color: #000;
+    }
+
+    .user-search-box input {
+      flex: 1;
+    }
+
+    body.dark-theme .user-search-box input,
+    body.dark-theme #adminDeleteName,
+    body.dark-theme #bioInput,
+    body.dark-theme #commentForm textarea,
+    body.dark-theme .server-form input,
+    body.dark-theme .server-form textarea,
+    body.dark-theme .server-form select {
+      background: #3c3636;
+      color: #fff;
+      border-color: #777;
+    }
+
+    .user-search-results { min-height: 20px; }
+
+    .user-result {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .user-result:last-child,
+    .comment:last-child,
+    .server-card:last-child { border-bottom: none; }
+
+    .user-result-avatar {
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+    }
+
+    .user-result-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .user-result-name {
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .user-result-status { font-size: 12px; }
+    .user-result-status.online { color: #1bb31b; }
+    .user-result-status.offline { color: #b39b1b; }
+
+    .user-result-last,
+    .user-result-note,
+    .comment-date,
+    .comment-info,
+    .comment-empty,
+    .tiny,
+    .server-meta,
+    .server-description,
+    .server-empty,
+    .profile-status,
+    .profile-bio,
+    .status-line {
+      font-size: 12px;
+      color: #666;
+    }
+
+    body.dark-theme .user-result-last,
+    body.dark-theme .user-result-note,
+    body.dark-theme .comment-date,
+    body.dark-theme .comment-info,
+    body.dark-theme .comment-empty,
+    body.dark-theme .tiny,
+    body.dark-theme .server-meta,
+    body.dark-theme .server-description,
+    body.dark-theme .server-empty,
+    body.dark-theme .profile-status,
+    body.dark-theme .profile-bio,
+    body.dark-theme .status-line {
+      color: #ddd;
+    }
+
+    #friendsBox,
+    #friendRequestsBox {
+      margin-top: 10px;
+      border-top: 1px solid var(--border-soft);
+      padding-top: 8px;
+    }
+
+    .friend-item,
+    .friend-requests-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+    }
+
+    .friend-item { cursor: pointer; }
+
+    .friend-requests-row {
+      justify-content: space-between;
+    }
+
+    .friend-requests-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .friend-avatar {
+      width: 32px;
+      height: 32px;
+    }
+
+    .friend-name {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    #commentForm textarea {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .comment {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .comment-author {
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .comment-text {
+      font-size: 14px;
+      margin: 2px 0;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--button-text);
+      background: var(--card-bg);
+      color: var(--button-text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+      z-index: 1100;
+      font-size: 20px;
+    }
+
+    .theme-toggle:hover { transform: scale(1.08); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 5000;
+    }
+
+    .modal.show { display: block; }
+
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.45);
+    }
+
+    .modal-card {
+      position: relative;
+      max-width: 680px;
+      width: calc(100% - 20px);
+      margin: 80px auto 20px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      padding: 14px 16px;
+      border: 1px solid var(--border-soft);
+    }
+
+    .modal-close {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+    }
+
+    .profile-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .profile-avatar {
+      width: 70px;
+      height: 70px;
+      border: 2px solid var(--border-soft);
+    }
+
+    .profile-name {
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    #bioInput {
+      min-height: 60px;
+      resize: vertical;
+    }
+
+    .avatar-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .avatar-option {
+      border: 2px solid transparent;
+      border-radius: 10px;
+      padding: 4px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .avatar-option:hover { transform: scale(1.03); }
+    .avatar-option.selected { border-color: #1bb31b; }
+
+    .avatar-option img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .server-actions-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .server-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .server-card {
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.18);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    }
+
+    body.dark-theme .server-card {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .server-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .server-name {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 2px;
+    }
+
+    .server-description {
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 8px 0 10px;
+      white-space: pre-wrap;
+    }
+
+    .server-meta-grid {
+      display: grid;
+      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      margin-bottom: 10px;
+    }
+
+    .server-badges {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin: 6px 0 8px;
+    }
+
+    .badge {
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid var(--border-soft);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    body.dark-theme .badge {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .badge.public { border-color: rgba(27, 179, 27, 0.35); }
+    .badge.private { border-color: rgba(255, 153, 0, 0.35); }
+    .badge.full { border-color: rgba(210, 40, 40, 0.35); }
+    .badge.online { border-color: rgba(27, 179, 27, 0.35); }
+    .badge.offline { border-color: rgba(180, 180, 180, 0.35); opacity: 0.85; }
+
+    .server-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    .server-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .server-form label {
+      display: grid;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .server-form textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    @media (max-width: 700px) {
+      .avatar-grid { grid-template-columns: repeat(3, 1fr); }
+      .main-logo { max-width: 90%; }
+    }
   </style>
 </head>
+
 <body>
-  <header>
-    <nav class="nav">
+  <header class="fade-down">
+    <nav class="main-nav">
       <a href="game.html" class="btn">Грати!</a>
       <a href="#multiplayer" class="btn">Multiplayer</a>
       <a href="#blog" class="btn">Блог</a>
     </nav>
-    <div class="auth">
+
+    <div class="auth-buttons">
       <a href="login.html" id="loginLink" class="btn">Sign in</a>
       <a href="signup.html" id="signupLink" class="btn">Sign up</a>
-      <button id="logoutBtn" class="btn" style="display:none">Log out</button>
+      <button id="logoutBtn" class="btn" style="display:none;">Log out</button>
     </div>
   </header>
 
   <main>
-    <p id="welcomeText" style="font-size:18px;font-weight:600">Welcome Guest</p>
+    <p class="welcome-text fade-up delay-1" id="welcomeText">Welcome Guest</p>
 
-    <div class="card user-panel">
-      <img class="user-avatar" src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png" alt="Avatar" />
-      <div style="flex:1">
+    <div class="user-panel fade-scale delay-1">
+      <div class="user-avatar-wrapper">
+        <img
+          src="https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png"
+          alt="Avatar"
+          class="user-avatar"
+        />
+      </div>
+      <div style="flex:1;">
         <div><strong>Account:</strong></div>
         <div id="userNameDisplay">Guest</div>
-        <div id="myBioLine" class="tiny" style="margin-top:4px;display:none"></div>
+        <div id="myBioLine" class="tiny" style="margin-top:4px; display:none;"></div>
       </div>
-      <button id="openEditProfile" class="btn" style="display:none">Edit profile</button>
+      <button id="openEditProfile" class="btn" style="display:none;">Edit profile</button>
     </div>
 
-    <section id="editProfileBox" class="card" style="display:none;max-width:980px">
-      <h2 style="margin-top:0">Edit profile</h2>
+    <section id="editProfileBox" class="fade-up delay-2" style="display:none;">
+      <h2>Edit profile</h2>
       <p class="tiny" id="avatarHint">Choose an avatar and write a short bio (max 200 chars).</p>
+
       <div id="avatarGrid" class="avatar-grid"></div>
+
       <label class="tiny" for="bioInput">Bio</label>
-      <textarea id="bioInput" maxlength="200" placeholder="Write something about your account..." style="width:100%;min-height:60px;resize:vertical"></textarea>
+      <textarea id="bioInput" maxlength="200" placeholder="Write something about your account..."></textarea>
       <div class="tiny" id="bioCount">0/200</div>
-      <div class="row">
+
+      <div class="row-actions">
         <button id="saveProfileBtn" class="btn">Save</button>
         <button id="closeEditProfileBtn" class="btn">Close</button>
         <span id="saveProfileMsg" class="tiny"></span>
       </div>
     </section>
 
-    <section id="userSearchSection" class="card" style="max-width:980px">
-      <h2 style="margin-top:0">Player search</h2>
-      <div class="search-box">
+    <section id="adminSection" class="fade-up delay-2" style="display:none;">
+      <h2>Admin panel</h2>
+      <p class="comment-info">
+        Only <strong>davyd3102</strong> can use this panel. Delete a user and all their comments.
+      </p>
+      <label for="adminDeleteName">Username to delete:</label>
+      <input type="text" id="adminDeleteName" placeholder="Username" />
+      <button id="adminDeleteBtn" class="btn">Delete user</button>
+      <p id="adminDeleteStatus" class="comment-info"></p>
+    </section>
+
+    <section id="userSearchSection" class="fade-up delay-2">
+      <h2>Player search</h2>
+      <div class="user-search-box">
         <input type="text" id="userSearchInput" placeholder="Type username..." />
         <button id="userSearchBtn" class="btn">Search</button>
       </div>
-      <div id="userSearchResults"><p class="empty">Type a name to search players.</p></div>
 
-      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
-        <h3 style="margin:4px 0">Your friends</h3>
-        <div id="friendsList"><p class="empty">Sign in to view friends.</p></div>
+      <div id="userSearchResults" class="user-search-results">
+        <p class="comment-empty">Type a name to search players.</p>
       </div>
 
-      <div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">
-        <h3 style="margin:4px 0">Friend requests</h3>
-        <div id="friendRequestsList"><p class="empty">No requests.</p></div>
+      <div id="friendsBox">
+        <h3>Your friends</h3>
+        <div id="friendsList">
+          <p class="comment-empty">Sign in to view friends.</p>
+        </div>
+      </div>
+
+      <div id="friendRequestsBox">
+        <h3>Friend requests</h3>
+        <div id="friendRequestsList">
+          <p class="comment-empty">No requests.</p>
+        </div>
       </div>
     </section>
 
-    <section id="multiplayerSection" class="card" style="max-width:980px">
-      <h2 id="multiplayer" style="margin-top:0">Multiplayer</h2>
-      <p class="muted">Старий режим у <strong>game.html</strong> лишається локальним. Тут — окреме меню серверів для мультиплеєра.</p>
-      <div class="row" style="margin-bottom:12px">
+    <section id="multiplayerSection" class="fade-up delay-2">
+      <h2 id="multiplayer">Multiplayer</h2>
+      <p class="comment-info">
+        Тут показуються сервери. Старий режим у <strong>game.html</strong> залишається локальним,
+        а мультиплеєр працює окремо через Firebase.
+      </p>
+
+      <div class="server-actions-bar">
         <button id="openCreateServerBtn" class="btn">Create Server</button>
         <button id="refreshServersBtn" class="btn">Refresh</button>
-        <span id="serverStatusLine" class="tiny">Loading servers...</span>
+        <span id="serverStatusLine" class="status-line">Loading servers...</span>
       </div>
-      <div class="search-box">
+
+      <div class="user-search-box" style="margin-bottom:12px;">
         <input type="text" id="serverSearchInput" placeholder="Search servers by name..." />
         <button id="clearServerSearchBtn" class="btn">Clear</button>
       </div>
-      <div id="multiplayerList" class="server-list"><div class="empty">Loading servers...</div></div>
+
+      <div id="multiplayerList" class="server-list">
+        <div class="server-empty">Loading servers...</div>
+      </div>
     </section>
 
-    <img src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png" alt="PINE Tycoon" class="logo" />
-    <p>Welcome to the world of PINE Tycoon. Chop wood and build your village.</p>
-    <p>This version is in beta. Bugs may occur and content may change.</p>
+    <img
+      src="https://learn.logikaschool.com/uploads/student/4796102/6929d42d4c366.png"
+      alt="PINE Tycoon"
+      class="main-logo fade-up delay-2"
+    />
 
-    <h1 id="blog">BLOG</h1>
-    <p>Updates will appear here.</p>
-    <p>Accounts, friends, player search, developer comments and multiplayer lobby are live.</p>
+    <p class="fade-up delay-2">
+      Welcome to the world of PINE Tycoon. Chop wood and build your village.
+    </p>
+    <p class="fade-up delay-2">
+      This version is in beta. Bugs may occur and content may change.
+    </p>
 
-    <section id="commentsSection" class="card" style="max-width:980px">
-      <h2 style="margin-top:0">Developer comments</h2>
-      <div id="commentsList"><p class="empty">Loading comments...</p></div>
-      <form id="commentForm" style="display:none">
-        <textarea id="commentText" placeholder="Write an update about the game or your thoughts..." style="width:100%;min-height:60px;resize:vertical"></textarea>
-        <button type="submit" class="btn" style="margin-top:6px">Post comment</button>
+    <h1 id="blog" class="fade-up delay-2">BLOG</h1>
+    <p class="fade-up delay-2">Updates will appear here.</p>
+    <p class="fade-up delay-2">
+      Accounts, friends, player search, developer comments and multiplayer lobby are live.
+    </p>
+
+    <section id="commentsSection" class="fade-up delay-3">
+      <h2>Developer comments</h2>
+      <div id="commentsList">
+        <p class="comment-empty">Loading comments...</p>
+      </div>
+
+      <form id="commentForm" style="display:none;">
+        <textarea
+          id="commentText"
+          placeholder="Write an update about the game or your thoughts..."
+        ></textarea>
+        <button type="submit" class="btn">Post comment</button>
       </form>
-      <p id="commentInfo" class="muted">Sign in as davyd3102 or 3102 to post comments.</p>
+
+      <p id="commentInfo" class="comment-info">
+        Sign in as davyd3102 or 3102 to post comments.
+      </p>
     </section>
   </main>
 
   <footer>© 2026 PINE Tycoon — beta</footer>
-  <button id="themeToggle" class="theme" title="Toggle theme">⚙</button>
+
+  <button id="themeToggle" class="theme-toggle" title="Toggle theme">⚙</button>
 
   <div id="profileModal" class="modal">
-    <div class="overlay" id="profileOverlay"></div>
+    <div class="modal-overlay" id="profileOverlay"></div>
     <div class="modal-card">
-      <button class="btn close" id="profileCloseBtn">✕</button>
+      <button class="btn modal-close" id="profileCloseBtn">✕</button>
+
       <div class="profile-row">
         <img id="profileAvatar" class="profile-avatar" alt="Avatar" />
         <div>
           <div id="profileName" class="profile-name">Player</div>
-          <div id="profileStatus" class="tiny">Offline</div>
+          <div id="profileStatus" class="profile-status">Offline</div>
           <div id="profileLast" class="tiny"></div>
         </div>
       </div>
-      <div id="profileBio" class="muted" style="margin-top:10px">No bio yet.</div>
+
+      <div id="profileBio" class="profile-bio" style="margin-top:10px;">No bio yet.</div>
     </div>
   </div>
 
   <div id="createServerModal" class="modal">
-    <div class="overlay" id="createServerOverlay"></div>
+    <div class="modal-overlay" id="createServerOverlay"></div>
     <div class="modal-card">
-      <button class="btn close" id="closeCreateServerBtn">✕</button>
-      <h2 style="margin-top:0">Create Server</h2>
-      <div class="form">
-        <label>Server name<input id="serverNameInput" type="text" maxlength="40" placeholder="My PINE Server" /></label>
-        <label>Description<textarea id="serverDescInput" maxlength="220" placeholder="Describe your server..."></textarea></label>
-        <div class="form-grid">
-          <label>Max players
-            <select id="serverMaxPlayersInput"><option>2</option><option>4</option><option>6</option><option selected>8</option><option>10</option><option>12</option></select>
+      <button class="btn modal-close" id="closeCreateServerBtn">✕</button>
+      <h2 style="margin-top:0;">Create Server</h2>
+      <p class="tiny">
+        Створи свій сервер, вибери максимальну кількість гравців, приватний список,
+        режим дня/ночі, назву та опис.
+      </p>
+
+      <div class="server-form">
+        <label>
+          Server name
+          <input id="serverNameInput" type="text" maxlength="40" placeholder="My PINE Server" />
+        </label>
+
+        <label>
+          Description
+          <textarea id="serverDescInput" maxlength="220" placeholder="Describe your server..."></textarea>
+        </label>
+
+        <div class="server-form-grid">
+          <label>
+            Max players
+            <select id="serverMaxPlayersInput">
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8" selected>8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+            </select>
           </label>
-          <label>Visibility
-            <select id="serverVisibilityInput"><option value="public" selected>Public</option><option value="private">Private</option></select>
+
+          <label>
+            Visibility
+            <select id="serverVisibilityInput">
+              <option value="public" selected>Public</option>
+              <option value="private">Private</option>
+            </select>
           </label>
-          <label>World mode
-            <select id="serverDayModeInput"><option value="auto" selected>Normal day/night</option><option value="dayForever">Day Forever</option><option value="nightForever">Night Forever</option></select>
+
+          <label>
+            World mode
+            <select id="serverDayModeInput">
+              <option value="auto" selected>Normal day/night</option>
+              <option value="dayForever">Day Forever</option>
+              <option value="nightForever">Night Forever</option>
+            </select>
           </label>
         </div>
-        <label>Allowed usernames (comma separated, only for private)<input id="serverAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" /></label>
-        <div class="row">
+
+        <label>
+          Allowed usernames (comma separated, only for private)
+          <input id="serverAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
+        <div class="row-actions">
           <button id="createServerSubmitBtn" class="btn">Create and Join</button>
           <button id="cancelCreateServerBtn" class="btn">Cancel</button>
           <span id="createServerMsg" class="tiny"></span>
@@ -178,26 +843,59 @@
   </div>
 
   <div id="editServerModal" class="modal">
-    <div class="overlay" id="editServerOverlay"></div>
+    <div class="modal-overlay" id="editServerOverlay"></div>
     <div class="modal-card">
-      <button class="btn close" id="closeEditServerBtn">✕</button>
-      <h2 style="margin-top:0">Edit Server</h2>
-      <div class="form">
-        <label>Server name<input id="editServerNameInput" type="text" maxlength="40" placeholder="Server name" /></label>
-        <label>Description<textarea id="editServerDescInput" maxlength="220" placeholder="Description..."></textarea></label>
-        <div class="form-grid">
-          <label>Max players
-            <select id="editServerMaxPlayersInput"><option>2</option><option>4</option><option>6</option><option>8</option><option>10</option><option>12</option></select>
+      <button class="btn modal-close" id="closeEditServerBtn">✕</button>
+      <h2 style="margin-top:0;">Edit Server</h2>
+
+      <div class="server-form">
+        <label>
+          Server name
+          <input id="editServerNameInput" type="text" maxlength="40" placeholder="Server name" />
+        </label>
+
+        <label>
+          Description
+          <textarea id="editServerDescInput" maxlength="220" placeholder="Description..."></textarea>
+        </label>
+
+        <div class="server-form-grid">
+          <label>
+            Max players
+            <select id="editServerMaxPlayersInput">
+              <option value="2">2</option>
+              <option value="4">4</option>
+              <option value="6">6</option>
+              <option value="8">8</option>
+              <option value="10">10</option>
+              <option value="12">12</option>
+            </select>
           </label>
-          <label>Visibility
-            <select id="editServerVisibilityInput"><option value="public">Public</option><option value="private">Private</option></select>
+
+          <label>
+            Visibility
+            <select id="editServerVisibilityInput">
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
           </label>
-          <label>World mode
-            <select id="editServerDayModeInput"><option value="auto">Normal day/night</option><option value="dayForever">Day Forever</option><option value="nightForever">Night Forever</option></select>
+
+          <label>
+            World mode
+            <select id="editServerDayModeInput">
+              <option value="auto">Normal day/night</option>
+              <option value="dayForever">Day Forever</option>
+              <option value="nightForever">Night Forever</option>
+            </select>
           </label>
         </div>
-        <label>Allowed usernames (comma separated, only for private)<input id="editServerAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" /></label>
-        <div class="row">
+
+        <label>
+          Allowed usernames (comma separated, only for private)
+          <input id="editServerAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
+        <div class="row-actions">
           <button id="saveServerEditBtn" class="btn">Save changes</button>
           <button id="cancelEditServerBtn" class="btn">Cancel</button>
           <span id="editServerMsg" class="tiny"></span>
@@ -206,736 +904,1253 @@
     </div>
   </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, setDoc, doc, deleteDoc, getDocs, where, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp,
+      query,
+      orderBy,
+      onSnapshot,
+      setDoc,
+      doc,
+      deleteDoc,
+      getDocs,
+      where,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
-  authDomain: "pine-tycoon.firebaseapp.com",
-  projectId: "pine-tycoon",
-  storageBucket: "pine-tycoon.firebasestorage.app",
-  messagingSenderId: "949986190236",
-  appId: "1:949986190236:web:4f5d50078326f5c1981e59",
-  measurementId: "G-2DY6KSY4G7",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-const BASE_AVATARS = [
-  DEFAULT_AVATAR,
-  "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
-];
-const EXCLUSIVE_AVATARS = [
-  "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
-  "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
-];
-
-const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
-const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
-const SERVER_TIMEOUT_MS = 12000;
-const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
-
-const usersCol = collection(db, "users");
-const commentsCol = collection(db, "comments");
-const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
-const friendRequestsCol = collection(db, "friendRequests");
-const serversCol = collection(db, "servers");
-
-const el = (id) => document.getElementById(id);
-const welcomeText = el("welcomeText");
-const userNameDisplay = el("userNameDisplay");
-const avatarImg = document.querySelector(".user-avatar");
-const myBioLine = el("myBioLine");
-const loginLink = el("loginLink");
-const signupLink = el("signupLink");
-const logoutBtn = el("logoutBtn");
-const commentsList = el("commentsList");
-const commentForm = el("commentForm");
-const commentText = el("commentText");
-const commentInfo = el("commentInfo");
-const themeToggleBtn = el("themeToggle");
-const userSearchInput = el("userSearchInput");
-const userSearchBtn = el("userSearchBtn");
-const userSearchResults = el("userSearchResults");
-const friendsListDiv = el("friendsList");
-const friendRequestsListDiv = el("friendRequestsList");
-const openEditProfileBtn = el("openEditProfile");
-const editProfileBox = el("editProfileBox");
-const avatarGrid = el("avatarGrid");
-const bioInput = el("bioInput");
-const bioCount = el("bioCount");
-const saveProfileBtn = el("saveProfileBtn");
-const closeEditProfileBtn = el("closeEditProfileBtn");
-const saveProfileMsg = el("saveProfileMsg");
-const avatarHint = el("avatarHint");
-const profileModal = el("profileModal");
-const profileOverlay = el("profileOverlay");
-const profileCloseBtn = el("profileCloseBtn");
-const profileAvatar = el("profileAvatar");
-const profileName = el("profileName");
-const profileStatus = el("profileStatus");
-const profileLast = el("profileLast");
-const profileBio = el("profileBio");
-const openCreateServerBtn = el("openCreateServerBtn");
-const refreshServersBtn = el("refreshServersBtn");
-const multiplayerList = el("multiplayerList");
-const serverStatusLine = el("serverStatusLine");
-const serverSearchInput = el("serverSearchInput");
-const clearServerSearchBtn = el("clearServerSearchBtn");
-const createServerModal = el("createServerModal");
-const createServerOverlay = el("createServerOverlay");
-const closeCreateServerBtn = el("closeCreateServerBtn");
-const cancelCreateServerBtn = el("cancelCreateServerBtn");
-const createServerSubmitBtn = el("createServerSubmitBtn");
-const createServerMsg = el("createServerMsg");
-const serverNameInput = el("serverNameInput");
-const serverDescInput = el("serverDescInput");
-const serverMaxPlayersInput = el("serverMaxPlayersInput");
-const serverVisibilityInput = el("serverVisibilityInput");
-const serverDayModeInput = el("serverDayModeInput");
-const serverAllowedUsersInput = el("serverAllowedUsersInput");
-const editServerModal = el("editServerModal");
-const editServerOverlay = el("editServerOverlay");
-const closeEditServerBtn = el("closeEditServerBtn");
-const cancelEditServerBtn = el("cancelEditServerBtn");
-const saveServerEditBtn = el("saveServerEditBtn");
-const editServerMsg = el("editServerMsg");
-const editServerNameInput = el("editServerNameInput");
-const editServerDescInput = el("editServerDescInput");
-const editServerMaxPlayersInput = el("editServerMaxPlayersInput");
-const editServerVisibilityInput = el("editServerVisibilityInput");
-const editServerDayModeInput = el("editServerDayModeInput");
-const editServerAllowedUsersInput = el("editServerAllowedUsersInput");
-
-let currentUserName = null;
-let currentUserUid = null;
-let currentUserAvatar = DEFAULT_AVATAR;
-let currentUserBio = "";
-let usersCache = [];
-let friendsList = [];
-let friendRequestsIncoming = [];
-let friendRequestsOutgoing = [];
-let serversCache = [];
-let editingServerId = null;
-let presenceInterval = null;
-let friendsUnsub = null;
-let friendReqUnsub = null;
-let serversUnsub = null;
-
-const normalizeName = (name) => String(name || "").trim().toLowerCase().replace(/\s+/g, "_");
-const randomSeed = () => Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
-const escapeHtml = (str) => String(str).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c] || c));
-const formatDate = (ts) => { const d = ts?.toDate ? ts.toDate() : ts instanceof Date ? ts : null; return d ? d.toLocaleString("uk-UA") : ""; };
-const isSpecialUser = (name) => SPECIAL_USERS.has(normalizeName(name));
-const getAllowedAvatarsFor = (name) => { const set = new Set(BASE_AVATARS); if (isSpecialUser(name)) EXCLUSIVE_AVATARS.forEach((u) => set.add(u)); return [...set]; };
-const computeOnline = (u) => { const now = new Date(); const last = u?.lastActive?.toDate ? u.lastActive.toDate() : null; return { isOnline: !!(last && now - last < ONLINE_TIMEOUT_MS), last }; };
-const parseAllowedUsers = (text) => { const raw = String(text || "").split(",").map((x) => x.trim()).filter(Boolean); const original = [...new Set(raw)]; const normalized = [...new Set(original.map((x) => normalizeName(x)).filter(Boolean))]; return { original, normalized }; };
-const getServerOnlineState = (server) => { const hb = server?.lastHeartbeat?.toDate ? server.lastHeartbeat.toDate().getTime() : 0; return !!(hb && Date.now() - hb < SERVER_TIMEOUT_MS); };
-const openModal = (m) => m.classList.add("show");
-const closeModal = (m) => m.classList.remove("show");
-
-profileOverlay.addEventListener("click", () => closeModal(profileModal));
-profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
-createServerOverlay.addEventListener("click", () => closeModal(createServerModal));
-closeCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
-cancelCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
-editServerOverlay.addEventListener("click", () => closeModal(editServerModal));
-closeEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
-cancelEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
-
-function showMiniProfile(uid) {
-  const u = usersCache.find((x) => x.id === uid);
-  if (!u) return;
-  const { isOnline, last } = computeOnline(u);
-  profileAvatar.src = u.avatar || DEFAULT_AVATAR;
-  profileName.textContent = u.name || "Player";
-  profileStatus.textContent = isOnline ? "Online" : "Offline";
-  profileLast.textContent = last ? "Last active: " + last.toLocaleString("uk-UA") : "";
-  profileBio.textContent = u.bio && u.bio.trim() ? u.bio.trim() : "No bio yet.";
-  openModal(profileModal);
-}
-
-function updateCommentUI() {
-  if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
-    commentForm.style.display = "block";
-    commentInfo.textContent = "You can post comments as " + currentUserName + ".";
-  } else {
-    commentForm.style.display = "none";
-    commentInfo.textContent = currentUserName ? "Only davyd3102 and 3102 can post comments." : "Sign in as davyd3102 or 3102 to post comments.";
-  }
-}
-
-async function loadMyProfile(uid) {
-  try {
-    const snap = await getDoc(doc(db, "users", uid));
-    const data = snap.exists() ? snap.data() : null;
-    currentUserAvatar = data?.avatar || DEFAULT_AVATAR;
-    currentUserBio = typeof data?.bio === "string" ? data.bio : "";
-    avatarImg.src = currentUserAvatar;
-    if (currentUserBio.trim()) {
-      myBioLine.style.display = "block";
-      myBioLine.textContent = currentUserBio.trim();
-    } else {
-      myBioLine.style.display = "none";
-      myBioLine.textContent = "";
-    }
-  } catch (e) {
-    console.error(e);
-    currentUserAvatar = DEFAULT_AVATAR;
-    currentUserBio = "";
-  }
-}
-
-async function touchUserPresence(uid, name) {
-  try {
-    await setDoc(doc(db, "users", uid), { name, avatar: currentUserAvatar || DEFAULT_AVATAR, bio: currentUserBio || "", lastActive: serverTimestamp() }, { merge: true });
-  } catch (err) { console.error(err); }
-}
-
-function startPresenceUpdater(uid, name) {
-  if (presenceInterval) clearInterval(presenceInterval);
-  touchUserPresence(uid, name);
-  presenceInterval = setInterval(() => touchUserPresence(uid, name), 60000);
-}
-function stopPresenceUpdater() { if (presenceInterval) clearInterval(presenceInterval); presenceInterval = null; }
-
-function renderFriends() {
-  friendsListDiv.innerHTML = "";
-  if (!currentUserUid) { friendsListDiv.innerHTML = '<p class="empty">Sign in to view friends.</p>'; return; }
-  if (!friendsList.length) { friendsListDiv.innerHTML = '<p class="empty">No friends yet.</p>'; return; }
-
-  const now = new Date();
-  friendsList.forEach((f) => {
-    const item = document.createElement("div");
-    item.className = "friend-item";
-    const avatar = document.createElement("img");
-    avatar.className = "friend-avatar";
-    avatar.src = f.friendAvatar || DEFAULT_AVATAR;
-    item.appendChild(avatar);
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = f.friendName || "";
-    nameSpan.className = "friend-name";
-    item.appendChild(nameSpan);
-    item.addEventListener("click", () => showMiniProfile(f.friendUid));
-    friendsListDiv.appendChild(item);
-  });
-}
-
-function renderFriendRequests() {
-  friendRequestsListDiv.innerHTML = "";
-  if (!currentUserUid) { friendRequestsListDiv.innerHTML = '<p class="empty">Sign in to view requests.</p>'; return; }
-  if (!friendRequestsIncoming.length && !friendRequestsOutgoing.length) { friendRequestsListDiv.innerHTML = '<p class="empty">No requests.</p>'; return; }
-
-  if (friendRequestsIncoming.length) {
-    const title = document.createElement("div");
-    title.className = "tiny";
-    title.textContent = "Incoming:";
-    friendRequestsListDiv.appendChild(title);
-    friendRequestsIncoming.forEach((req) => {
-      const row = document.createElement("div");
-      row.className = "req-row";
-      row.innerHTML = `<div class="tiny">${escapeHtml(req.fromName || "Player")} wants to add you</div>`;
-      const actions = document.createElement("div");
-      actions.className = "friend-actions";
-      const acceptBtn = document.createElement("button");
-      acceptBtn.className = "btn";
-      acceptBtn.textContent = "Accept";
-      acceptBtn.onclick = () => handleAcceptRequest(req);
-      const declineBtn = document.createElement("button");
-      declineBtn.className = "btn";
-      declineBtn.textContent = "Decline";
-      declineBtn.onclick = () => handleDeclineRequest(req);
-      actions.appendChild(acceptBtn); actions.appendChild(declineBtn); row.appendChild(actions); friendRequestsListDiv.appendChild(row);
-    });
-  }
-
-  if (friendRequestsOutgoing.length) {
-    const title = document.createElement("div");
-    title.className = "tiny";
-    title.style.marginTop = "8px";
-    title.textContent = "Sent:";
-    friendRequestsListDiv.appendChild(title);
-    friendRequestsOutgoing.forEach((req) => {
-      const row = document.createElement("div");
-      row.className = "req-row";
-      row.innerHTML = `<div class="tiny">Request to ${escapeHtml(req.toName || "player")} (pending)</div>`;
-      friendRequestsListDiv.appendChild(row);
-    });
-  }
-}
-
-function subscribeFriendsFor(uid) {
-  if (friendsUnsub) friendsUnsub();
-  friendsUnsub = null; friendsList = []; renderFriends();
-  if (!uid) return;
-  friendsUnsub = onSnapshot(collection(db, "users", uid, "friends"), (snapshot) => {
-    friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderFriends();
-    if (userSearchInput.value.trim()) renderUserResults(userSearchInput.value.trim());
-  }, (error) => { console.error(error); friendsListDiv.innerHTML = '<p class="empty">Failed to load friends.</p>'; });
-}
-
-function subscribeFriendRequestsFor(uid) {
-  if (friendReqUnsub) friendReqUnsub();
-  friendReqUnsub = null; friendRequestsIncoming = []; friendRequestsOutgoing = []; renderFriendRequests();
-  if (!uid) return;
-  friendReqUnsub = onSnapshot(friendRequestsCol, (snapshot) => {
-    friendRequestsIncoming = []; friendRequestsOutgoing = [];
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      if (!data || data.status !== "pending") return;
-      if (data.toUid === uid) friendRequestsIncoming.push({ id: docSnap.id, ...data });
-      if (data.fromUid === uid) friendRequestsOutgoing.push({ id: docSnap.id, ...data });
-    });
-    renderFriendRequests();
-    if (userSearchInput.value.trim()) renderUserResults(userSearchInput.value.trim());
-  }, console.error);
-}
-
-async function handleAcceptRequest(req) {
-  if (!currentUserUid || !currentUserName) return;
-  try {
-    const fromUser = usersCache.find((u) => u.id === req.fromUid);
-    const myUser = usersCache.find((u) => u.id === currentUserUid);
-    await Promise.all([
-      setDoc(doc(db, "users", currentUserUid, "friends", req.fromUid), {
-        friendUid: req.fromUid,
-        friendName: req.fromName || "Player",
-        friendAvatar: fromUser?.avatar || DEFAULT_AVATAR,
-        createdAt: serverTimestamp(),
-      }),
-      setDoc(doc(db, "users", req.fromUid, "friends", currentUserUid), {
-        friendUid: currentUserUid,
-        friendName: currentUserName,
-        friendAvatar: myUser?.avatar || currentUserAvatar || DEFAULT_AVATAR,
-        createdAt: serverTimestamp(),
-      }),
-      deleteDoc(doc(db, "friendRequests", req.id)),
-    ]);
-  } catch (err) {
-    console.error(err);
-    alert("Failed to accept request: " + err.message);
-  }
-}
-
-async function handleDeclineRequest(req) {
-  try { await deleteDoc(doc(db, "friendRequests", req.id)); }
-  catch (err) { console.error(err); alert("Failed to decline request: " + err.message); }
-}
-
-function renderUserResults(term) {
-  userSearchResults.innerHTML = "";
-  const trimmed = term.trim();
-  if (!trimmed) { userSearchResults.innerHTML = '<p class="empty">Type a name to search players.</p>'; return; }
-  const lower = trimmed.toLowerCase();
-  const filtered = usersCache.filter((u) => u.name && u.name.toLowerCase().includes(lower));
-  if (!filtered.length) { userSearchResults.innerHTML = '<p class="empty">No results.</p>'; return; }
-
-  const now = new Date();
-  filtered.forEach((u) => {
-    const last = u.lastActive?.toDate ? u.lastActive.toDate() : null;
-    const isOnline = !!(last && now - last < ONLINE_TIMEOUT_MS);
-    let relation = "none";
-    if (!currentUserUid) relation = "guest";
-    else if (u.id === currentUserUid) relation = "self";
-    else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
-    else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
-    else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
-
-    const item = document.createElement("div");
-    item.className = "result";
-    item.innerHTML = `
-      <img class="result-avatar" src="${escapeHtml(u.avatar || DEFAULT_AVATAR)}" alt="Avatar">
-      <div style="flex:1">
-        <div class="result-name">${escapeHtml(u.name || "Player")}</div>
-        <div class="status ${isOnline ? "online" : "offline"}">${isOnline ? "Online" : "Offline"}</div>
-        ${last ? `<div class="tiny">Last active: ${escapeHtml(last.toLocaleString("uk-UA"))}</div>` : ""}
-      </div>
-      <div class="row"></div>`;
-
-    item.querySelector(".result-avatar").onclick = () => showMiniProfile(u.id);
-    item.querySelector(".result-name").onclick = () => showMiniProfile(u.id);
-    const actionDiv = item.querySelector(".row");
-
-    if (relation === "guest") actionDiv.innerHTML = '<div class="tiny">Sign in to add friends.</div>';
-    else if (relation === "self") actionDiv.innerHTML = '<div class="tiny">This is your account.</div>';
-    else if (relation === "friend") actionDiv.innerHTML = '<div class="tiny">Already friends</div>';
-    else if (relation === "outgoing") actionDiv.innerHTML = '<div class="tiny">Request sent</div>';
-    else if (relation === "incoming") actionDiv.innerHTML = '<div class="tiny">Incoming request</div>';
-    else {
-      const btn = document.createElement("button");
-      btn.className = "btn";
-      btn.textContent = "Add friend";
-      btn.onclick = () => sendFriendRequest(u);
-      actionDiv.appendChild(btn);
-    }
-
-    userSearchResults.appendChild(item);
-  });
-}
-
-async function sendFriendRequest(targetUser) {
-  if (!currentUserUid || !currentUserName) { alert("Sign in first to add friends."); return; }
-  if (!targetUser || !targetUser.id || targetUser.id === currentUserUid) return;
-  if (friendsList.some((f) => f.friendUid === targetUser.id)) { alert((targetUser.name || "Player") + " is already your friend."); return; }
-  if (friendRequestsOutgoing.some((r) => r.toUid === targetUser.id)) { alert("You already sent a request to this player."); return; }
-  try {
-    await addDoc(friendRequestsCol, { fromUid: currentUserUid, fromName: currentUserName, toUid: targetUser.id, toName: targetUser.name || "Player", status: "pending", createdAt: serverTimestamp() });
-  } catch (err) { console.error(err); alert("Failed to send request: " + err.message); }
-}
-
-function buildAvatarGrid(selectedUrl) {
-  avatarGrid.innerHTML = "";
-  const allowed = getAllowedAvatarsFor(currentUserName);
-  avatarHint.textContent = isSpecialUser(currentUserName)
-    ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
-    : "Choose an avatar and write a short bio (max 200 chars).";
-
-  allowed.forEach((url) => {
-    const cell = document.createElement("div");
-    cell.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
-    cell.innerHTML = `<img src="${escapeHtml(url)}" alt="Avatar">`;
-    cell.onclick = () => {
-      [...avatarGrid.querySelectorAll(".avatar-option")].forEach((x) => x.classList.remove("selected"));
-      cell.classList.add("selected");
-      avatarGrid.dataset.selected = url;
+    const firebaseConfig = {
+      apiKey: "AIzaSyDZEwAbFwLQXxlkkmuMKBFof2J3OE02Egs",
+      authDomain: "pine-tycoon.firebaseapp.com",
+      projectId: "pine-tycoon",
+      storageBucket: "pine-tycoon.firebasestorage.app",
+      messagingSenderId: "949986190236",
+      appId: "1:949986190236:web:4f5d50078326f5c1981e59",
+      measurementId: "G-2DY6KSY4G7",
     };
-    avatarGrid.appendChild(cell);
-  });
-  avatarGrid.dataset.selected = selectedUrl;
-}
 
-function openEditProfile() {
-  editProfileBox.style.display = "block";
-  saveProfileMsg.textContent = "";
-  bioInput.value = currentUserBio || "";
-  bioCount.textContent = `${bioInput.value.length}/200`;
-  buildAvatarGrid(currentUserAvatar || DEFAULT_AVATAR);
-  editProfileBox.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-function closeEditProfile() { editProfileBox.style.display = "none"; }
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-bioInput.addEventListener("input", () => { bioCount.textContent = `${bioInput.value.length}/200`; });
-openEditProfileBtn.addEventListener("click", openEditProfile);
-closeEditProfileBtn.addEventListener("click", closeEditProfile);
+    const welcomeText = document.getElementById("welcomeText");
+    const userNameDisplay = document.getElementById("userNameDisplay");
+    const avatarImg = document.querySelector(".user-avatar");
+    const myBioLine = document.getElementById("myBioLine");
 
-saveProfileBtn.addEventListener("click", async () => {
-  if (!currentUserUid || !currentUserName) return;
-  const allowed = new Set(getAllowedAvatarsFor(currentUserName));
-  const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
-  const safeSelected = allowed.has(selected) ? selected : DEFAULT_AVATAR;
-  const bio = (bioInput.value || "").trim().slice(0, 200);
-  saveProfileMsg.textContent = "Saving...";
-  try {
-    await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio }, { merge: true });
-    currentUserAvatar = safeSelected; currentUserBio = bio; avatarImg.src = currentUserAvatar;
-    if (currentUserBio.trim()) { myBioLine.style.display = "block"; myBioLine.textContent = currentUserBio.trim(); }
-    else { myBioLine.style.display = "none"; myBioLine.textContent = ""; }
-    saveProfileMsg.textContent = "Saved.";
-    setTimeout(() => saveProfileMsg.textContent = "", 1200);
-  } catch (err) { console.error(err); saveProfileMsg.textContent = "Error: " + (err.message || err); }
-});
+    const loginLink = document.getElementById("loginLink");
+    const signupLink = document.getElementById("signupLink");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-function applyTheme(theme) { document.body.classList.toggle("dark", theme === "dark"); }
-applyTheme(localStorage.getItem("pineTheme") || "light");
-themeToggleBtn.addEventListener("click", () => { const newTheme = document.body.classList.contains("dark") ? "light" : "dark"; applyTheme(newTheme); localStorage.setItem("pineTheme", newTheme); });
+    const commentsList = document.getElementById("commentsList");
+    const commentForm = document.getElementById("commentForm");
+    const commentText = document.getElementById("commentText");
+    const commentInfo = document.getElementById("commentInfo");
 
-function serverModeLabel(mode) {
-  if (mode === "dayForever") return "Day Forever";
-  if (mode === "nightForever") return "Night Forever";
-  return "Normal day/night";
-}
+    const themeToggleBtn = document.getElementById("themeToggle");
 
-function canJoinServer(server) {
-  if (!currentUserUid || !currentUserName) return { ok: false, reason: "Sign in required" };
-  const isCreator = server.createdByUid === currentUserUid;
-  const maxPlayers = Number(server.maxPlayers || 8);
-  const online = getServerOnlineState(server);
-  const displayedPlayers = online ? Number(server.playerCount || 0) : 0;
-  if (!isCreator && online && displayedPlayers >= maxPlayers) return { ok: false, reason: "Server full" };
-  if (server.status === "closed") return { ok: false, reason: "Server closed" };
-  if (server.visibility === "private") {
-    const allowed = Array.isArray(server.allowedUsersNormalized) ? server.allowedUsersNormalized : [];
-    if (!isCreator && !allowed.includes(normalizeName(currentUserName))) return { ok: false, reason: "Private server" };
-  }
-  return { ok: true, reason: "" };
-}
+    const userSearchInput = document.getElementById("userSearchInput");
+    const userSearchBtn = document.getElementById("userSearchBtn");
+    const userSearchResults = document.getElementById("userSearchResults");
 
-function openCreateServer() {
-  if (!currentUserUid || !currentUserName) { alert("Please sign in first."); return; }
-  createServerMsg.textContent = "";
-  serverNameInput.value = `${currentUserName}'s server`;
-  serverDescInput.value = "";
-  serverMaxPlayersInput.value = "8";
-  serverVisibilityInput.value = "public";
-  serverDayModeInput.value = "auto";
-  serverAllowedUsersInput.value = "";
-  openModal(createServerModal);
-}
-openCreateServerBtn.addEventListener("click", openCreateServer);
+    const friendsListDiv = document.getElementById("friendsList");
+    const friendRequestsListDiv = document.getElementById("friendRequestsList");
 
-async function createServer() {
-  if (!currentUserUid || !currentUserName) { createServerMsg.textContent = "Sign in first."; return; }
-  const name = serverNameInput.value.trim().slice(0, 40);
-  const description = serverDescInput.value.trim().slice(0, 220);
-  const maxPlayers = Number(serverMaxPlayersInput.value || 8);
-  const visibility = serverVisibilityInput.value === "private" ? "private" : "public";
-  const dayMode = ["auto", "dayForever", "nightForever"].includes(serverDayModeInput.value) ? serverDayModeInput.value : "auto";
-  if (!name) { createServerMsg.textContent = "Type a server name."; return; }
+    const adminSection = document.getElementById("adminSection");
+    const adminDeleteName = document.getElementById("adminDeleteName");
+    const adminDeleteBtn = document.getElementById("adminDeleteBtn");
+    const adminDeleteStatus = document.getElementById("adminDeleteStatus");
 
-  const { original, normalized } = parseAllowedUsers(serverAllowedUsersInput.value);
-  if (visibility === "private" && !normalized.includes(normalizeName(currentUserName))) {
-    normalized.push(normalizeName(currentUserName));
-    original.push(currentUserName);
-  }
+    const openEditProfileBtn = document.getElementById("openEditProfile");
+    const editProfileBox = document.getElementById("editProfileBox");
+    const avatarGrid = document.getElementById("avatarGrid");
+    const bioInput = document.getElementById("bioInput");
+    const bioCount = document.getElementById("bioCount");
+    const saveProfileBtn = document.getElementById("saveProfileBtn");
+    const closeEditProfileBtn = document.getElementById("closeEditProfileBtn");
+    const saveProfileMsg = document.getElementById("saveProfileMsg");
+    const avatarHint = document.getElementById("avatarHint");
 
-  createServerMsg.textContent = "Creating server...";
-  createServerSubmitBtn.disabled = true;
-  try {
-    const docRef = await addDoc(serversCol, {
-      name, description,
-      createdByUid: currentUserUid,
-      createdByName: currentUserName,
-      createdByAvatar: currentUserAvatar || DEFAULT_AVATAR,
-      maxPlayers,
-      playerCount: 0,
-      visibility,
-      allowedUsers: visibility === "private" ? original : [],
-      allowedUsersNormalized: visibility === "private" ? normalized : [],
-      dayMode,
-      status: "offline",
-      worldSeed: randomSeed(),
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastHeartbeat: serverTimestamp(),
-    });
-    location.href = `multiplayer.html?server=${encodeURIComponent(docRef.id)}`;
-  } catch (err) { console.error(err); createServerMsg.textContent = "Error: " + (err.message || err); createServerSubmitBtn.disabled = false; }
-}
-createServerSubmitBtn.addEventListener("click", createServer);
+    const profileModal = document.getElementById("profileModal");
+    const profileOverlay = document.getElementById("profileOverlay");
+    const profileCloseBtn = document.getElementById("profileCloseBtn");
+    const profileAvatar = document.getElementById("profileAvatar");
+    const profileName = document.getElementById("profileName");
+    const profileStatus = document.getElementById("profileStatus");
+    const profileLast = document.getElementById("profileLast");
+    const profileBio = document.getElementById("profileBio");
 
-function openEditServer(server) {
-  if (!server || !currentUserUid || server.createdByUid !== currentUserUid) return;
-  editingServerId = server.id;
-  editServerMsg.textContent = "";
-  editServerNameInput.value = server.name || "";
-  editServerDescInput.value = server.description || "";
-  editServerMaxPlayersInput.value = String(server.maxPlayers || 8);
-  editServerVisibilityInput.value = server.visibility || "public";
-  editServerDayModeInput.value = server.dayMode || "auto";
-  editServerAllowedUsersInput.value = Array.isArray(server.allowedUsers) ? server.allowedUsers.join(", ") : "";
-  openModal(editServerModal);
-}
+    const openCreateServerBtn = document.getElementById("openCreateServerBtn");
+    const refreshServersBtn = document.getElementById("refreshServersBtn");
+    const multiplayerList = document.getElementById("multiplayerList");
+    const serverStatusLine = document.getElementById("serverStatusLine");
+    const serverSearchInput = document.getElementById("serverSearchInput");
+    const clearServerSearchBtn = document.getElementById("clearServerSearchBtn");
 
-saveServerEditBtn.addEventListener("click", async () => {
-  if (!editingServerId || !currentUserUid) return;
-  const server = serversCache.find((s) => s.id === editingServerId);
-  if (!server || server.createdByUid !== currentUserUid) { editServerMsg.textContent = "Only owner can edit this server."; return; }
+    const createServerModal = document.getElementById("createServerModal");
+    const createServerOverlay = document.getElementById("createServerOverlay");
+    const closeCreateServerBtn = document.getElementById("closeCreateServerBtn");
+    const cancelCreateServerBtn = document.getElementById("cancelCreateServerBtn");
+    const createServerSubmitBtn = document.getElementById("createServerSubmitBtn");
+    const createServerMsg = document.getElementById("createServerMsg");
+    const serverNameInput = document.getElementById("serverNameInput");
+    const serverDescInput = document.getElementById("serverDescInput");
+    const serverMaxPlayersInput = document.getElementById("serverMaxPlayersInput");
+    const serverVisibilityInput = document.getElementById("serverVisibilityInput");
+    const serverDayModeInput = document.getElementById("serverDayModeInput");
+    const serverAllowedUsersInput = document.getElementById("serverAllowedUsersInput");
 
-  const name = editServerNameInput.value.trim().slice(0, 40);
-  const description = editServerDescInput.value.trim().slice(0, 220);
-  const maxPlayers = Number(editServerMaxPlayersInput.value || 8);
-  const visibility = editServerVisibilityInput.value === "private" ? "private" : "public";
-  const dayMode = ["auto", "dayForever", "nightForever"].includes(editServerDayModeInput.value) ? editServerDayModeInput.value : "auto";
-  if (!name) { editServerMsg.textContent = "Type a server name."; return; }
+    const editServerModal = document.getElementById("editServerModal");
+    const editServerOverlay = document.getElementById("editServerOverlay");
+    const closeEditServerBtn = document.getElementById("closeEditServerBtn");
+    const cancelEditServerBtn = document.getElementById("cancelEditServerBtn");
+    const saveServerEditBtn = document.getElementById("saveServerEditBtn");
+    const editServerMsg = document.getElementById("editServerMsg");
+    const editServerNameInput = document.getElementById("editServerNameInput");
+    const editServerDescInput = document.getElementById("editServerDescInput");
+    const editServerMaxPlayersInput = document.getElementById("editServerMaxPlayersInput");
+    const editServerVisibilityInput = document.getElementById("editServerVisibilityInput");
+    const editServerDayModeInput = document.getElementById("editServerDayModeInput");
+    const editServerAllowedUsersInput = document.getElementById("editServerAllowedUsersInput");
 
-  const { original, normalized } = parseAllowedUsers(editServerAllowedUsersInput.value);
-  if (visibility === "private" && currentUserName && !normalized.includes(normalizeName(currentUserName))) {
-    normalized.push(normalizeName(currentUserName));
-    original.push(currentUserName);
-  }
+    const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
 
-  editServerMsg.textContent = "Saving...";
-  try {
-    await setDoc(doc(db, "servers", editingServerId), {
-      name, description, maxPlayers, visibility, dayMode,
-      allowedUsers: visibility === "private" ? original : [],
-      allowedUsersNormalized: visibility === "private" ? normalized : [],
-      updatedAt: serverTimestamp(),
-    }, { merge: true });
-    editServerMsg.textContent = "Saved.";
-    setTimeout(() => { editServerMsg.textContent = ""; closeModal(editServerModal); }, 800);
-  } catch (err) { console.error(err); editServerMsg.textContent = "Error: " + (err.message || err); }
-});
+    const BASE_AVATARS = [
+      DEFAULT_AVATAR,
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
+    ];
 
-function renderServers() {
-  multiplayerList.innerHTML = "";
-  const searchTerm = (serverSearchInput?.value || "").trim().toLowerCase();
-  let filtered = [...serversCache];
-  if (searchTerm) filtered = filtered.filter((server) => String(server.name || "").toLowerCase().includes(searchTerm));
+    const EXCLUSIVE_AVATARS = [
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
+    ];
 
-  const sorted = filtered.sort((a, b) => {
-    const aOnline = getServerOnlineState(a) ? 1 : 0;
-    const bOnline = getServerOnlineState(b) ? 1 : 0;
-    if (bOnline !== aOnline) return bOnline - aOnline;
-    const byPlayers = Number(b.playerCount || 0) - Number(a.playerCount || 0);
-    if (byPlayers !== 0) return byPlayers;
-    const bt = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
-    const at = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
-    return bt - at;
-  });
+    const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
+    const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
+    const SERVER_TIMEOUT_MS = 12000;
+    const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
 
-  if (!sorted.length) {
-    multiplayerList.innerHTML = '<div class="empty">No servers found.</div>';
-    serverStatusLine.textContent = "Servers found: 0";
-    return;
-  }
+    let currentUserName = null;
+    let currentUserUid = null;
+    let currentUserAvatar = DEFAULT_AVATAR;
+    let currentUserBio = "";
 
-  sorted.forEach((server, index) => {
-    const online = getServerOnlineState(server);
-    const displayedPlayers = online ? Number(server.playerCount || 0) : 0;
-    const maxPlayers = Number(server.maxPlayers || 8);
-    const full = online && displayedPlayers >= maxPlayers;
-    const access = canJoinServer({ ...server, playerCount: displayedPlayers });
+    let usersCache = [];
+    let friendsList = [];
+    let friendRequestsIncoming = [];
+    let friendRequestsOutgoing = [];
+    let serversCache = [];
+    let editingServerId = null;
 
-    const badges = [];
-    badges.push(`<span class="badge ${online ? "online" : "offline"}">${online ? "Online" : "Offline"}</span>`);
-    badges.push(`<span class="badge ${server.visibility === "private" ? "private" : "public"}">${server.visibility === "private" ? "Private" : "Public"}</span>`);
-    badges.push(`<span class="badge">${escapeHtml(serverModeLabel(server.dayMode))}</span>`);
-    if (index === 0 && displayedPlayers > 0) badges.push('<span class="badge">Most active</span>');
-    if (full) badges.push('<span class="badge full">Full</span>');
+    let presenceInterval = null;
+    let friendsUnsub = null;
+    let friendReqUnsub = null;
+    let serversUnsub = null;
 
-    const card = document.createElement("div");
-    card.className = "server-card";
-    card.innerHTML = `
-      <div class="server-top">
-        <div>
-          <div class="server-name">${escapeHtml(server.name || "Server")}</div>
-          <div class="meta">Created by: ${escapeHtml(server.createdByName || "Unknown")}</div>
-        </div>
-        <div class="row"></div>
-      </div>
-      <div class="badges">${badges.join("")}</div>
-      <div class="server-desc">${escapeHtml(server.description || "No description.")}</div>
-      <div class="server-grid">
-        <div class="meta"><strong>Players:</strong> ${displayedPlayers} / ${maxPlayers}</div>
-        <div class="meta"><strong>World mode:</strong> ${escapeHtml(serverModeLabel(server.dayMode))}</div>
-        <div class="meta"><strong>Visibility:</strong> ${escapeHtml(server.visibility || "public")}</div>
-        <div class="meta"><strong>Created:</strong> ${escapeHtml(formatDate(server.createdAt) || "—")}</div>
-      </div>`;
+    const usersCol = collection(db, "users");
+    const commentsCol = collection(db, "comments");
+    const commentsQ = query(commentsCol, orderBy("createdAt", "desc"));
+    const friendRequestsCol = collection(db, "friendRequests");
+    const serversCol = collection(db, "servers");
 
-    const actionDiv = card.querySelector(".row");
-    if (currentUserUid && server.createdByUid === currentUserUid) {
-      const editBtn = document.createElement("button");
-      editBtn.className = "btn";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = () => openEditServer(server);
-      actionDiv.appendChild(editBtn);
+    function normalizeName(name) {
+      return String(name || "").trim().toLowerCase().replace(/\s+/g, "_");
     }
 
-    const joinBtn = document.createElement("button");
-    joinBtn.className = "btn";
-    joinBtn.disabled = !access.ok;
-    joinBtn.textContent = access.ok ? (online ? "Join" : "Start / Join") : access.reason;
-    joinBtn.onclick = () => { if (access.ok) location.href = `multiplayer.html?server=${encodeURIComponent(server.id)}`; };
-    actionDiv.appendChild(joinBtn);
+    function randomSeed() {
+      return Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
+    }
 
-    multiplayerList.appendChild(card);
-  });
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) => {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] || c);
+      });
+    }
 
-  serverStatusLine.textContent = `Servers found: ${sorted.length}`;
-}
+    function formatDate(ts) {
+      const d = ts?.toDate ? ts.toDate() : ts instanceof Date ? ts : null;
+      return d ? d.toLocaleString("uk-UA") : "";
+    }
 
-function subscribeServers() {
-  if (serversUnsub) serversUnsub();
-  serverStatusLine.textContent = "Loading servers...";
-  serversUnsub = onSnapshot(serversCol, (snapshot) => {
-    serversCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderServers();
-  }, (error) => {
-    console.error(error);
-    serverStatusLine.textContent = "Failed to load servers.";
-    multiplayerList.innerHTML = '<div class="empty">Failed to load servers.</div>';
-  });
-}
+    function isSpecialUser(name) {
+      return SPECIAL_USERS.has(normalizeName(name));
+    }
 
-serverSearchInput.addEventListener("input", renderServers);
-clearServerSearchBtn.addEventListener("click", () => { serverSearchInput.value = ""; renderServers(); });
-refreshServersBtn.addEventListener("click", renderServers);
+    function getAllowedAvatarsFor(name) {
+      const set = new Set(BASE_AVATARS);
+      if (isSpecialUser(name)) EXCLUSIVE_AVATARS.forEach((u) => set.add(u));
+      return [...set];
+    }
 
-onAuthStateChanged(auth, async (user) => {
-  if (user && user.displayName) {
-    currentUserName = user.displayName;
-    currentUserUid = user.uid;
-    welcomeText.textContent = "Welcome " + currentUserName;
-    userNameDisplay.textContent = currentUserName;
-    loginLink.style.display = "none";
-    signupLink.style.display = "none";
-    logoutBtn.style.display = "inline-block";
-    await loadMyProfile(user.uid);
-    openEditProfileBtn.style.display = "inline-block";
-    startPresenceUpdater(user.uid, currentUserName);
-    subscribeFriendsFor(user.uid);
-    subscribeFriendRequestsFor(user.uid);
-  } else {
-    currentUserName = null; currentUserUid = null; currentUserAvatar = DEFAULT_AVATAR; currentUserBio = "";
-    welcomeText.textContent = "Welcome Guest";
-    userNameDisplay.textContent = "Guest";
-    avatarImg.src = DEFAULT_AVATAR;
-    myBioLine.style.display = "none";
-    loginLink.style.display = "inline-block";
-    signupLink.style.display = "inline-block";
-    logoutBtn.style.display = "none";
-    openEditProfileBtn.style.display = "none";
-    editProfileBox.style.display = "none";
-    stopPresenceUpdater();
-    subscribeFriendsFor(null);
-    subscribeFriendRequestsFor(null);
-  }
-  updateCommentUI();
-  renderServers();
-});
+    function computeOnline(u) {
+      const now = new Date();
+      const last = u?.lastActive?.toDate ? u.lastActive.toDate() : null;
+      const isOnline = !!(last && now - last < ONLINE_TIMEOUT_MS);
+      return { isOnline, last };
+    }
 
-logoutBtn.addEventListener("click", async () => { try { await signOut(auth); } catch (err) { console.error(err); alert("Failed to log out: " + err.message); } });
+    function parseAllowedUsers(text) {
+      const raw = String(text || "")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
 
-onSnapshot(usersCol, (snapshot) => {
-  usersCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-  if (userSearchInput.value.trim()) renderUserResults(userSearchInput.value.trim());
-  renderFriends();
-}, console.error);
+      const original = [...new Set(raw)];
+      const normalized = [...new Set(original.map((x) => normalizeName(x)).filter(Boolean))];
+      return { original, normalized };
+    }
 
-onSnapshot(commentsQ, (snapshot) => {
-  commentsList.innerHTML = "";
-  if (snapshot.empty) {
-    commentsList.innerHTML = '<p class="empty">No comments yet.</p>';
-    return;
-  }
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data();
-    const div = document.createElement("div");
-    div.className = "comment";
-    div.innerHTML = `<div class="comment-author">${escapeHtml(data.author || "??")}</div><div class="comment-text">${escapeHtml(data.text || "")}</div><div class="tiny">${escapeHtml(formatDate(data.createdAt))}</div>`;
-    commentsList.appendChild(div);
-  });
-}, (error) => { console.error(error); commentsList.innerHTML = '<p class="empty">Failed to load comments.</p>'; });
+    function getServerOnlineState(server) {
+      const hb = server?.lastHeartbeat?.toDate ? server.lastHeartbeat.toDate().getTime() : 0;
+      const now = Date.now();
+      return !!(hb && now - hb < SERVER_TIMEOUT_MS);
+    }
 
-commentForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!currentUserName || !ALLOWED_COMMENTERS.includes(currentUserName)) { alert("Only davyd3102 and 3102 can post comments."); return; }
-  const text = commentText.value.trim();
-  if (!text) return;
-  try {
-    await addDoc(commentsCol, { author: currentUserName, text, createdAt: serverTimestamp() });
-    commentText.value = "";
-  } catch (err) { console.error(err); alert("Failed to post comment: " + err.message); }
-});
+    function openModal(modal) {
+      modal.classList.add("show");
+    }
 
-userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
-userSearchInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); renderUserResults(userSearchInput.value); } });
+    function closeModal(modal) {
+      modal.classList.remove("show");
+    }
 
-subscribeServers();
-</script>
+    profileOverlay.addEventListener("click", () => closeModal(profileModal));
+    profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
+    createServerOverlay.addEventListener("click", () => closeModal(createServerModal));
+    closeCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
+    cancelCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
+    editServerOverlay.addEventListener("click", () => closeModal(editServerModal));
+    closeEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
+    cancelEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
+
+    function showMiniProfile(uid) {
+      const u = usersCache.find((x) => x.id === uid);
+      if (!u) return;
+
+      const { isOnline, last } = computeOnline(u);
+
+      profileAvatar.src = u.avatar || DEFAULT_AVATAR;
+      profileName.textContent = u.name || "Player";
+      profileStatus.textContent = isOnline ? "Online" : "Offline";
+      profileLast.textContent = last ? "Last active: " + last.toLocaleString("uk-UA") : "";
+      profileBio.textContent = u.bio && u.bio.trim() ? u.bio.trim() : "No bio yet.";
+      openModal(profileModal);
+    }
+
+    function updateCommentUI() {
+      if (currentUserName && ALLOWED_COMMENTERS.includes(currentUserName)) {
+        commentForm.style.display = "block";
+        commentInfo.textContent = "You can post comments as " + currentUserName + ".";
+      } else {
+        commentForm.style.display = "none";
+        commentInfo.textContent = currentUserName
+          ? "Only davyd3102 and 3102 can post comments."
+          : "Sign in as davyd3102 or 3102 to post comments.";
+      }
+    }
+
+    async function loadMyProfile(uid) {
+      try {
+        const snap = await getDoc(doc(db, "users", uid));
+        const data = snap.exists() ? snap.data() : null;
+
+        currentUserAvatar = data?.avatar || DEFAULT_AVATAR;
+        currentUserBio = typeof data?.bio === "string" ? data.bio : "";
+
+        avatarImg.src = currentUserAvatar;
+
+        if (currentUserBio.trim()) {
+          myBioLine.style.display = "block";
+          myBioLine.textContent = currentUserBio.trim();
+        } else {
+          myBioLine.style.display = "none";
+          myBioLine.textContent = "";
+        }
+      } catch (e) {
+        console.error("Load profile error:", e);
+        currentUserAvatar = DEFAULT_AVATAR;
+        currentUserBio = "";
+      }
+    }
+
+    async function touchUserPresence(uid, name) {
+      try {
+        await setDoc(
+          doc(db, "users", uid),
+          {
+            name,
+            avatar: currentUserAvatar || DEFAULT_AVATAR,
+            bio: currentUserBio || "",
+            lastActive: serverTimestamp(),
+          },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error("Presence update error:", err);
+      }
+    }
+
+    function startPresenceUpdater(uid, name) {
+      if (!uid || !name) return;
+      if (presenceInterval) clearInterval(presenceInterval);
+
+      touchUserPresence(uid, name);
+      presenceInterval = setInterval(() => touchUserPresence(uid, name), 60000);
+    }
+
+    function stopPresenceUpdater() {
+      if (presenceInterval) {
+        clearInterval(presenceInterval);
+        presenceInterval = null;
+      }
+    }
+
+    function renderFriends() {
+      friendsListDiv.innerHTML = "";
+
+      if (!currentUserUid) {
+        friendsListDiv.innerHTML = '<p class="comment-empty">Sign in to view friends.</p>';
+        return;
+      }
+
+      if (!friendsList.length) {
+        friendsListDiv.innerHTML = '<p class="comment-empty">No friends yet.</p>';
+        return;
+      }
+
+      const now = new Date();
+
+      friendsList.forEach((f) => {
+        const item = document.createElement("div");
+        item.className = "friend-item";
+
+        const avatar = document.createElement("img");
+        avatar.className = "friend-avatar";
+        avatar.src = f.friendAvatar || DEFAULT_AVATAR;
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "friend-avatar-wrapper";
+        wrapper.appendChild(avatar);
+
+        const userData = usersCache.find((u) => u.id === f.friendUid);
+        let isOnline = false;
+        if (userData?.lastActive?.toDate) {
+          isOnline = now - userData.lastActive.toDate() < ONLINE_TIMEOUT_MS;
+        }
+
+        if (isOnline) {
+          const dot = document.createElement("div");
+          dot.className = "user-status-dot";
+          wrapper.appendChild(dot);
+        }
+
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "friend-name";
+        nameSpan.textContent = f.friendName || "";
+
+        item.appendChild(wrapper);
+        item.appendChild(nameSpan);
+        item.addEventListener("click", () => showMiniProfile(f.friendUid));
+        friendsListDiv.appendChild(item);
+      });
+    }
+
+    function renderFriendRequests() {
+      friendRequestsListDiv.innerHTML = "";
+
+      if (!currentUserUid) {
+        friendRequestsListDiv.innerHTML = '<p class="comment-empty">Sign in to view requests.</p>';
+        return;
+      }
+
+      if (!friendRequestsIncoming.length && !friendRequestsOutgoing.length) {
+        friendRequestsListDiv.innerHTML = '<p class="comment-empty">No requests.</p>';
+        return;
+      }
+
+      if (friendRequestsIncoming.length) {
+        const title = document.createElement("div");
+        title.className = "tiny";
+        title.textContent = "Incoming:";
+        friendRequestsListDiv.appendChild(title);
+
+        friendRequestsIncoming.forEach((req) => {
+          const row = document.createElement("div");
+          row.className = "friend-requests-row";
+
+          const text = document.createElement("div");
+          text.className = "user-result-note";
+          text.textContent = `${req.fromName || "Player"} wants to add you`;
+
+          const actions = document.createElement("div");
+          actions.className = "friend-requests-actions";
+
+          const acceptBtn = document.createElement("button");
+          acceptBtn.className = "btn";
+          acceptBtn.textContent = "Accept";
+          acceptBtn.addEventListener("click", () => handleAcceptRequest(req));
+
+          const declineBtn = document.createElement("button");
+          declineBtn.className = "btn";
+          declineBtn.textContent = "Decline";
+          declineBtn.addEventListener("click", () => handleDeclineRequest(req));
+
+          actions.appendChild(acceptBtn);
+          actions.appendChild(declineBtn);
+
+          row.appendChild(text);
+          row.appendChild(actions);
+          friendRequestsListDiv.appendChild(row);
+        });
+      }
+
+      if (friendRequestsOutgoing.length) {
+        const title2 = document.createElement("div");
+        title2.className = "tiny";
+        title2.style.marginTop = "8px";
+        title2.textContent = "Sent:";
+        friendRequestsListDiv.appendChild(title2);
+
+        friendRequestsOutgoing.forEach((req) => {
+          const row = document.createElement("div");
+          row.className = "friend-requests-row";
+
+          const text = document.createElement("div");
+          text.className = "user-result-note";
+          text.textContent = `Request to ${req.toName || "player"} (pending)`;
+
+          row.appendChild(text);
+          friendRequestsListDiv.appendChild(row);
+        });
+      }
+    }
+
+    function subscribeFriendsFor(uid) {
+      if (friendsUnsub) {
+        friendsUnsub();
+        friendsUnsub = null;
+      }
+
+      friendsList = [];
+      renderFriends();
+      if (!uid) return;
+
+      const friendsColRef = collection(db, "users", uid, "friends");
+      friendsUnsub = onSnapshot(
+        friendsColRef,
+        (snapshot) => {
+          friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          renderFriends();
+          const term = userSearchInput.value.trim();
+          if (term) renderUserResults(term);
+        },
+        (error) => {
+          console.error("Friends load error:", error);
+          friendsListDiv.innerHTML = '<p class="comment-empty">Failed to load friends.</p>';
+        }
+      );
+    }
+
+    function subscribeFriendRequestsFor(uid) {
+      if (friendReqUnsub) {
+        friendReqUnsub();
+        friendReqUnsub = null;
+      }
+
+      friendRequestsIncoming = [];
+      friendRequestsOutgoing = [];
+      renderFriendRequests();
+      if (!uid) return;
+
+      friendReqUnsub = onSnapshot(
+        friendRequestsCol,
+        (snapshot) => {
+          friendRequestsIncoming = [];
+          friendRequestsOutgoing = [];
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            if (!data || data.status !== "pending") return;
+            if (data.toUid === uid) friendRequestsIncoming.push({ id: docSnap.id, ...data });
+            if (data.fromUid === uid) friendRequestsOutgoing.push({ id: docSnap.id, ...data });
+          });
+
+          renderFriendRequests();
+          const term = userSearchInput.value.trim();
+          if (term) renderUserResults(term);
+        },
+        (error) => console.error("friendRequests load error:", error)
+      );
+    }
+
+    async function handleAcceptRequest(req) {
+      if (!currentUserUid || !currentUserName) return;
+      try {
+        const fromUid = req.fromUid;
+        const fromName = req.fromName || "??";
+        const myUid = currentUserUid;
+        const myName = currentUserName;
+
+        const fromUser = usersCache.find((u) => u.id === fromUid);
+        const myUser = usersCache.find((u) => u.id === myUid);
+
+        const fromAvatar = fromUser?.avatar || DEFAULT_AVATAR;
+        const myAvatar = myUser?.avatar || currentUserAvatar || DEFAULT_AVATAR;
+
+        await Promise.all([
+          setDoc(doc(db, "users", myUid, "friends", fromUid), {
+            friendUid: fromUid,
+            friendName: fromName,
+            friendAvatar: fromAvatar,
+            createdAt: serverTimestamp(),
+          }),
+          setDoc(doc(db, "users", fromUid, "friends", myUid), {
+            friendUid: myUid,
+            friendName: myName,
+            friendAvatar: myAvatar,
+            createdAt: serverTimestamp(),
+          }),
+          deleteDoc(doc(db, "friendRequests", req.id)),
+        ]);
+      } catch (err) {
+        console.error("Accept request error:", err);
+        alert("Failed to accept request: " + err.message);
+      }
+    }
+
+    async function handleDeclineRequest(req) {
+      try {
+        await deleteDoc(doc(db, "friendRequests", req.id));
+      } catch (err) {
+        console.error("Decline request error:", err);
+        alert("Failed to decline request: " + err.message);
+      }
+    }
+
+    function renderUserResults(term) {
+      userSearchResults.innerHTML = "";
+
+      const trimmed = term.trim();
+      if (!trimmed) {
+        userSearchResults.innerHTML = '<p class="comment-empty">Type a name to search players.</p>';
+        return;
+      }
+
+      const lower = trimmed.toLowerCase();
+      const filtered = usersCache.filter((u) => u.name && u.name.toLowerCase().includes(lower));
+
+      if (!filtered.length) {
+        userSearchResults.innerHTML = '<p class="comment-empty">No results.</p>';
+        return;
+      }
+
+      const now = new Date();
+
+      filtered.forEach((u) => {
+        const name = u.name || "Player";
+        const avatarUrl = u.avatar || DEFAULT_AVATAR;
+        const last = u.lastActive?.toDate ? u.lastActive.toDate() : null;
+
+        let status = "Offline";
+        let isOnline = false;
+        if (last && now - last < ONLINE_TIMEOUT_MS) {
+          status = "Online";
+          isOnline = true;
+        }
+
+        let relation = "none";
+        if (!currentUserUid) relation = "guest";
+        else if (u.id === currentUserUid) relation = "self";
+        else if (friendsList.some((f) => f.friendUid === u.id)) relation = "friend";
+        else if (friendRequestsOutgoing.some((r) => r.toUid === u.id)) relation = "outgoing";
+        else if (friendRequestsIncoming.some((r) => r.fromUid === u.id)) relation = "incoming";
+
+        const item = document.createElement("div");
+        item.className = "user-result";
+
+        const avatarImg2 = document.createElement("img");
+        avatarImg2.className = "user-result-avatar";
+        avatarImg2.src = avatarUrl;
+        avatarImg2.addEventListener("click", () => showMiniProfile(u.id));
+
+        const infoDiv = document.createElement("div");
+        infoDiv.className = "user-result-info";
+
+        const nameDiv = document.createElement("div");
+        nameDiv.className = "user-result-name";
+        nameDiv.textContent = name;
+        nameDiv.addEventListener("click", () => showMiniProfile(u.id));
+
+        const statusDiv = document.createElement("div");
+        statusDiv.className = "user-result-status " + (isOnline ? "online" : "offline");
+        statusDiv.textContent = status;
+
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(statusDiv);
+
+        if (last) {
+          const lastDiv = document.createElement("div");
+          lastDiv.className = "user-result-last";
+          lastDiv.textContent = "Last active: " + last.toLocaleString("uk-UA");
+          infoDiv.appendChild(lastDiv);
+        }
+
+        const actionDiv = document.createElement("div");
+        actionDiv.className = "user-result-action";
+
+        const note = document.createElement("div");
+        note.className = "user-result-note";
+
+        if (relation === "guest") {
+          note.textContent = "Sign in to add friends.";
+          actionDiv.appendChild(note);
+        } else if (relation === "self") {
+          note.textContent = "This is your account.";
+          actionDiv.appendChild(note);
+        } else if (relation === "friend") {
+          note.textContent = "Already friends";
+          actionDiv.appendChild(note);
+        } else if (relation === "outgoing") {
+          note.textContent = "Request sent";
+          actionDiv.appendChild(note);
+        } else if (relation === "incoming") {
+          note.textContent = 'Incoming request (see "Friend requests")';
+          actionDiv.appendChild(note);
+        } else {
+          const btn = document.createElement("button");
+          btn.className = "btn";
+          btn.textContent = "Add friend";
+          btn.addEventListener("click", () => sendFriendRequest(u));
+          actionDiv.appendChild(btn);
+        }
+
+        item.appendChild(avatarImg2);
+        item.appendChild(infoDiv);
+        item.appendChild(actionDiv);
+        userSearchResults.appendChild(item);
+      });
+    }
+
+    async function sendFriendRequest(targetUser) {
+      if (!currentUserUid || !currentUserName) {
+        alert("Sign in first to add friends.");
+        return;
+      }
+      if (!targetUser || !targetUser.id || targetUser.id === currentUserUid) return;
+
+      if (friendsList.some((f) => f.friendUid === targetUser.id)) {
+        alert((targetUser.name || "Player") + " is already your friend.");
+        return;
+      }
+
+      if (friendRequestsOutgoing.some((r) => r.toUid === targetUser.id)) {
+        alert("You already sent a request to this player.");
+        return;
+      }
+
+      try {
+        await addDoc(friendRequestsCol, {
+          fromUid: currentUserUid,
+          fromName: currentUserName,
+          toUid: targetUser.id,
+          toName: targetUser.name || "Player",
+          status: "pending",
+          createdAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error("Send request error:", err);
+        alert("Failed to send request: " + err.message);
+      }
+    }
+
+    function buildAvatarGrid(selectedUrl) {
+      avatarGrid.innerHTML = "";
+      const allowed = getAllowedAvatarsFor(currentUserName);
+
+      avatarHint.textContent = isSpecialUser(currentUserName)
+        ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
+        : "Choose an avatar and write a short bio (max 200 chars).";
+
+      allowed.forEach((url) => {
+        const cell = document.createElement("div");
+        cell.className = "avatar-option" + (url === selectedUrl ? " selected" : "");
+
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "Avatar";
+        cell.appendChild(img);
+
+        cell.addEventListener("click", () => {
+          [...avatarGrid.querySelectorAll(".avatar-option")].forEach((x) => x.classList.remove("selected"));
+          cell.classList.add("selected");
+          avatarGrid.dataset.selected = url;
+        });
+
+        avatarGrid.appendChild(cell);
+      });
+
+      avatarGrid.dataset.selected = selectedUrl;
+    }
+
+    function openEditProfile() {
+      editProfileBox.style.display = "block";
+      saveProfileMsg.textContent = "";
+      bioInput.value = currentUserBio || "";
+      bioCount.textContent = `${bioInput.value.length}/200`;
+      buildAvatarGrid(currentUserAvatar || DEFAULT_AVATAR);
+      editProfileBox.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function closeEditProfile() {
+      editProfileBox.style.display = "none";
+    }
+
+    bioInput.addEventListener("input", () => {
+      bioCount.textContent = `${bioInput.value.length}/200`;
+    });
+
+    openEditProfileBtn.addEventListener("click", openEditProfile);
+    closeEditProfileBtn.addEventListener("click", closeEditProfile);
+
+    saveProfileBtn.addEventListener("click", async () => {
+      if (!currentUserUid || !currentUserName) return;
+
+      const allowed = new Set(getAllowedAvatarsFor(currentUserName));
+      const selected = avatarGrid.dataset.selected || DEFAULT_AVATAR;
+      const safeSelected = allowed.has(selected) ? selected : DEFAULT_AVATAR;
+      const bio = (bioInput.value || "").trim().slice(0, 200);
+
+      saveProfileMsg.textContent = "Saving...";
+
+      try {
+        await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio }, { merge: true });
+        currentUserAvatar = safeSelected;
+        currentUserBio = bio;
+        avatarImg.src = currentUserAvatar;
+
+        if (currentUserBio.trim()) {
+          myBioLine.style.display = "block";
+          myBioLine.textContent = currentUserBio.trim();
+        } else {
+          myBioLine.style.display = "none";
+          myBioLine.textContent = "";
+        }
+
+        saveProfileMsg.textContent = "Saved.";
+        setTimeout(() => (saveProfileMsg.textContent = ""), 1200);
+      } catch (err) {
+        console.error(err);
+        saveProfileMsg.textContent = "Error: " + (err.message || err);
+      }
+    });
+
+    function applyTheme(theme) {
+      if (theme === "dark") document.body.classList.add("dark-theme");
+      else document.body.classList.remove("dark-theme");
+    }
+
+    applyTheme(localStorage.getItem("pineTheme") || "light");
+
+    themeToggleBtn.addEventListener("click", () => {
+      const isDark = document.body.classList.contains("dark-theme");
+      const newTheme = isDark ? "light" : "dark";
+      applyTheme(newTheme);
+      localStorage.setItem("pineTheme", newTheme);
+    });
+
+    function openCreateServer() {
+      if (!currentUserUid || !currentUserName) {
+        alert("Please sign in first.");
+        return;
+      }
+
+      createServerMsg.textContent = "";
+      serverNameInput.value = `${currentUserName}'s server`;
+      serverDescInput.value = "";
+      serverMaxPlayersInput.value = "8";
+      serverVisibilityInput.value = "public";
+      serverDayModeInput.value = "auto";
+      serverAllowedUsersInput.value = "";
+      openModal(createServerModal);
+    }
+
+    openCreateServerBtn.addEventListener("click", openCreateServer);
+
+    async function createServer() {
+      if (!currentUserUid || !currentUserName) {
+        createServerMsg.textContent = "Sign in first.";
+        return;
+      }
+
+      const name = serverNameInput.value.trim().slice(0, 40);
+      const description = serverDescInput.value.trim().slice(0, 220);
+      const maxPlayers = Number(serverMaxPlayersInput.value || 8);
+      const visibility = serverVisibilityInput.value === "private" ? "private" : "public";
+      const dayMode = ["auto", "dayForever", "nightForever"].includes(serverDayModeInput.value)
+        ? serverDayModeInput.value
+        : "auto";
+
+      if (!name) {
+        createServerMsg.textContent = "Type a server name.";
+        return;
+      }
+
+      const { original, normalized } = parseAllowedUsers(serverAllowedUsersInput.value);
+      if (visibility === "private" && !normalized.includes(normalizeName(currentUserName))) {
+        normalized.push(normalizeName(currentUserName));
+        original.push(currentUserName);
+      }
+
+      createServerMsg.textContent = "Creating server...";
+      createServerSubmitBtn.disabled = true;
+
+      try {
+        const docRef = await addDoc(serversCol, {
+          name,
+          description,
+          createdByUid: currentUserUid,
+          createdByName: currentUserName,
+          createdByAvatar: currentUserAvatar || DEFAULT_AVATAR,
+          maxPlayers,
+          playerCount: 0,
+          visibility,
+          allowedUsers: visibility === "private" ? original : [],
+          allowedUsersNormalized: visibility === "private" ? normalized : [],
+          dayMode,
+          status: "offline",
+          worldSeed: randomSeed(),
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastHeartbeat: serverTimestamp(),
+        });
+
+        location.href = `multiplayer.html?server=${encodeURIComponent(docRef.id)}`;
+      } catch (err) {
+        console.error("Create server error:", err);
+        createServerMsg.textContent = "Error: " + (err.message || err);
+        createServerSubmitBtn.disabled = false;
+      }
+    }
+
+    createServerSubmitBtn.addEventListener("click", createServer);
+
+    function serverModeLabel(mode) {
+      if (mode === "dayForever") return "Day Forever";
+      if (mode === "nightForever") return "Night Forever";
+      return "Normal day/night";
+    }
+
+    function canJoinServer(server) {
+      if (!currentUserUid || !currentUserName) {
+        return { ok: false, reason: "Sign in required" };
+      }
+
+      const isCreator = server.createdByUid === currentUserUid;
+      const maxPlayers = Number(server.maxPlayers || 8);
+      const online = getServerOnlineState(server);
+      const displayedPlayers = online ? Number(server.playerCount || 0) : 0;
+
+      if (!isCreator && online && displayedPlayers >= maxPlayers) {
+        return { ok: false, reason: "Server full" };
+      }
+
+      if (server.status === "closed") {
+        return { ok: false, reason: "Server closed" };
+      }
+
+      if (server.visibility === "private") {
+        const allowed = Array.isArray(server.allowedUsersNormalized) ? server.allowedUsersNormalized : [];
+        const me = normalizeName(currentUserName);
+        if (!isCreator && !allowed.includes(me)) {
+          return { ok: false, reason: "Private server" };
+        }
+      }
+
+      return { ok: true, reason: "" };
+    }
+
+    function openEditServer(server) {
+      if (!server || !currentUserUid || server.createdByUid !== currentUserUid) return;
+
+      editingServerId = server.id;
+      editServerMsg.textContent = "";
+      editServerNameInput.value = server.name || "";
+      editServerDescInput.value = server.description || "";
+      editServerMaxPlayersInput.value = String(server.maxPlayers || 8);
+      editServerVisibilityInput.value = server.visibility || "public";
+      editServerDayModeInput.value = server.dayMode || "auto";
+      editServerAllowedUsersInput.value = Array.isArray(server.allowedUsers)
+        ? server.allowedUsers.join(", ")
+        : "";
+
+      openModal(editServerModal);
+    }
+
+    saveServerEditBtn.addEventListener("click", async () => {
+      if (!editingServerId || !currentUserUid) return;
+
+      const server = serversCache.find((s) => s.id === editingServerId);
+      if (!server || server.createdByUid !== currentUserUid) {
+        editServerMsg.textContent = "Only owner can edit this server.";
+        return;
+      }
+
+      const name = editServerNameInput.value.trim().slice(0, 40);
+      const description = editServerDescInput.value.trim().slice(0, 220);
+      const maxPlayers = Number(editServerMaxPlayersInput.value || 8);
+      const visibility = editServerVisibilityInput.value === "private" ? "private" : "public";
+      const dayMode = ["auto", "dayForever", "nightForever"].includes(editServerDayModeInput.value)
+        ? editServerDayModeInput.value
+        : "auto";
+
+      if (!name) {
+        editServerMsg.textContent = "Type a server name.";
+        return;
+      }
+
+      const { original, normalized } = parseAllowedUsers(editServerAllowedUsersInput.value);
+      if (visibility === "private" && currentUserName && !normalized.includes(normalizeName(currentUserName))) {
+        normalized.push(normalizeName(currentUserName));
+        original.push(currentUserName);
+      }
+
+      editServerMsg.textContent = "Saving...";
+
+      try {
+        await setDoc(doc(db, "servers", editingServerId), {
+          name,
+          description,
+          maxPlayers,
+          visibility,
+          dayMode,
+          allowedUsers: visibility === "private" ? original : [],
+          allowedUsersNormalized: visibility === "private" ? normalized : [],
+          updatedAt: serverTimestamp(),
+        }, { merge: true });
+
+        editServerMsg.textContent = "Saved.";
+        setTimeout(() => {
+          editServerMsg.textContent = "";
+          closeModal(editServerModal);
+        }, 800);
+      } catch (err) {
+        console.error(err);
+        editServerMsg.textContent = "Error: " + (err.message || err);
+      }
+    });
+
+    function renderServers() {
+      multiplayerList.innerHTML = "";
+
+      const searchTerm = (serverSearchInput?.value || "").trim().toLowerCase();
+      let filtered = [...serversCache];
+
+      if (searchTerm) {
+        filtered = filtered.filter((server) =>
+          String(server.name || "").toLowerCase().includes(searchTerm)
+        );
+      }
+
+      const sorted = filtered.sort((a, b) => {
+        const aOnline = getServerOnlineState(a) ? 1 : 0;
+        const bOnline = getServerOnlineState(b) ? 1 : 0;
+        if (bOnline !== aOnline) return bOnline - aOnline;
+
+        const byPlayers = Number(b.playerCount || 0) - Number(a.playerCount || 0);
+        if (byPlayers !== 0) return byPlayers;
+
+        const bt = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
+        const at = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
+        return bt - at;
+      });
+
+      if (!sorted.length) {
+        multiplayerList.innerHTML = '<div class="server-empty">No servers found.</div>';
+        serverStatusLine.textContent = "Servers found: 0";
+        return;
+      }
+
+      sorted.forEach((server, index) => {
+        const card = document.createElement("div");
+        card.className = "server-card";
+
+        const online = getServerOnlineState(server);
+        const displayedPlayers = online ? Number(server.playerCount || 0) : 0;
+        const maxPlayers = Number(server.maxPlayers || 8);
+        const full = online && displayedPlayers >= maxPlayers;
+        const access = canJoinServer({ ...server, playerCount: displayedPlayers });
+
+        const badges = [];
+        badges.push(`<span class="badge ${online ? "online" : "offline"}">${online ? "Online" : "Offline"}</span>`);
+        badges.push(`<span class="badge ${server.visibility === "private" ? "private" : "public"}">${server.visibility === "private" ? "Private" : "Public"}</span>`);
+        badges.push(`<span class="badge">${escapeHtml(serverModeLabel(server.dayMode))}</span>`);
+
+        if (index === 0 && displayedPlayers > 0) {
+          badges.push('<span class="badge">Most active</span>');
+        }
+        if (full) {
+          badges.push('<span class="badge full">Full</span>');
+        }
+
+        const ownerControls = currentUserUid && server.createdByUid === currentUserUid
+          ? `<button class="btn edit-server-btn">Edit</button>`
+          : "";
+
+        card.innerHTML = `
+          <div class="server-top">
+            <div>
+              <div class="server-name">${escapeHtml(server.name || "Server")}</div>
+              <div class="server-meta">Created by: ${escapeHtml(server.createdByName || "Unknown")}</div>
+            </div>
+            <div class="row-actions">
+              ${ownerControls}
+              <button class="btn join-server-btn" ${access.ok ? "" : "disabled"}>
+                ${access.ok ? (online ? "Join" : "Start / Join") : escapeHtml(access.reason)}
+              </button>
+            </div>
+          </div>
+
+          <div class="server-badges">${badges.join("")}</div>
+          <div class="server-description">${escapeHtml(server.description || "No description.")}</div>
+
+          <div class="server-meta-grid">
+            <div class="server-meta"><strong>Players:</strong> ${displayedPlayers} / ${maxPlayers}</div>
+            <div class="server-meta"><strong>World mode:</strong> ${escapeHtml(serverModeLabel(server.dayMode))}</div>
+            <div class="server-meta"><strong>Visibility:</strong> ${escapeHtml(server.visibility || "public")}</div>
+            <div class="server-meta"><strong>Created:</strong> ${escapeHtml(formatDate(server.createdAt) || "—")}</div>
+          </div>
+        `;
+
+        const joinBtn = card.querySelector(".join-server-btn");
+        joinBtn.addEventListener("click", () => {
+          if (!access.ok) return;
+          location.href = `multiplayer.html?server=${encodeURIComponent(server.id)}`;
+        });
+
+        const editBtn = card.querySelector(".edit-server-btn");
+        if (editBtn) editBtn.addEventListener("click", () => openEditServer(server));
+
+        multiplayerList.appendChild(card);
+      });
+
+      serverStatusLine.textContent = `Servers found: ${sorted.length}`;
+    }
+
+    function subscribeServers() {
+      if (serversUnsub) {
+        serversUnsub();
+        serversUnsub = null;
+      }
+
+      serverStatusLine.textContent = "Loading servers...";
+
+      serversUnsub = onSnapshot(
+        serversCol,
+        (snapshot) => {
+          serversCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+          renderServers();
+        },
+        (error) => {
+          console.error("Servers load error:", error);
+          serverStatusLine.textContent = "Failed to load servers.";
+          multiplayerList.innerHTML = '<div class="server-empty">Failed to load servers.</div>';
+        }
+      );
+    }
+
+    serverSearchInput?.addEventListener("input", renderServers);
+    clearServerSearchBtn?.addEventListener("click", () => {
+      serverSearchInput.value = "";
+      renderServers();
+    });
+
+    refreshServersBtn.addEventListener("click", () => renderServers());
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user && user.displayName) {
+        currentUserName = user.displayName;
+        currentUserUid = user.uid;
+
+        welcomeText.textContent = "Welcome " + currentUserName;
+        userNameDisplay.textContent = currentUserName;
+
+        loginLink.style.display = "none";
+        signupLink.style.display = "none";
+        logoutBtn.style.display = "inline-block";
+
+        await loadMyProfile(user.uid);
+        openEditProfileBtn.style.display = "inline-block";
+        adminSection.style.display = currentUserName === "davyd3102" ? "block" : "none";
+
+        startPresenceUpdater(user.uid, currentUserName);
+        subscribeFriendsFor(user.uid);
+        subscribeFriendRequestsFor(user.uid);
+      } else {
+        currentUserName = null;
+        currentUserUid = null;
+        currentUserAvatar = DEFAULT_AVATAR;
+        currentUserBio = "";
+
+        welcomeText.textContent = "Welcome Guest";
+        userNameDisplay.textContent = "Guest";
+        avatarImg.src = DEFAULT_AVATAR;
+
+        myBioLine.style.display = "none";
+        myBioLine.textContent = "";
+
+        loginLink.style.display = "inline-block";
+        signupLink.style.display = "inline-block";
+        logoutBtn.style.display = "none";
+        adminSection.style.display = "none";
+        openEditProfileBtn.style.display = "none";
+        editProfileBox.style.display = "none";
+
+        stopPresenceUpdater();
+        subscribeFriendsFor(null);
+        subscribeFriendRequestsFor(null);
+      }
+
+      updateCommentUI();
+      renderServers();
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+      } catch (err) {
+        console.error(err);
+        alert("Failed to log out: " + err.message);
+      }
+    });
+
+    onSnapshot(
+      usersCol,
+      (snapshot) => {
+        usersCache = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const term = userSearchInput.value.trim();
+        if (term) renderUserResults(term);
+        renderFriends();
+      },
+      (error) => console.error("Users load error:", error)
+    );
+
+    onSnapshot(
+      commentsQ,
+      (snapshot) => {
+        commentsList.innerHTML = "";
+
+        if (snapshot.empty) {
+          commentsList.innerHTML = '<p class="comment-empty">No comments yet.</p>';
+          return;
+        }
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          const div = document.createElement("div");
+          div.className = "comment";
+          div.innerHTML = `
+            <div class="comment-author">${escapeHtml(data.author || "??")}</div>
+            <div class="comment-text">${escapeHtml(data.text || "")}</div>
+            <div class="comment-date">${escapeHtml(formatDate(data.createdAt))}</div>
+          `;
+          commentsList.appendChild(div);
+        });
+      },
+      (error) => {
+        console.error(error);
+        commentsList.innerHTML = '<p class="comment-empty">Failed to load comments.</p>';
+      }
+    );
+
+    if (commentForm) {
+      commentForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!currentUserName || !ALLOWED_COMMENTERS.includes(currentUserName)) {
+          alert("Only davyd3102 and 3102 can post comments.");
+          return;
+        }
+
+        const text = commentText.value.trim();
+        if (!text) return;
+
+        try {
+          await addDoc(commentsCol, {
+            author: currentUserName,
+            text,
+            createdAt: serverTimestamp(),
+          });
+          commentText.value = "";
+        } catch (err) {
+          console.error(err);
+          alert("Failed to post comment: " + err.message);
+        }
+      });
+    }
+
+    userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
+    userSearchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        renderUserResults(userSearchInput.value);
+      }
+    });
+
+    if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
+      adminDeleteBtn.addEventListener("click", async () => {
+        const name = adminDeleteName.value.trim();
+        adminDeleteStatus.textContent = "";
+
+        if (!currentUserName || currentUserName !== "davyd3102") {
+          adminDeleteStatus.textContent = "Only davyd3102 can use this panel.";
+          return;
+        }
+
+        if (!name) {
+          adminDeleteStatus.textContent = "Type a username.";
+          return;
+        }
+
+        adminDeleteStatus.textContent = "Searching user...";
+
+        try {
+          const targets = usersCache.filter((u) => u.name === name);
+
+          let deletedUsers = 0;
+          for (const u of targets) {
+            await deleteDoc(doc(db, "users", u.id));
+            deletedUsers++;
+          }
+
+          const qComm = query(collection(db, "comments"), where("author", "==", name));
+          const commSnap = await getDocs(qComm);
+
+          let deletedComments = 0;
+          for (const cDoc of commSnap.docs) {
+            await deleteDoc(cDoc.ref);
+            deletedComments++;
+          }
+
+          adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleted comments: ${deletedComments}.`;
+          adminDeleteName.value = "";
+        } catch (err) {
+          console.error("Admin delete error:", err);
+          adminDeleteStatus.textContent = "Error: " + (err.message || err);
+        }
+      });
+    }
+
+    subscribeServers();
+  </script>
 </body>
 </html>
