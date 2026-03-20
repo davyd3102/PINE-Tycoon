@@ -39,7 +39,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.35);
       user-select: none;
       pointer-events: none;
-      max-width: min(1150px, calc(100vw - 20px));
+      max-width: min(1180px, calc(100vw - 20px));
     }
 
     #hud .small {
@@ -87,6 +87,7 @@
       cursor: pointer;
       font-size: 13px;
       font-weight: 700;
+      transition: transform 0.14s ease;
     }
 
     .top-btn:hover { transform: scale(1.04); }
@@ -261,8 +262,8 @@
       right: 10px;
       bottom: 10px;
       z-index: 60;
-      width: min(500px, calc(100vw - 20px));
-      max-height: 56vh;
+      width: min(560px, calc(100vw - 20px));
+      max-height: 64vh;
       overflow-y: auto;
       display: none;
       padding: 12px;
@@ -273,6 +274,11 @@
     #palettePanel h3 {
       margin: 0 0 6px;
       font-size: 15px;
+    }
+
+    #palettePanel h4 {
+      margin: 12px 0 6px;
+      font-size: 13px;
     }
 
     #palettePanel .hint {
@@ -315,11 +321,32 @@
       font-weight: 600;
     }
 
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .select,
+    .admin-btn {
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .admin-btn { cursor: pointer; }
+
     @media (pointer: coarse) {
       #touchControls { display: block; }
       #minimapWrap { width: 120px; height: 120px; }
       #hud { font-size: 12px; }
-      #palettePanel { max-height: 44vh; }
+      #palettePanel { max-height: 48vh; }
     }
   </style>
 </head>
@@ -355,8 +382,42 @@
 
   <div id="palettePanel" class="glass">
     <h3>Builder / Admin Palette</h3>
-    <div class="hint">P або кнопка Palette. Для owner / creative / builder: дороги, фарбування землі, вода, дерева, нові вогнища та блок телепорту на спавн.</div>
+    <div class="hint">B — будування. P — palette. X або правий клік — видалення. V — preview claim. G — перемкнути доступ claim. Q — quick chat.</div>
+
+    <h4>Classic + Terrain + Objects</h4>
     <div id="paletteGrid" class="palette-grid"></div>
+
+    <h4>Colored Walls</h4>
+    <div id="colorWallGrid" class="palette-grid"></div>
+
+    <div id="adminTools" style="display:none; margin-top:12px;">
+      <h4>Owner Admin Terrain Tools</h4>
+      <div class="hint">Застосовується до всієї мапи одразу. Це безпечніше ніж створювати десятки тисяч Firestore-документів.</div>
+      <div class="row">
+        <select id="globalSurfaceSelect" class="select">
+          <option value="base">Natural</option>
+          <option value="road">Road</option>
+          <option value="stoneground">Stone</option>
+          <option value="grassgreen">Green</option>
+          <option value="grassdark">Dark Grass</option>
+          <option value="sandpaint">Sand</option>
+          <option value="redpaint">Red</option>
+          <option value="bluepaint">Blue</option>
+          <option value="whitepaint">White</option>
+          <option value="blackpaint">Black</option>
+          <option value="water_tile">Water</option>
+        </select>
+        <button id="applyGlobalSurfaceBtn" class="admin-btn">Apply All Surface</button>
+        <button id="restoreGlobalSurfaceBtn" class="admin-btn">Restore Natural Surface</button>
+      </div>
+      <div class="row">
+        <button id="clearNatureBtn" class="admin-btn">Clear All Natural Trees/Rocks</button>
+        <button id="restoreNatureBtn" class="admin-btn">Restore Natural Trees/Rocks</button>
+      </div>
+      <div class="row">
+        <span id="adminToolsStatus" style="font-size:12px; opacity:0.9;"></span>
+      </div>
+    </div>
   </div>
 
   <script type="module">
@@ -385,6 +446,12 @@
     };
 
     const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+    const PLAYER_TIMEOUT_MS = 10000;
+    const SERVER_TIMEOUT_MS = 12000;
+    const QUICK_CHAT_VISIBLE_MS = 4000;
+    const CLAIM_SIZE = 16;
+    const TELEPORT_COOLDOWN_MS = 1200;
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -401,6 +468,14 @@
     const paletteToggleBtn = document.getElementById("paletteToggleBtn");
     const palettePanel = document.getElementById("palettePanel");
     const paletteGrid = document.getElementById("paletteGrid");
+    const colorWallGrid = document.getElementById("colorWallGrid");
+    const adminTools = document.getElementById("adminTools");
+    const globalSurfaceSelect = document.getElementById("globalSurfaceSelect");
+    const applyGlobalSurfaceBtn = document.getElementById("applyGlobalSurfaceBtn");
+    const restoreGlobalSurfaceBtn = document.getElementById("restoreGlobalSurfaceBtn");
+    const clearNatureBtn = document.getElementById("clearNatureBtn");
+    const restoreNatureBtn = document.getElementById("restoreNatureBtn");
+    const adminToolsStatus = document.getElementById("adminToolsStatus");
     const miniWrap = document.getElementById("minimapWrap");
     const mini = document.getElementById("minimap");
     const mctx = mini.getContext("2d");
@@ -413,22 +488,6 @@
     const quickChatCenter = document.getElementById("quickChatCenter");
     const quickChatBackdrop = document.getElementById("quickChatBackdrop");
 
-    function showErr(msg) {
-      errBox.style.display = "block";
-      errBox.textContent = String(msg);
-      console.error(msg);
-    }
-
-    window.addEventListener("error", (e) => showErr("JS ERROR:\n" + (e.message || e.error || e)));
-    window.addEventListener("unhandledrejection", (e) => showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
-
-    const QUICK_CHAT_MESSAGES = ["Hello!", "Bye!", "How are you?", "Follow me!", "Need help!", "Thanks!", "Sorry!", "Good luck!", ";)", ":D", ":(", ":3"];
-    const PLAYER_TIMEOUT_MS = 10000;
-    const SERVER_TIMEOUT_MS = 12000;
-    const QUICK_CHAT_VISIBLE_MS = 4000;
-    const CLAIM_SIZE = 16;
-    const TELEPORT_COOLDOWN_MS = 1200;
-
     const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
     const lerp = (a, b, t) => a + (b - a) * t;
     const dist2 = (ax, ay, bx, by) => { const dx = ax - bx, dy = ay - by; return dx * dx + dy * dy; };
@@ -437,6 +496,16 @@
     function normalizeName(name) { return String(name || "").trim().toLowerCase().replace(/\s+/g, "_"); }
     function getTimestampMs(ts) { return ts?.toDate ? ts.toDate().getTime() : 0; }
     function getIsFresh(ts, timeout) { const ms = getTimestampMs(ts); return !!(ms && Date.now() - ms < timeout); }
+    function claimKey(chunkX, chunkY) { return `${chunkX}_${chunkY}`; }
+
+    function showErr(msg) {
+      errBox.style.display = "block";
+      errBox.textContent = String(msg);
+      console.error(msg);
+    }
+
+    window.addEventListener("error", (e) => showErr("JS ERROR:\n" + (e.message || e.error || e)));
+    window.addEventListener("unhandledrejection", (e) => showErr("PROMISE ERROR:\n" + (e.reason?.message || e.reason || e)));
 
     async function resolveUserName(user) {
       if (!user) return null;
@@ -493,6 +562,7 @@
     window.addEventListener("pointerdown", () => audio.resume(), { once: true, capture: true });
     window.addEventListener("keydown", () => audio.resume(), { once: true, capture: true });
 
+    const QUICK_CHAT_MESSAGES = ["Hello!", "Bye!", "How are you?", "Follow me!", "Need help!", "Thanks!", "Sorry!", "Good luck!", ";)", ":D", ":(", ":3"];
     const isCoarse = matchMedia("(pointer:coarse)").matches;
     const INTERNAL_W = 512;
     const INTERNAL_H = 288;
@@ -511,8 +581,6 @@
     const T = { WATER: 0, SAND: 1, GRASS: 2, HILL: 3, ROCK: 4 };
     const BUILD = { FLOOR: "floor", WALL: "wall", DOOR: "door", WINDOW: "window", ROOF: "roof" };
     const TOOL = { AXE: 0, PICKAXE: 1 };
-    const COST = { floor: 1, wall: 2, door: 3, window: 3, roof: 2 };
-
     const tileMap = new Uint8Array(WORLD_SIZE * WORLD_SIZE);
     const heightMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
     const moistMap = new Float32Array(WORLD_SIZE * WORLD_SIZE);
@@ -522,7 +590,6 @@
     function inBounds(tx, ty) { return tx >= 0 && ty >= 0 && tx < WORLD_SIZE && ty < WORLD_SIZE; }
     function worldToTile(wx) { return Math.floor(wx + WORLD_HALF); }
     function tileToWorld(tx) { return (tx - WORLD_HALF) + 0.5; }
-    function claimKey(chunkX, chunkY) { return `${chunkX}_${chunkY}`; }
     function getChunkFromTile(tx, ty) { return { chunkX: Math.floor(tx / CLAIM_SIZE), chunkY: Math.floor(ty / CLAIM_SIZE) }; }
 
     function getChunkWorldRect(chunkX, chunkY) {
@@ -554,13 +621,6 @@
 
     function isBlocked(px, py, pr) {
       return colliders.some((r) => circleRectCollide(px, py, pr, r));
-    }
-
-    function tileOccupiedByCollider(wx, wy, pad = 0.48) {
-      for (const r of colliders) {
-        if (Math.abs(r.x - wx) < r.hw + pad && Math.abs(r.y - wy) < r.hh + pad) return true;
-      }
-      return false;
     }
 
     function xmur3(str) {
@@ -672,8 +732,47 @@
     let claimPreviewActive = false;
     let paletteOpen = false;
     let lastTeleportAt = 0;
+    let worldReady = false;
+    let canPlay = false;
+    let joinedPresence = false;
+    let leaveDone = false;
+    let actualPlayersCount = 0;
+    let remotePlayers = [];
+    const remotePlayersMap = new Map();
+
+    let myUid = null;
+    let myName = null;
+    let myAvatar = DEFAULT_AVATAR;
+    let serverMeta = null;
+    let lastWorldVisualSignature = "";
+
+    let unsubServer = null;
+    let unsubPlayers = null;
+    let unsubBuilds = null;
+    let unsubRemovedTrees = null;
+    let unsubRemovedBoulders = null;
+    let unsubClaims = null;
+
+    let lastNetSendAt = 0;
+    let lastHeartbeatAt = 0;
+    let lastServerSyncAt = 0;
+    let lastSentX = 99999;
+    let lastSentY = 99999;
+    let lastSentDir = 99999;
 
     const toast = { text: "", t: 0 };
+    function showToast(text, seconds = 1) {
+      toast.text = String(text || "");
+      toast.t = seconds;
+    }
+
+    function getBuildCost(type) {
+      if (type === BUILD.FLOOR) return 1;
+      if (type === BUILD.DOOR || type === BUILD.WINDOW || type === BUILD.ROOF) return 3;
+      if (type === BUILD.WALL) return 2;
+      if (String(type).startsWith("wall_")) return 2;
+      return 1;
+    }
 
     const PALETTE_ITEMS = [
       { key: "floor", layer: "structure", type: "floor", label: "Floor", info: "classic" },
@@ -696,8 +795,21 @@
       { key: "teleporter_spawn", layer: "object", type: "teleporter_spawn", label: "Spawn TP", info: "teleport" },
     ];
 
+    const COLOR_WALL_ITEMS = [
+      { key: "wall_white", layer: "structure", type: "wall_white", label: "White Wall", info: "solid" },
+      { key: "wall_black", layer: "structure", type: "wall_black", label: "Black Wall", info: "solid" },
+      { key: "wall_red", layer: "structure", type: "wall_red", label: "Red Wall", info: "solid" },
+      { key: "wall_orange", layer: "structure", type: "wall_orange", label: "Orange Wall", info: "solid" },
+      { key: "wall_yellow", layer: "structure", type: "wall_yellow", label: "Yellow Wall", info: "solid" },
+      { key: "wall_green", layer: "structure", type: "wall_green", label: "Green Wall", info: "solid" },
+      { key: "wall_blue", layer: "structure", type: "wall_blue", label: "Blue Wall", info: "solid" },
+      { key: "wall_purple", layer: "structure", type: "wall_purple", label: "Purple Wall", info: "solid" },
+      { key: "wall_brown", layer: "structure", type: "wall_brown", label: "Brown Wall", info: "solid" },
+      { key: "wall_gray", layer: "structure", type: "wall_gray", label: "Gray Wall", info: "solid" },
+    ];
+
     function getPaletteItemByKey(key) {
-      return PALETTE_ITEMS.find((x) => x.key === key) || PALETTE_ITEMS[1];
+      return [...PALETTE_ITEMS, ...COLOR_WALL_ITEMS].find((x) => x.key === key) || PALETTE_ITEMS[1];
     }
 
     function applySelectedPalette(key) {
@@ -713,60 +825,21 @@
         const btn = document.createElement("button");
         btn.className = "palette-btn" + (item.key === selectedPaletteKey ? " active" : "");
         btn.innerHTML = `${item.label}<small>${item.info}</small>`;
-        btn.addEventListener("click", () => {
-          applySelectedPalette(item.key);
-          buildMode = true;
-        });
+        btn.addEventListener("click", () => { applySelectedPalette(item.key); buildMode = true; });
         paletteGrid.appendChild(btn);
+      });
+
+      colorWallGrid.innerHTML = "";
+      COLOR_WALL_ITEMS.forEach((item) => {
+        const btn = document.createElement("button");
+        btn.className = "palette-btn" + (item.key === selectedPaletteKey ? " active" : "");
+        btn.innerHTML = `${item.label}<small>${item.info}</small>`;
+        btn.addEventListener("click", () => { applySelectedPalette(item.key); buildMode = true; });
+        colorWallGrid.appendChild(btn);
       });
     }
 
     renderPaletteButtons();
-
-    function openPalette() {
-      if (!hasAdvancedBuilderAccess()) return;
-      paletteOpen = true;
-      palettePanel.classList.add("show");
-    }
-
-    function closePalette() {
-      paletteOpen = false;
-      palettePanel.classList.remove("show");
-    }
-
-    function togglePalette() {
-      if (!hasAdvancedBuilderAccess()) return;
-      if (paletteOpen) closePalette();
-      else openPalette();
-    }
-
-    paletteToggleBtn.addEventListener("click", () => togglePalette());
-
-    let serverMeta = null;
-    let myUid = null;
-    let myName = null;
-    let myAvatar = DEFAULT_AVATAR;
-    let worldReady = false;
-    let canPlay = false;
-    let joinedPresence = false;
-    let leaveDone = false;
-    let actualPlayersCount = 0;
-    let remotePlayers = [];
-    const remotePlayersMap = new Map();
-
-    let unsubServer = null;
-    let unsubPlayers = null;
-    let unsubBuilds = null;
-    let unsubRemovedTrees = null;
-    let unsubRemovedBoulders = null;
-    let unsubClaims = null;
-
-    let lastNetSendAt = 0;
-    let lastHeartbeatAt = 0;
-    let lastServerSyncAt = 0;
-    let lastSentX = 99999;
-    let lastSentY = 99999;
-    let lastSentDir = 99999;
 
     function getGameplay() {
       const gp = serverMeta?.gameplay || {};
@@ -826,6 +899,78 @@
     function isFreeBuildForMe() {
       return hasAdvancedBuilderAccess();
     }
+
+    function getAdminSurfaceMode() {
+      return serverMeta?.adminGlobalSurfaceMode || "base";
+    }
+
+    function isNatureCleared() {
+      return serverMeta?.natureCleared === true;
+    }
+
+    function updateAdminToolsUI() {
+      adminTools.style.display = isOwner() ? "block" : "none";
+      paletteToggleBtn.style.display = hasAdvancedBuilderAccess() ? "inline-block" : "none";
+      globalSurfaceSelect.value = getAdminSurfaceMode();
+    }
+
+    function openPalette() {
+      if (!hasAdvancedBuilderAccess()) return;
+      paletteOpen = true;
+      palettePanel.classList.add("show");
+      updateAdminToolsUI();
+    }
+
+    function closePalette() {
+      paletteOpen = false;
+      palettePanel.classList.remove("show");
+    }
+
+    function togglePalette() {
+      if (!hasAdvancedBuilderAccess()) return;
+      if (paletteOpen) closePalette();
+      else openPalette();
+    }
+
+    paletteToggleBtn.addEventListener("click", togglePalette);
+
+    async function applyAdminGlobalSurface(mode) {
+      if (!isOwner()) return;
+      adminToolsStatus.textContent = "Saving...";
+      try {
+        await updateDoc(doc(db, "servers", serverId), {
+          adminGlobalSurfaceMode: mode,
+          updatedAt: serverTimestamp(),
+        });
+        adminToolsStatus.textContent = mode === "base" ? "Natural surface restored." : `Global surface: ${mode}`;
+        showToast(mode === "base" ? "Natural surface restored" : `Global surface → ${mode}`, 1.2);
+        minimapDirty = true;
+      } catch (e) {
+        console.error(e);
+        adminToolsStatus.textContent = "Error while saving global surface.";
+      }
+    }
+
+    async function setNatureCleared(value) {
+      if (!isOwner()) return;
+      adminToolsStatus.textContent = value ? "Clearing natural objects..." : "Restoring natural objects...";
+      try {
+        await updateDoc(doc(db, "servers", serverId), {
+          natureCleared: !!value,
+          updatedAt: serverTimestamp(),
+        });
+        adminToolsStatus.textContent = value ? "All natural trees/rocks cleared." : "Natural trees/rocks restored.";
+        showToast(value ? "Nature cleared" : "Nature restored", 1.2);
+      } catch (e) {
+        console.error(e);
+        adminToolsStatus.textContent = "Error while saving nature mode.";
+      }
+    }
+
+    applyGlobalSurfaceBtn.addEventListener("click", () => applyAdminGlobalSurface(globalSurfaceSelect.value));
+    restoreGlobalSurfaceBtn.addEventListener("click", () => applyAdminGlobalSurface("base"));
+    clearNatureBtn.addEventListener("click", () => setNatureCleared(true));
+    restoreNatureBtn.addEventListener("click", () => setNatureCleared(false));
 
     function updateServerInfo() {
       if (!serverMeta) {
@@ -978,7 +1123,6 @@
       }
 
       for (let i = 0; i < tileMap.length; i++) if (riverMask[i]) tileMap[i] = T.WATER;
-
       for (let ty = 1; ty < WORLD_SIZE - 1; ty++) {
         for (let tx = 1; tx < WORLD_SIZE - 1; tx++) {
           const id = idxOf(tx, ty);
@@ -1044,11 +1188,7 @@
       const baseHP = 3 + (hash2(tx, ty, seedU32 + 31) < 0.25 ? 1 : 0);
       const x = wx + jx;
       const y = wy + jy;
-      trees.push({
-        tileId, x, y, hp: baseHP, removed: false, kind, scale, trunk, hueVar,
-        sway: hash2(tx, ty, seedU32 + 41) * Math.PI * 2,
-        collider: addColliderRect(x, y, 0.80, 0.80, "tree"),
-      });
+      trees.push({ tileId, x, y, hp: baseHP, removed: false, kind, scale, trunk, hueVar, sway: hash2(tx, ty, seedU32 + 41) * Math.PI * 2, collider: addColliderRect(x, y, 0.80, 0.80, "tree") });
     }
 
     function createBoulderAtTile(tx, ty, type) {
@@ -1061,10 +1201,7 @@
       const hp = type === "coal" ? 4 : 3;
       const x = wx + jx;
       const y = wy + jy;
-      boulders.push({
-        tileId, x, y, size, hp, type, removed: false,
-        collider: addColliderRect(x, y, size * 0.80, size * 0.80, "boulder"),
-      });
+      boulders.push({ tileId, x, y, size, hp, type, removed: false, collider: addColliderRect(x, y, size * 0.80, size * 0.80, "boulder") });
     }
 
     function rebuildBuildColliders() {
@@ -1074,7 +1211,8 @@
       }
 
       structureLayerMap.forEach((v, tileId) => {
-        if (v.type !== BUILD.WALL && v.type !== BUILD.WINDOW) return;
+        const isSolidWall = v.type === BUILD.WALL || String(v.type).startsWith("wall_") || v.type === BUILD.WINDOW;
+        if (!isSolidWall) return;
         const tx = tileId % WORLD_SIZE;
         const ty = (tileId / WORLD_SIZE) | 0;
         addColliderRect(tileToWorld(tx), tileToWorld(ty), 0.48, 0.48, `layer_structure_${v.type}`);
@@ -1094,6 +1232,10 @@
       trees = [];
       boulders = [];
       colliders.length = 0;
+      if (isNatureCleared()) {
+        rebuildBuildColliders();
+        return;
+      }
       for (let ty = 1; ty < WORLD_SIZE - 1; ty++) {
         for (let tx = 1; tx < WORLD_SIZE - 1; tx++) {
           const id = idxOf(tx, ty);
@@ -1161,17 +1303,28 @@
     function getBaseTileType(tileId) { return tileMap[tileId]; }
 
     function getVisualTerrainType(tileId) {
-      const t = getTerrainEntry(tileId);
-      if (!t) return getBaseTileType(tileId);
-      if (t.type === "water_tile") return T.WATER;
-      if (t.type === "sandpaint") return T.SAND;
-      if (t.type === "road" || t.type === "stoneground" || t.type === "blackpaint" || t.type === "whitepaint") return T.ROCK;
-      return T.GRASS;
+      const local = getTerrainEntry(tileId);
+      if (local) {
+        if (local.type === "water_tile") return T.WATER;
+        if (local.type === "sandpaint") return T.SAND;
+        if (local.type === "road" || local.type === "stoneground" || local.type === "whitepaint" || local.type === "blackpaint") return T.ROCK;
+        return T.GRASS;
+      }
+      const globalMode = getAdminSurfaceMode();
+      if (globalMode && globalMode !== "base") {
+        if (globalMode === "water_tile") return T.WATER;
+        if (globalMode === "sandpaint") return T.SAND;
+        if (globalMode === "road" || globalMode === "stoneground" || globalMode === "whitepaint" || globalMode === "blackpaint") return T.ROCK;
+        return T.GRASS;
+      }
+      return getBaseTileType(tileId);
     }
 
     function isWaterTile(tileId) {
-      const t = getTerrainEntry(tileId);
-      if (t) return t.type === "water_tile";
+      const local = getTerrainEntry(tileId);
+      if (local) return local.type === "water_tile";
+      const globalMode = getAdminSurfaceMode();
+      if (globalMode && globalMode !== "base") return globalMode === "water_tile";
       return getBaseTileType(tileId) === T.WATER;
     }
 
@@ -1198,8 +1351,10 @@
     }
 
     function tileColor(tileId, h, m, time, tx, ty, light) {
-      const terrainEntry = getTerrainEntry(tileId);
-      if (terrainEntry) return terrainOverrideColor(terrainEntry.type, light);
+      const local = getTerrainEntry(tileId);
+      if (local) return terrainOverrideColor(local.type, light);
+      const globalMode = getAdminSurfaceMode();
+      if (globalMode && globalMode !== "base") return terrainOverrideColor(globalMode, light);
       const tt = getBaseTileType(tileId);
       const day = 0.62 + 0.38 * light;
       if (tt === T.WATER) {
@@ -1223,6 +1378,23 @@
       return rgba((110 * day) | 0, (112 * day) | 0, (120 * day) | 0, 1);
     }
 
+    function worldToScreen(wx, wy) {
+      const sx = (wx - camera.x) * PPU + INTERNAL_W / 2;
+      const sy = (wy - camera.y) * PPU + INTERNAL_H / 2;
+      return { x: sx, y: sy };
+    }
+
+    function pRect(ctx, x, y, w, h) {
+      ctx.fillRect((x | 0), (y | 0), (w | 0), (h | 0));
+    }
+
+    function drawShadowCircle(ctx, x, y, r) {
+      ctx.fillStyle = "rgba(0,0,0,0.30)";
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 1.15, r * 0.7, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     function drawTerrain(ctx, time, light) {
       const halfW = INTERNAL_W / (2 * PPU);
       const halfH = INTERNAL_H / (2 * PPU);
@@ -1240,14 +1412,9 @@
           ctx.fillStyle = tileColor(id, heightMap[id], moistMap[id], time, tx, ty, light);
           pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
           const terrainEntry = getTerrainEntry(id);
-          if (terrainEntry?.type === "road") {
+          if (terrainEntry?.type === "road" || (!terrainEntry && getAdminSurfaceMode() === "road")) {
             ctx.fillStyle = "rgba(255,255,255,0.08)";
             pRect(ctx, pos.x, pos.y + 7, PPU + 1, 2);
-          }
-          const speck = hash2(tx, ty, seedU32 + 12345);
-          if (!terrainEntry && (getBaseTileType(id) === T.GRASS || getBaseTileType(id) === T.HILL) && speck < 0.35) {
-            ctx.fillStyle = "rgba(0,0,0,0.06)";
-            pRect(ctx, pos.x + ((speck * 11) | 0), pos.y + (((speck * 19) | 0) % 12), 2, 2);
           }
         }
       }
@@ -1303,8 +1470,6 @@
         blob(-PPU * 0.40 * s, -PPU * 0.95 * s, PPU * 0.85 * s, PPU * 0.65 * s, cBase);
         blob(PPU * 0.42 * s, -PPU * 0.95 * s, PPU * 0.85 * s, PPU * 0.65 * s, cBase);
         blob(0, -PPU * 0.55 * s, PPU * 1.10 * s, PPU * 0.78 * s, cDeep);
-        blob(-PPU * 0.30 * s, -PPU * 1.25 * s, PPU * 0.42 * s, PPU * 0.32 * s, cHi);
-        blob(PPU * 0.25 * s, -PPU * 1.00 * s, PPU * 0.55 * s, PPU * 0.40 * s, cHi);
       }
       ctx.restore();
     }
@@ -1322,12 +1487,6 @@
       ctx.moveTo(pos.x, pos.y - 20);
       ctx.lineTo(pos.x + 14, pos.y + 2);
       ctx.lineTo(pos.x - 14, pos.y + 2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y - 12);
-      ctx.lineTo(pos.x + 11, pos.y + 10);
-      ctx.lineTo(pos.x - 11, pos.y + 10);
       ctx.closePath();
       ctx.fill();
     }
@@ -1384,6 +1543,24 @@
       ctx.fill();
     }
 
+    function getWallColor(type, light) {
+      const day = 0.68 + 0.32 * light;
+      const map = {
+        wall_white: [230, 230, 230],
+        wall_black: [40, 40, 42],
+        wall_red: [184, 58, 58],
+        wall_orange: [210, 125, 50],
+        wall_yellow: [220, 200, 70],
+        wall_green: [72, 160, 88],
+        wall_blue: [68, 105, 190],
+        wall_purple: [132, 85, 188],
+        wall_brown: [128, 86, 58],
+        wall_gray: [125, 128, 140],
+      };
+      const v = map[type] || [110, 75, 45];
+      return rgba((v[0] * day) | 0, (v[1] * day) | 0, (v[2] * day) | 0, 0.98);
+    }
+
     function drawLayerTile(ctx, tileId, entry, light, time) {
       const tx = tileId % WORLD_SIZE;
       const ty = (tileId / WORLD_SIZE) | 0;
@@ -1396,17 +1573,17 @@
       if (type === BUILD.FLOOR) {
         ctx.fillStyle = rgba((120 * shade) | 0, (85 * shade) | 0, (50 * shade) | 0, 0.95);
         pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba(0, 0, 0, 0.10);
+        ctx.fillStyle = rgba(0,0,0,0.10);
         for (let i = 0; i < 4; i++) pRect(ctx, x + i * 4, y, 1, PPU + 1);
         return;
       }
 
-      if (type === BUILD.WALL) {
+      if (type === BUILD.WALL || String(type).startsWith("wall_")) {
         drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 10);
-        ctx.fillStyle = rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98);
+        ctx.fillStyle = type === BUILD.WALL ? rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98) : getWallColor(type, light);
         pRect(ctx, x, y, PPU + 1, PPU + 1);
-        ctx.fillStyle = rgba(0, 0, 0, 0.10);
-        for (let r = 0; r < 4; r++) pRect(ctx, x, y + r * 4 + 3, PPU + 1, 1);
+        ctx.fillStyle = "rgba(255,255,255,0.06)";
+        pRect(ctx, x + 1, y + 1, PPU - 2, 2);
         return;
       }
 
@@ -1656,17 +1833,6 @@
         }
       }
       mctx.putImageData(img, 0, 0);
-
-      claimsMap.forEach((claim) => {
-        if (!claimsAreEnabled()) return;
-        const px = Math.floor(((claim.chunkX * CLAIM_SIZE) / WORLD_SIZE) * w);
-        const py = Math.floor(((claim.chunkY * CLAIM_SIZE) / WORLD_SIZE) * h);
-        const size = Math.max(2, Math.floor((CLAIM_SIZE / WORLD_SIZE) * w));
-        mctx.strokeStyle = claim.ownerUid === myUid ? "rgba(80,150,255,0.9)" : "rgba(255,160,70,0.9)";
-        mctx.lineWidth = 1;
-        mctx.strokeRect(px, py, size, size);
-      });
-
       if (!isCampfireRemoved()) {
         const cpx = Math.floor(((campfire.x + WORLD_HALF) / WORLD_SIZE) * w);
         const cpy = Math.floor(((campfire.y + WORLD_HALF) / WORLD_SIZE) * h);
@@ -1675,12 +1841,14 @@
         mctx.arc(cpx, cpy, 3, 0, Math.PI * 2);
         mctx.fill();
       }
-
-      terrainLayerMap.forEach((_, tileId) => {
-        const tx = tileId % WORLD_SIZE;
-        const ty = (tileId / WORLD_SIZE) | 0;
-        mctx.fillStyle = "rgba(255,255,255,0.50)";
-        mctx.fillRect(Math.floor((tx / WORLD_SIZE) * w), Math.floor((ty / WORLD_SIZE) * h), 1, 1);
+      claimsMap.forEach((claim) => {
+        if (!claimsAreEnabled()) return;
+        const px = Math.floor(((claim.chunkX * CLAIM_SIZE) / WORLD_SIZE) * w);
+        const py = Math.floor(((claim.chunkY * CLAIM_SIZE) / WORLD_SIZE) * h);
+        const size = Math.max(2, Math.floor((CLAIM_SIZE / WORLD_SIZE) * w));
+        mctx.strokeStyle = claim.ownerUid === myUid ? "rgba(80,150,255,0.9)" : "rgba(255,160,70,0.9)";
+        mctx.lineWidth = 1;
+        mctx.strokeRect(px, py, size, size);
       });
       structureLayerMap.forEach((_, tileId) => {
         const tx = tileId % WORLD_SIZE;
@@ -1799,16 +1967,14 @@
       const tx = tileId % WORLD_SIZE;
       const ty = (tileId / WORLD_SIZE) | 0;
       if (!inBounds(tx, ty)) return { ok: false, reason: "Out of bounds" };
-      if (selectedBuild.layer === "terrain") return { ok: true, reason: "" };
-      if (selectedBuild.layer === "object") return { ok: true, reason: "" };
-      if (isWaterTile(tileId) && !hasAdvancedBuilderAccess()) return { ok: false, reason: "Water tile" };
+      if (selectedBuild.layer !== "terrain" && isWaterTile(tileId) && !hasAdvancedBuilderAccess()) return { ok: false, reason: "Water tile" };
       return { ok: true, reason: "" };
     }
 
     async function syncCampfireRemoved(value) {
       try {
         await updateDoc(doc(db, "servers", serverId), { campfireRemoved: !!value, updatedAt: serverTimestamp() });
-      } catch (e) { console.error("syncCampfireRemoved error:", e); }
+      } catch (e) { console.error(e); }
     }
 
     async function removeNaturalAt(tileId) {
@@ -1819,11 +1985,7 @@
           removedTrees.add(tileId);
           const i = colliders.indexOf(t.collider);
           if (i !== -1) colliders.splice(i, 1);
-          try {
-            await setDoc(doc(db, "servers", serverId, "removedTrees", String(tileId)), {
-              tileId, removedAt: serverTimestamp(), removedBy: myUid,
-            });
-          } catch (e) { console.error(e); }
+          await setDoc(doc(db, "servers", serverId, "removedTrees", String(tileId)), { tileId, removedAt: serverTimestamp(), removedBy: myUid }).catch(console.error);
           changed = true;
         }
       }
@@ -1833,11 +1995,7 @@
           removedBoulders.add(tileId);
           const i = colliders.indexOf(b.collider);
           if (i !== -1) colliders.splice(i, 1);
-          try {
-            await setDoc(doc(db, "servers", serverId, "removedBoulders", String(tileId)), {
-              tileId, removedAt: serverTimestamp(), removedBy: myUid,
-            });
-          } catch (e) { console.error(e); }
+          await setDoc(doc(db, "servers", serverId, "removedBoulders", String(tileId)), { tileId, removedAt: serverTimestamp(), removedBy: myUid }).catch(console.error);
           changed = true;
         }
       }
@@ -1855,16 +2013,11 @@
     }
 
     async function upsertLayerTile(layer, tileId, type, rot = 0) {
-      await setDoc(doc(db, "servers", serverId, "builds", buildDocId(layer, tileId)), {
-        tileId, layer, type, rot, updatedAt: serverTimestamp(), updatedBy: myUid,
-      });
+      await setDoc(doc(db, "servers", serverId, "builds", buildDocId(layer, tileId)), { tileId, layer, type, rot, updatedAt: serverTimestamp(), updatedBy: myUid });
     }
 
     async function deleteLayerTile(layer, tileId) {
-      await deleteDoc(doc(db, "servers", serverId, "builds", buildDocId(layer, tileId)));
-      if (layer === "structure") {
-        try { await deleteDoc(doc(db, "servers", serverId, "builds", String(tileId))); } catch {}
-      }
+      await deleteDoc(doc(db, "servers", serverId, "builds", buildDocId(layer, tileId))).catch(console.error);
     }
 
     async function placeSelected(tileId) {
@@ -1875,12 +2028,10 @@
         return false;
       }
 
-      if (selectedBuild.layer === "terrain" || selectedBuild.layer === "object" || hasAdvancedBuilderAccess()) {
-        await removeNaturalAt(tileId);
-      }
+      if (selectedBuild.layer === "terrain" || selectedBuild.layer === "object" || hasAdvancedBuilderAccess()) await removeNaturalAt(tileId);
 
       if (selectedBuild.layer === "structure" && !isFreeBuildForMe()) {
-        const cost = COST[selectedBuild.type] || 1;
+        const cost = getBuildCost(selectedBuild.type);
         if (wood < cost) {
           showToast("Not enough wood", 1.0);
           audio.beep(180, 0.10, 0.04);
@@ -1899,9 +2050,7 @@
       const ty = (tileId / WORLD_SIZE) | 0;
       spawnParticles("build", tileToWorld(tx), tileToWorld(ty), 10);
       audio.beep(560, 0.05, 0.04);
-
-      try { await upsertLayerTile(selectedBuild.layer, tileId, selectedBuild.type, selectedBuild.rot || 0); }
-      catch (e) { console.error("placeSelected sync error:", e); }
+      await upsertLayerTile(selectedBuild.layer, tileId, selectedBuild.type, selectedBuild.rot || 0).catch(console.error);
       return true;
     }
 
@@ -1917,7 +2066,7 @@
         objectLayerMap.delete(tileId);
         rebuildBuildColliders();
         minimapDirty = true;
-        await deleteLayerTile("object", tileId).catch(console.error);
+        await deleteLayerTile("object", tileId);
         showToast("Object removed", 0.8);
         return true;
       }
@@ -1927,8 +2076,8 @@
         structureLayerMap.delete(tileId);
         rebuildBuildColliders();
         minimapDirty = true;
-        if (!isFreeBuildForMe()) wood += Math.max(1, Math.floor((COST[entry.type] || 1) * 0.5));
-        await deleteLayerTile("structure", tileId).catch(console.error);
+        if (!isFreeBuildForMe()) wood += Math.max(1, Math.floor(getBuildCost(entry.type) * 0.5));
+        await deleteLayerTile("structure", tileId);
         showToast(isFreeBuildForMe() ? "Structure removed" : "Removed (+wood)", 0.8);
         return true;
       }
@@ -1936,7 +2085,7 @@
       if (getTerrainEntry(tileId)) {
         terrainLayerMap.delete(tileId);
         minimapDirty = true;
-        await deleteLayerTile("terrain", tileId).catch(console.error);
+        await deleteLayerTile("terrain", tileId);
         showToast("Terrain removed", 0.8);
         return true;
       }
@@ -1983,11 +2132,7 @@
         if (!isFreeBuildForMe()) wood += 1;
         showToast(isFreeBuildForMe() ? "Tree removed" : "+1 wood", 0.7);
         minimapDirty = true;
-        try {
-          await setDoc(doc(db, "servers", serverId, "removedTrees", String(best.tileId)), {
-            tileId: best.tileId, removedAt: serverTimestamp(), removedBy: myUid,
-          });
-        } catch (e) { console.error(e); }
+        await setDoc(doc(db, "servers", serverId, "removedTrees", String(best.tileId)), { tileId: best.tileId, removedAt: serverTimestamp(), removedBy: myUid }).catch(console.error);
       }
     }
 
@@ -2021,11 +2166,7 @@
           showToast("Rock removed", 0.7);
         }
         minimapDirty = true;
-        try {
-          await setDoc(doc(db, "servers", serverId, "removedBoulders", String(best.tileId)), {
-            tileId: best.tileId, removedAt: serverTimestamp(), removedBy: myUid,
-          });
-        } catch (e) { console.error(e); }
+        await setDoc(doc(db, "servers", serverId, "removedBoulders", String(best.tileId)), { tileId: best.tileId, removedAt: serverTimestamp(), removedBy: myUid }).catch(console.error);
       }
     }
 
@@ -2051,15 +2192,10 @@
         audio.beep(180, 0.10, 0.04);
         return;
       }
-      try {
-        await setDoc(doc(db, "servers", serverId, "claims", key), {
-          chunkX, chunkY, ownerUid: myUid, ownerName: myName,
-          access: "visitOnly", createdAt: serverTimestamp(), updatedAt: serverTimestamp(),
-        });
-        showToast("Territory claimed (visitOnly)", 1.0);
-        minimapDirty = true;
-        audio.beep(640, 0.08, 0.04);
-      } catch (e) { console.error(e); }
+      await setDoc(doc(db, "servers", serverId, "claims", key), { chunkX, chunkY, ownerUid: myUid, ownerName: myName, access: "visitOnly", createdAt: serverTimestamp(), updatedAt: serverTimestamp() }).catch(console.error);
+      showToast("Territory claimed (visitOnly)", 1.0);
+      minimapDirty = true;
+      audio.beep(640, 0.08, 0.04);
     }
 
     async function toggleClaimAccessAtTarget() {
@@ -2082,13 +2218,9 @@
         return;
       }
       const newAccess = claim.access === "sharedBuild" ? "visitOnly" : "sharedBuild";
-      try {
-        await updateDoc(doc(db, "servers", serverId, "claims", claimKey(claim.chunkX, claim.chunkY)), {
-          access: newAccess, updatedAt: serverTimestamp(),
-        });
-        showToast(`Claim: ${newAccess}`, 1.0);
-        audio.beep(700, 0.05, 0.04);
-      } catch (e) { console.error(e); }
+      await updateDoc(doc(db, "servers", serverId, "claims", claimKey(claim.chunkX, claim.chunkY)), { access: newAccess, updatedAt: serverTimestamp() }).catch(console.error);
+      showToast(`Claim: ${newAccess}`, 1.0);
+      audio.beep(700, 0.05, 0.04);
     }
 
     async function sendQuickChat(text) {
@@ -2096,11 +2228,7 @@
       const until = Date.now() + QUICK_CHAT_VISIBLE_MS;
       player.quickChatText = text;
       player.quickChatUntil = until;
-      try {
-        await setDoc(doc(db, "servers", serverId, "players", myUid), {
-          quickChatText: text, quickChatUntil: until, lastActive: serverTimestamp(),
-        }, { merge: true });
-      } catch (e) { console.error(e); }
+      await setDoc(doc(db, "servers", serverId, "players", myUid), { quickChatText: text, quickChatUntil: until, lastActive: serverTimestamp() }, { merge: true }).catch(console.error);
     }
 
     async function doAction() {
@@ -2204,22 +2332,24 @@
       pad.addEventListener("touchmove", (e) => {
         e.preventDefault();
         if (touchId === null) return;
-        for (const t of e.touches) {
-          if (t.identifier === touchId) { updateFromTouch(t); break; }
-        }
+        for (const t of e.touches) if (t.identifier === touchId) { updateFromTouch(t); break; }
       }, { passive: false });
       function end(e) {
         if (touchId === null) return;
-        for (const t of e.changedTouches) {
-          if (t.identifier === touchId) { touchId = null; reset(); break; }
-        }
+        for (const t of e.changedTouches) if (t.identifier === touchId) { touchId = null; reset(); break; }
       }
       pad.addEventListener("touchend", end, { passive: false });
       pad.addEventListener("touchcancel", end, { passive: false });
       reset();
     }
-
     if (movePad && moveStick) setupMoveStick(movePad, moveStick);
+
+    function resize() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      gameCanvas.width = Math.floor(innerWidth * dpr);
+      gameCanvas.height = Math.floor(innerHeight * dpr);
+      gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
 
     function setupScreenView() {
       const screenW = innerWidth;
@@ -2235,36 +2365,12 @@
       return { drawW, drawH, ox, oy };
     }
 
-    function resize() {
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      gameCanvas.width = Math.floor(innerWidth * dpr);
-      gameCanvas.height = Math.floor(innerHeight * dpr);
-      gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
-    function worldToScreen(wx, wy) {
-      const sx = (wx - camera.x) * PPU + INTERNAL_W / 2;
-      const sy = (wy - camera.y) * PPU + INTERNAL_H / 2;
-      return { x: sx, y: sy };
-    }
-
-    function pRect(ctx, x, y, w, h) {
-      ctx.fillRect((x | 0), (y | 0), (w | 0), (h | 0));
-    }
-
-    function drawShadowCircle(ctx, x, y, r) {
-      ctx.fillStyle = "rgba(0,0,0,0.30)";
-      ctx.beginPath();
-      ctx.ellipse(x, y, r * 1.15, r * 0.7, 0, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    function spawnParticles(type, x, y, count = 10) {
-      for (let i = 0; i < count; i++) {
-        const a = Math.random() * Math.PI * 2;
-        const sp = 2.5 + Math.random() * 4.5;
-        particles.push({ type, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35 + Math.random() * 0.45 });
-      }
+    function handleWorldVisualChanges() {
+      if (!serverMeta || !worldReady) return;
+      const sig = `${getAdminSurfaceMode()}|${isNatureCleared()}|${serverMeta.campfireRemoved ? 1 : 0}`;
+      if (sig === lastWorldVisualSignature) return;
+      lastWorldVisualSignature = sig;
+      generateWorld();
     }
 
     async function syncServerPresence(force = false) {
@@ -2272,14 +2378,12 @@
       const now = Date.now();
       if (!force && now - lastServerSyncAt < 4000) return;
       lastServerSyncAt = now;
-      try {
-        await updateDoc(doc(db, "servers", serverId), {
-          lastHeartbeat: serverTimestamp(),
-          status: actualPlayersCount > 0 ? "online" : "offline",
-          playerCount: actualPlayersCount,
-          updatedAt: serverTimestamp(),
-        });
-      } catch (e) { console.error("syncServerPresence error:", e); }
+      await updateDoc(doc(db, "servers", serverId), {
+        lastHeartbeat: serverTimestamp(),
+        status: actualPlayersCount > 0 ? "online" : "offline",
+        playerCount: actualPlayersCount,
+        updatedAt: serverTimestamp(),
+      }).catch(console.error);
     }
 
     async function syncMyPlayer(force = false) {
@@ -2291,21 +2395,19 @@
       lastSentX = player.x;
       lastSentY = player.y;
       lastSentDir = player.dir;
-      try {
-        await setDoc(doc(db, "servers", serverId, "players", myUid), {
-          uid: myUid,
-          name: myName,
-          avatar: myAvatar || DEFAULT_AVATAR,
-          x: player.x,
-          y: player.y,
-          dir: player.dir,
-          tool: currentTool,
-          isCreative: isCreativeForMe(),
-          lastActive: serverTimestamp(),
-          quickChatText: player.quickChatText || "",
-          quickChatUntil: player.quickChatUntil || 0,
-        }, { merge: true });
-      } catch (e) { console.error("syncMyPlayer error:", e); }
+      await setDoc(doc(db, "servers", serverId, "players", myUid), {
+        uid: myUid,
+        name: myName,
+        avatar: myAvatar || DEFAULT_AVATAR,
+        x: player.x,
+        y: player.y,
+        dir: player.dir,
+        tool: currentTool,
+        isCreative: isCreativeForMe(),
+        lastActive: serverTimestamp(),
+        quickChatText: player.quickChatText || "",
+        quickChatUntil: player.quickChatUntil || 0,
+      }, { merge: true }).catch(console.error);
     }
 
     async function heartbeat() {
@@ -2313,14 +2415,12 @@
       const now = Date.now();
       if (now - lastHeartbeatAt < 4000) return;
       lastHeartbeatAt = now;
-      try {
-        await setDoc(doc(db, "servers", serverId, "players", myUid), {
-          lastActive: serverTimestamp(),
-          name: myName,
-          avatar: myAvatar || DEFAULT_AVATAR,
-          isCreative: isCreativeForMe(),
-        }, { merge: true });
-      } catch (e) { console.error("heartbeat player error:", e); }
+      await setDoc(doc(db, "servers", serverId, "players", myUid), {
+        lastActive: serverTimestamp(),
+        name: myName,
+        avatar: myAvatar || DEFAULT_AVATAR,
+        isCreative: isCreativeForMe(),
+      }, { merge: true }).catch(console.error);
       await syncServerPresence(true);
     }
 
@@ -2328,10 +2428,11 @@
       unsubServer = onSnapshot(doc(db, "servers", serverId), (snap) => {
         if (!snap.exists()) throw new Error("Server not found.");
         serverMeta = { id: snap.id, ...snap.data() };
-        paletteToggleBtn.style.display = hasAdvancedBuilderAccess() ? "inline-block" : "none";
+        updateAdminToolsUI();
         if (!hasAdvancedBuilderAccess()) closePalette();
         if (!hasAxeAccess() && currentTool === TOOL.AXE) currentTool = TOOL.PICKAXE;
         updateServerInfo();
+        handleWorldVisualChanges();
       });
 
       unsubPlayers = onSnapshot(collection(db, "servers", serverId, "players"), (snap) => {
@@ -2350,7 +2451,9 @@
             id: p.id,
             name: p.name || "Player",
             avatar: p.avatar || DEFAULT_AVATAR,
-            x: Number(p.x || 0), y: Number(p.y || 0), dir: Number(p.dir || 0),
+            x: Number(p.x || 0),
+            y: Number(p.y || 0),
+            dir: Number(p.dir || 0),
             rx: prev ? lerp(prev.rx ?? prev.x, Number(p.x || 0), 0.55) : Number(p.x || 0),
             ry: prev ? lerp(prev.ry ?? prev.y, Number(p.y || 0), 0.55) : Number(p.y || 0),
             tool: Number.isFinite(p.tool) ? p.tool : TOOL.AXE,
@@ -2401,13 +2504,7 @@
         claimsMap = new Map();
         snap.forEach((d) => {
           const v = d.data();
-          claimsMap.set(d.id, {
-            chunkX: Number(v.chunkX),
-            chunkY: Number(v.chunkY),
-            ownerUid: v.ownerUid,
-            ownerName: v.ownerName,
-            access: v.access || "visitOnly",
-          });
+          claimsMap.set(d.id, { chunkX: Number(v.chunkX), chunkY: Number(v.chunkY), ownerUid: v.ownerUid, ownerName: v.ownerName, access: v.access || "visitOnly" });
         });
         minimapDirty = true;
       });
@@ -2427,7 +2524,7 @@
           myAvatar = meSnap.data().avatar || DEFAULT_AVATAR;
           player.avatar = myAvatar;
         }
-      } catch (e) { console.error("load my avatar error:", e); }
+      } catch (e) { console.error(e); }
 
       if (serverMeta.visibility === "private") {
         const allowed = Array.isArray(serverMeta.allowedUsersNormalized) ? serverMeta.allowedUsersNormalized : [];
@@ -2435,8 +2532,8 @@
         if (serverMeta.createdByUid !== myUid && !allowed.includes(me)) throw new Error("This is a private server.");
       }
 
+      updateAdminToolsUI();
       if (!hasAxeAccess() && currentTool === TOOL.AXE) currentTool = TOOL.PICKAXE;
-      paletteToggleBtn.style.display = hasAdvancedBuilderAccess() ? "inline-block" : "none";
     }
 
     async function joinServer(user) {
@@ -2444,6 +2541,7 @@
       if (!serverMeta.worldSeed) throw new Error("Server seed is missing.");
       setSeed(serverMeta.worldSeed);
       generateWorld();
+      lastWorldVisualSignature = `${getAdminSurfaceMode()}|${isNatureCleared()}|${serverMeta.campfireRemoved ? 1 : 0}`;
       player.x = campfire.x + 1.4;
       player.y = campfire.y + 1.2;
       player.dir = 0;
@@ -2462,7 +2560,7 @@
         quickChatUntil: 0,
         joinedAt: serverTimestamp(),
         lastActive: serverTimestamp(),
-      }, { merge: true });
+      }, { merge: true }).catch(console.error);
       joinedPresence = true;
       canPlay = true;
       worldReady = true;
@@ -2475,12 +2573,8 @@
     async function leaveServer() {
       if (leaveDone) return;
       leaveDone = true;
-      try {
-        if (myUid && joinedPresence) await deleteDoc(doc(db, "servers", serverId, "players", myUid));
-      } catch (e) { console.error("leaveServer delete player error:", e); }
-      try {
-        if (myUid) await updateDoc(doc(db, "servers", serverId), { updatedAt: serverTimestamp() });
-      } catch (e) { console.error("leaveServer update server error:", e); }
+      if (myUid && joinedPresence) await deleteDoc(doc(db, "servers", serverId, "players", myUid)).catch(console.error);
+      if (myUid) await updateDoc(doc(db, "servers", serverId), { updatedAt: serverTimestamp() }).catch(console.error);
     }
 
     leaveBtn.addEventListener("click", async () => {
@@ -2506,10 +2600,17 @@
       }
     }
 
-    let last = performance.now();
+    function spawnParticles(type, x, y, count = 10) {
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const sp = 2.5 + Math.random() * 4.5;
+        particles.push({ type, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35 + Math.random() * 0.45 });
+      }
+    }
 
     function update(dt, time) {
       if (!worldReady) return;
+
       let mx = 0, my = 0;
       if (keys["KeyW"] || keys["ArrowUp"]) my -= 1;
       if (keys["KeyS"] || keys["ArrowDown"]) my += 1;
@@ -2519,6 +2620,7 @@
         mx += touchMoveX;
         my += touchMoveY;
       }
+
       const len = Math.hypot(mx, my);
       if (!isCoarse && mouseAim) {
         const cx = innerWidth / 2;
@@ -2529,6 +2631,7 @@
       } else if (len > 0.001) {
         player.dir = Math.atan2(my, mx);
       }
+
       const speed = isCreativeForMe() ? 9.0 : hasAdvancedBuilderAccess() ? 8.5 : 7.8;
       if (len > 0.001) {
         const nx = clamp(player.x + (mx / Math.max(1, len)) * speed * dt, -WORLD_HALF + 1, WORLD_HALF - 1);
@@ -2577,19 +2680,12 @@
       heartbeat();
       updateServerInfo();
 
-      const creative = isCreativeForMe();
-      const adv = hasAdvancedBuilderAccess();
-      const woodText = isFreeBuildForMe() ? "∞" : wood;
-      const stoneText = isFreeBuildForMe() ? "∞" : stone;
-      const coalText = isFreeBuildForMe() ? "∞" : coal;
-
+      const modeText = isCreativeForMe() ? "Creative" : hasAdvancedBuilderAccess() ? "Builder+" : "Survival";
       hudEl.innerHTML =
-        `Wood: ${woodText} | Stone: ${stoneText} | Coal: ${coalText}` +
-        `<div class="small">Mode: ${creative ? "Creative" : adv ? "Builder+" : "Survival"} | Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"}` +
-        ` | Selected: ${selectedBuild.label}` +
-        ` | Claims: ${claimsAreEnabled() ? "ON" : "OFF"}` +
-        ` | Break: ${canBreakServerWide() ? "Yes" : "No"}` +
-        ` | Minimap: M | Palette: P | Quick Chat: Q | Claim Preview: V` +
+        `Wood: ${isFreeBuildForMe() ? "∞" : wood} | Stone: ${isFreeBuildForMe() ? "∞" : stone} | Coal: ${isFreeBuildForMe() ? "∞" : coal}` +
+        `<div class="small">Mode: ${modeText} | Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"} | Selected: ${selectedBuild.label}` +
+        ` | Claims: ${claimsAreEnabled() ? "ON" : "OFF"} | Break: ${canBreakServerWide() ? "Yes" : "No"}` +
+        ` | Minimap: M | Palette: P | Quick Chat: Q | Claim Preview: V | Claim Access: G` +
         `</div>`;
     }
 
@@ -2631,7 +2727,6 @@
       }
 
       drawToast(bctx);
-
       const night = 1 - light;
       if (night > 0.001) {
         bctx.fillStyle = rgba(10, 20, 40, 0.10 + 0.55 * night);
@@ -2644,6 +2739,7 @@
       gctx.drawImage(buffer, 0, 0, INTERNAL_W, INTERNAL_H, ox, oy, drawW, drawH);
     }
 
+    let last = performance.now();
     function loop(now) {
       const dt = Math.min(0.033, (now - last) / 1000);
       last = now;
@@ -2733,5 +2829,4 @@
       }
     });
   </script>
-</body>
-</html>
+</bo
