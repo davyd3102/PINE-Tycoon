@@ -440,6 +440,8 @@
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
       padding: 14px 16px;
       border: 1px solid var(--border-soft);
+      max-height: calc(100vh - 100px);
+      overflow-y: auto;
     }
 
     .modal-close {
@@ -835,6 +837,59 @@
           <input id="serverAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" />
         </label>
 
+        <label>
+          Creative mode
+          <select id="serverCreativeEnabledInput">
+            <option value="false" selected>Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </label>
+
+        <label>
+          Creative access
+          <select id="serverCreativeAccessInput">
+            <option value="owner" selected>Only owner</option>
+            <option value="selected">Selected players</option>
+            <option value="all">All players</option>
+          </select>
+        </label>
+
+        <label>
+          Creative usernames (comma separated)
+          <input id="serverCreativeUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
+        <div class="server-form-grid">
+          <label>
+            Can break blocks
+            <select id="serverCanBreakInput">
+              <option value="true" selected>Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+
+          <label>
+            Give axe
+            <select id="serverGiveAxeInput">
+              <option value="true" selected>Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+
+          <label>
+            Territory system
+            <select id="serverClaimsEnabledInput">
+              <option value="true" selected>Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Builder usernames (comma separated)
+          <input id="serverBuilderUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
         <div class="row-actions">
           <button id="createServerSubmitBtn" class="btn">Create and Join</button>
           <button id="cancelCreateServerBtn" class="btn">Cancel</button>
@@ -897,6 +952,59 @@
           <input id="editServerAllowedUsersInput" type="text" placeholder="davyd3102, friend_name" />
         </label>
 
+        <label>
+          Creative mode
+          <select id="editServerCreativeEnabledInput">
+            <option value="false">Disabled</option>
+            <option value="true">Enabled</option>
+          </select>
+        </label>
+
+        <label>
+          Creative access
+          <select id="editServerCreativeAccessInput">
+            <option value="owner">Only owner</option>
+            <option value="selected">Selected players</option>
+            <option value="all">All players</option>
+          </select>
+        </label>
+
+        <label>
+          Creative usernames (comma separated)
+          <input id="editServerCreativeUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
+        <div class="server-form-grid">
+          <label>
+            Can break blocks
+            <select id="editServerCanBreakInput">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+
+          <label>
+            Give axe
+            <select id="editServerGiveAxeInput">
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </label>
+
+          <label>
+            Territory system
+            <select id="editServerClaimsEnabledInput">
+              <option value="true">Enabled</option>
+              <option value="false">Disabled</option>
+            </select>
+          </label>
+        </div>
+
+        <label>
+          Builder usernames (comma separated)
+          <input id="editServerBuilderUsersInput" type="text" placeholder="davyd3102, friend_name" />
+        </label>
+
         <div class="row-actions">
           <button id="saveServerEditBtn" class="btn">Save changes</button>
           <button id="cancelEditServerBtn" class="btn">Cancel</button>
@@ -934,6 +1042,29 @@
       appId: "1:949986190236:web:4f5d50078326f5c1981e59",
       measurementId: "G-2DY6KSY4G7",
     };
+
+    const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
+    const BASE_AVATARS = [
+      DEFAULT_AVATAR,
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
+    ];
+
+    const EXCLUSIVE_AVATARS = [
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
+      "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
+    ];
+
+    const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
+    const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
+    const SERVER_TIMEOUT_MS = 12000;
+    const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
@@ -1005,6 +1136,13 @@
     const serverVisibilityInput = document.getElementById("serverVisibilityInput");
     const serverDayModeInput = document.getElementById("serverDayModeInput");
     const serverAllowedUsersInput = document.getElementById("serverAllowedUsersInput");
+    const serverCreativeEnabledInput = document.getElementById("serverCreativeEnabledInput");
+    const serverCreativeAccessInput = document.getElementById("serverCreativeAccessInput");
+    const serverCreativeUsersInput = document.getElementById("serverCreativeUsersInput");
+    const serverCanBreakInput = document.getElementById("serverCanBreakInput");
+    const serverGiveAxeInput = document.getElementById("serverGiveAxeInput");
+    const serverClaimsEnabledInput = document.getElementById("serverClaimsEnabledInput");
+    const serverBuilderUsersInput = document.getElementById("serverBuilderUsersInput");
 
     const editServerModal = document.getElementById("editServerModal");
     const editServerOverlay = document.getElementById("editServerOverlay");
@@ -1018,30 +1156,13 @@
     const editServerVisibilityInput = document.getElementById("editServerVisibilityInput");
     const editServerDayModeInput = document.getElementById("editServerDayModeInput");
     const editServerAllowedUsersInput = document.getElementById("editServerAllowedUsersInput");
-
-    const DEFAULT_AVATAR = "https://learn.logikaschool.com/uploads/student/4796102/692acc8996fdc.png";
-
-    const BASE_AVATARS = [
-      DEFAULT_AVATAR,
-      "https://learn.logikaschool.com/uploads/student/4796102/697cf6cfb1ffc.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/697cf70b50a52.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/697cf71c21fe0.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/697cf72c2ca11.png",
-    ];
-
-    const EXCLUSIVE_AVATARS = [
-      "https://learn.logikaschool.com/uploads/student/4796102/697cfdf57544e.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/697cfe0d059e5.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/697cfe633e773.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/692acfc896c23.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/692b12eb74937.png",
-      "https://learn.logikaschool.com/uploads/student/4796102/692b1a155937b.png",
-    ];
-
-    const ALLOWED_COMMENTERS = ["davyd3102", "3102"];
-    const ONLINE_TIMEOUT_MS = 2 * 60 * 1000;
-    const SERVER_TIMEOUT_MS = 12000;
-    const SPECIAL_USERS = new Set(["cool_dave", "grivield", "davyd3102", "davyd"]);
+    const editServerCreativeEnabledInput = document.getElementById("editServerCreativeEnabledInput");
+    const editServerCreativeAccessInput = document.getElementById("editServerCreativeAccessInput");
+    const editServerCreativeUsersInput = document.getElementById("editServerCreativeUsersInput");
+    const editServerCanBreakInput = document.getElementById("editServerCanBreakInput");
+    const editServerGiveAxeInput = document.getElementById("editServerGiveAxeInput");
+    const editServerClaimsEnabledInput = document.getElementById("editServerClaimsEnabledInput");
+    const editServerBuilderUsersInput = document.getElementById("editServerBuilderUsersInput");
 
     let currentUserName = null;
     let currentUserUid = null;
@@ -1133,10 +1254,58 @@
       return { original, normalized };
     }
 
+    function parseUserList(text) {
+      const raw = String(text || "")
+        .split(",")
+        .map((x) => x.trim())
+        .filter(Boolean);
+
+      const original = [...new Set(raw)];
+      const normalized = [...new Set(original.map((x) => normalizeName(x)).filter(Boolean))];
+      return { original, normalized };
+    }
+
+    function buildServerGameplaySettings({
+      ownerName,
+      creativeEnabled,
+      creativeAccess,
+      creativeUsersText,
+      canBreakBlocks,
+      giveAxe,
+      claimsEnabled,
+      builderUsersText,
+    }) {
+      const creativeUsers = parseUserList(creativeUsersText);
+      const builderUsers = parseUserList(builderUsersText);
+
+      if (!creativeUsers.normalized.includes(normalizeName(ownerName))) {
+        creativeUsers.normalized.push(normalizeName(ownerName));
+        creativeUsers.original.push(ownerName);
+      }
+
+      if (!builderUsers.normalized.includes(normalizeName(ownerName))) {
+        builderUsers.normalized.push(normalizeName(ownerName));
+        builderUsers.original.push(ownerName);
+      }
+
+      return {
+        gameplay: {
+          creativeEnabled: !!creativeEnabled,
+          creativeAccess: ["owner", "selected", "all"].includes(creativeAccess) ? creativeAccess : "owner",
+          creativeUsers: creativeUsers.original,
+          creativeUsersNormalized: creativeUsers.normalized,
+          canBreakBlocks: !!canBreakBlocks,
+          giveAxe: !!giveAxe,
+          claimsEnabled: !!claimsEnabled,
+          builderUsers: builderUsers.original,
+          builderUsersNormalized: builderUsers.normalized,
+        }
+      };
+    }
+
     function getServerOnlineState(server) {
       const hb = server?.lastHeartbeat?.toDate ? server.lastHeartbeat.toDate().getTime() : 0;
-      const now = Date.now();
-      return !!(hb && now - hb < SERVER_TIMEOUT_MS);
+      return !!(hb && Date.now() - hb < SERVER_TIMEOUT_MS);
     }
 
     function openModal(modal) {
@@ -1149,11 +1318,9 @@
 
     profileOverlay.addEventListener("click", () => closeModal(profileModal));
     profileCloseBtn.addEventListener("click", () => closeModal(profileModal));
-
     createServerOverlay.addEventListener("click", () => closeModal(createServerModal));
     closeCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
     cancelCreateServerBtn.addEventListener("click", () => closeModal(createServerModal));
-
     editServerOverlay.addEventListener("click", () => closeModal(editServerModal));
     closeEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
     cancelEditServerBtn.addEventListener("click", () => closeModal(editServerModal));
@@ -1163,13 +1330,11 @@
       if (!u) return;
 
       const { isOnline, last } = computeOnline(u);
-
       profileAvatar.src = u.avatar || DEFAULT_AVATAR;
       profileName.textContent = u.name || "Player";
       profileStatus.textContent = isOnline ? "Online" : "Offline";
       profileLast.textContent = last ? "Last active: " + last.toLocaleString("uk-UA") : "";
       profileBio.textContent = u.bio && u.bio.trim() ? u.bio.trim() : "No bio yet.";
-
       openModal(profileModal);
     }
 
@@ -1194,7 +1359,6 @@
 
         currentUserAvatar = data?.avatar || DEFAULT_AVATAR;
         currentUserBio = typeof data?.bio === "string" ? data.bio : "";
-
         avatarImg.src = currentUserAvatar;
 
         if (currentUserBio.trim()) {
@@ -1231,7 +1395,6 @@
     function startPresenceUpdater(uid, name) {
       if (!uid || !name) return;
       if (presenceInterval) clearInterval(presenceInterval);
-
       touchUserPresence(uid, name);
       presenceInterval = setInterval(() => touchUserPresence(uid, name), 60000);
     }
@@ -1289,7 +1452,6 @@
         item.appendChild(wrapper);
         item.appendChild(nameSpan);
         item.addEventListener("click", () => showMiniProfile(f.friendUid));
-
         friendsListDiv.appendChild(item);
       });
     }
@@ -1336,7 +1498,6 @@
 
           actions.appendChild(acceptBtn);
           actions.appendChild(declineBtn);
-
           row.appendChild(text);
           row.appendChild(actions);
           friendRequestsListDiv.appendChild(row);
@@ -1353,11 +1514,9 @@
         friendRequestsOutgoing.forEach((req) => {
           const row = document.createElement("div");
           row.className = "friend-requests-row";
-
           const text = document.createElement("div");
           text.className = "user-result-note";
           text.textContent = `Request to ${req.toName || "player"} (pending)`;
-
           row.appendChild(text);
           friendRequestsListDiv.appendChild(row);
         });
@@ -1372,7 +1531,6 @@
 
       friendsList = [];
       renderFriends();
-
       if (!uid) return;
 
       const friendsColRef = collection(db, "users", uid, "friends");
@@ -1381,7 +1539,6 @@
         (snapshot) => {
           friendsList = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
           renderFriends();
-
           const term = userSearchInput.value.trim();
           if (term) renderUserResults(term);
         },
@@ -1401,7 +1558,6 @@
       friendRequestsIncoming = [];
       friendRequestsOutgoing = [];
       renderFriendRequests();
-
       if (!uid) return;
 
       friendReqUnsub = onSnapshot(
@@ -1471,8 +1627,8 @@
 
     function renderUserResults(term) {
       userSearchResults.innerHTML = "";
-
       const trimmed = term.trim();
+
       if (!trimmed) {
         userSearchResults.innerHTML = '<p class="comment-empty">Type a name to search players.</p>';
         return;
@@ -1539,7 +1695,6 @@
 
         const actionDiv = document.createElement("div");
         actionDiv.className = "user-result-action";
-
         const note = document.createElement("div");
         note.className = "user-result-note";
 
@@ -1607,8 +1762,8 @@
 
     function buildAvatarGrid(selectedUrl) {
       avatarGrid.innerHTML = "";
-
       const allowed = getAllowedAvatarsFor(currentUserName);
+
       avatarHint.textContent = isSpecialUser(currentUserName)
         ? "Choose an avatar (standard + exclusive) and write a short bio (max 200 chars)."
         : "Choose an avatar and write a short bio (max 200 chars).";
@@ -1666,7 +1821,6 @@
 
       try {
         await setDoc(doc(db, "users", currentUserUid), { avatar: safeSelected, bio }, { merge: true });
-
         currentUserAvatar = safeSelected;
         currentUserBio = bio;
         avatarImg.src = currentUserAvatar;
@@ -1714,6 +1868,13 @@
       serverVisibilityInput.value = "public";
       serverDayModeInput.value = "auto";
       serverAllowedUsersInput.value = "";
+      serverCreativeEnabledInput.value = "false";
+      serverCreativeAccessInput.value = "owner";
+      serverCreativeUsersInput.value = "";
+      serverCanBreakInput.value = "true";
+      serverGiveAxeInput.value = "true";
+      serverClaimsEnabledInput.value = "true";
+      serverBuilderUsersInput.value = "";
       openModal(createServerModal);
     }
 
@@ -1738,11 +1899,22 @@
         return;
       }
 
-      const { original, normalized } = parseAllowedUsers(serverAllowedUsersInput.value);
-      if (visibility === "private" && !normalized.includes(normalizeName(currentUserName))) {
-        normalized.push(normalizeName(currentUserName));
-        original.push(currentUserName);
+      const allowedUsers = parseAllowedUsers(serverAllowedUsersInput.value);
+      if (visibility === "private" && !allowedUsers.normalized.includes(normalizeName(currentUserName))) {
+        allowedUsers.normalized.push(normalizeName(currentUserName));
+        allowedUsers.original.push(currentUserName);
       }
+
+      const gameplayPack = buildServerGameplaySettings({
+        ownerName: currentUserName,
+        creativeEnabled: serverCreativeEnabledInput.value === "true",
+        creativeAccess: serverCreativeAccessInput.value,
+        creativeUsersText: serverCreativeUsersInput.value,
+        canBreakBlocks: serverCanBreakInput.value === "true",
+        giveAxe: serverGiveAxeInput.value === "true",
+        claimsEnabled: serverClaimsEnabledInput.value === "true",
+        builderUsersText: serverBuilderUsersInput.value,
+      });
 
       createServerMsg.textContent = "Creating server...";
       createServerSubmitBtn.disabled = true;
@@ -1757,14 +1929,15 @@
           maxPlayers,
           playerCount: 0,
           visibility,
-          allowedUsers: visibility === "private" ? original : [],
-          allowedUsersNormalized: visibility === "private" ? normalized : [],
+          allowedUsers: visibility === "private" ? allowedUsers.original : [],
+          allowedUsersNormalized: visibility === "private" ? allowedUsers.normalized : [],
           dayMode,
           status: "offline",
           worldSeed: randomSeed(),
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           lastHeartbeat: serverTimestamp(),
+          ...gameplayPack,
         });
 
         location.href = `multiplayer.html?server=${encodeURIComponent(docRef.id)}`;
@@ -1817,16 +1990,23 @@
 
       editingServerId = server.id;
       editServerMsg.textContent = "";
-
       editServerNameInput.value = server.name || "";
       editServerDescInput.value = server.description || "";
       editServerMaxPlayersInput.value = String(server.maxPlayers || 8);
       editServerVisibilityInput.value = server.visibility || "public";
       editServerDayModeInput.value = server.dayMode || "auto";
-      editServerAllowedUsersInput.value = Array.isArray(server.allowedUsers)
-        ? server.allowedUsers.join(", ")
+      editServerAllowedUsersInput.value = Array.isArray(server.allowedUsers) ? server.allowedUsers.join(", ") : "";
+      editServerCreativeEnabledInput.value = server.gameplay?.creativeEnabled ? "true" : "false";
+      editServerCreativeAccessInput.value = server.gameplay?.creativeAccess || "owner";
+      editServerCreativeUsersInput.value = Array.isArray(server.gameplay?.creativeUsers)
+        ? server.gameplay.creativeUsers.join(", ")
         : "";
-
+      editServerCanBreakInput.value = server.gameplay?.canBreakBlocks === false ? "false" : "true";
+      editServerGiveAxeInput.value = server.gameplay?.giveAxe === false ? "false" : "true";
+      editServerClaimsEnabledInput.value = server.gameplay?.claimsEnabled === false ? "false" : "true";
+      editServerBuilderUsersInput.value = Array.isArray(server.gameplay?.builderUsers)
+        ? server.gameplay.builderUsers.join(", ")
+        : "";
       openModal(editServerModal);
     }
 
@@ -1852,11 +2032,22 @@
         return;
       }
 
-      const { original, normalized } = parseAllowedUsers(editServerAllowedUsersInput.value);
-      if (visibility === "private" && currentUserName && !normalized.includes(normalizeName(currentUserName))) {
-        normalized.push(normalizeName(currentUserName));
-        original.push(currentUserName);
+      const allowedUsers = parseAllowedUsers(editServerAllowedUsersInput.value);
+      if (visibility === "private" && currentUserName && !allowedUsers.normalized.includes(normalizeName(currentUserName))) {
+        allowedUsers.normalized.push(normalizeName(currentUserName));
+        allowedUsers.original.push(currentUserName);
       }
+
+      const gameplayPack = buildServerGameplaySettings({
+        ownerName: currentUserName,
+        creativeEnabled: editServerCreativeEnabledInput.value === "true",
+        creativeAccess: editServerCreativeAccessInput.value,
+        creativeUsersText: editServerCreativeUsersInput.value,
+        canBreakBlocks: editServerCanBreakInput.value === "true",
+        giveAxe: editServerGiveAxeInput.value === "true",
+        claimsEnabled: editServerClaimsEnabledInput.value === "true",
+        builderUsersText: editServerBuilderUsersInput.value,
+      });
 
       editServerMsg.textContent = "Saving...";
 
@@ -1867,9 +2058,10 @@
           maxPlayers,
           visibility,
           dayMode,
-          allowedUsers: visibility === "private" ? original : [],
-          allowedUsersNormalized: visibility === "private" ? normalized : [],
+          allowedUsers: visibility === "private" ? allowedUsers.original : [],
+          allowedUsersNormalized: visibility === "private" ? allowedUsers.normalized : [],
           updatedAt: serverTimestamp(),
+          ...gameplayPack,
         }, { merge: true });
 
         editServerMsg.textContent = "Saved.";
@@ -1885,25 +2077,19 @@
 
     function renderServers() {
       multiplayerList.innerHTML = "";
-
       const searchTerm = (serverSearchInput?.value || "").trim().toLowerCase();
       let filtered = [...serversCache];
 
       if (searchTerm) {
-        filtered = filtered.filter((server) =>
-          String(server.name || "").toLowerCase().includes(searchTerm)
-        );
+        filtered = filtered.filter((server) => String(server.name || "").toLowerCase().includes(searchTerm));
       }
 
       const sorted = filtered.sort((a, b) => {
         const aOnline = getServerOnlineState(a) ? 1 : 0;
         const bOnline = getServerOnlineState(b) ? 1 : 0;
-
         if (bOnline !== aOnline) return bOnline - aOnline;
-
         const byPlayers = Number(b.playerCount || 0) - Number(a.playerCount || 0);
         if (byPlayers !== 0) return byPlayers;
-
         const bt = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
         const at = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
         return bt - at;
@@ -1930,13 +2116,10 @@
         badges.push(`<span class="badge ${server.visibility === "private" ? "private" : "public"}">${server.visibility === "private" ? "Private" : "Public"}</span>`);
         badges.push(`<span class="badge">${escapeHtml(serverModeLabel(server.dayMode))}</span>`);
 
-        if (index === 0 && displayedPlayers > 0) {
-          badges.push('<span class="badge">Most active</span>');
-        }
-
-        if (full) {
-          badges.push('<span class="badge full">Full</span>');
-        }
+        if (index === 0 && displayedPlayers > 0) badges.push('<span class="badge">Most active</span>');
+        if (full) badges.push('<span class="badge full">Full</span>');
+        if (server.gameplay?.creativeEnabled) badges.push('<span class="badge">Creative</span>');
+        if (server.gameplay?.claimsEnabled === false) badges.push('<span class="badge">No Claims</span>');
 
         const ownerControls = currentUserUid && server.createdByUid === currentUserUid
           ? `<button class="btn edit-server-btn">Edit</button>`
@@ -1964,6 +2147,9 @@
             <div class="server-meta"><strong>Players:</strong> ${displayedPlayers} / ${maxPlayers}</div>
             <div class="server-meta"><strong>World mode:</strong> ${escapeHtml(serverModeLabel(server.dayMode))}</div>
             <div class="server-meta"><strong>Visibility:</strong> ${escapeHtml(server.visibility || "public")}</div>
+            <div class="server-meta"><strong>Creative:</strong> ${server.gameplay?.creativeEnabled ? escapeHtml(server.gameplay?.creativeAccess || "owner") : "off"}</div>
+            <div class="server-meta"><strong>Can break:</strong> ${server.gameplay?.canBreakBlocks === false ? "No" : "Yes"}</div>
+            <div class="server-meta"><strong>Claims:</strong> ${server.gameplay?.claimsEnabled === false ? "Off" : "On"}</div>
             <div class="server-meta"><strong>Created:</strong> ${escapeHtml(formatDate(server.createdAt) || "—")}</div>
           </div>
         `;
@@ -2008,15 +2194,11 @@
     }
 
     serverSearchInput?.addEventListener("input", renderServers);
-
     clearServerSearchBtn?.addEventListener("click", () => {
       serverSearchInput.value = "";
       renderServers();
     });
-
-    refreshServersBtn.addEventListener("click", () => {
-      renderServers();
-    });
+    refreshServersBtn.addEventListener("click", () => renderServers());
 
     onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -2025,7 +2207,6 @@
 
         welcomeText.textContent = "Welcome " + currentUserName;
         userNameDisplay.textContent = currentUserName;
-
         loginLink.style.display = "none";
         signupLink.style.display = "none";
         logoutBtn.style.display = "inline-block";
@@ -2036,10 +2217,8 @@
         }, { merge: true });
 
         await loadMyProfile(user.uid);
-
         openEditProfileBtn.style.display = "inline-block";
         adminSection.style.display = currentUserName === "davyd3102" ? "block" : "none";
-
         startPresenceUpdater(user.uid, currentUserName);
         subscribeFriendsFor(user.uid);
         subscribeFriendRequestsFor(user.uid);
@@ -2052,17 +2231,14 @@
         welcomeText.textContent = "Welcome Guest";
         userNameDisplay.textContent = "Guest";
         avatarImg.src = DEFAULT_AVATAR;
-
         myBioLine.style.display = "none";
         myBioLine.textContent = "";
-
         loginLink.style.display = "inline-block";
         signupLink.style.display = "inline-block";
         logoutBtn.style.display = "none";
         adminSection.style.display = "none";
         openEditProfileBtn.style.display = "none";
         editProfileBox.style.display = "none";
-
         stopPresenceUpdater();
         subscribeFriendsFor(null);
         subscribeFriendRequestsFor(null);
@@ -2096,7 +2272,6 @@
       commentsQ,
       (snapshot) => {
         commentsList.innerHTML = "";
-
         if (snapshot.empty) {
           commentsList.innerHTML = '<p class="comment-empty">No comments yet.</p>';
           return;
@@ -2120,31 +2295,29 @@
       }
     );
 
-    if (commentForm) {
-      commentForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    commentForm?.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-        if (!currentUserName || !ALLOWED_COMMENTERS.includes(currentUserName)) {
-          alert("Only davyd3102 and 3102 can post comments.");
-          return;
-        }
+      if (!currentUserName || !ALLOWED_COMMENTERS.includes(currentUserName)) {
+        alert("Only davyd3102 and 3102 can post comments.");
+        return;
+      }
 
-        const text = commentText.value.trim();
-        if (!text) return;
+      const text = commentText.value.trim();
+      if (!text) return;
 
-        try {
-          await addDoc(commentsCol, {
-            author: currentUserName,
-            text,
-            createdAt: serverTimestamp(),
-          });
-          commentText.value = "";
-        } catch (err) {
-          console.error(err);
-          alert("Failed to post comment: " + err.message);
-        }
-      });
-    }
+      try {
+        await addDoc(commentsCol, {
+          author: currentUserName,
+          text,
+          createdAt: serverTimestamp(),
+        });
+        commentText.value = "";
+      } catch (err) {
+        console.error(err);
+        alert("Failed to post comment: " + err.message);
+      }
+    });
 
     userSearchBtn.addEventListener("click", () => renderUserResults(userSearchInput.value));
     userSearchInput.addEventListener("keydown", (e) => {
@@ -2154,49 +2327,47 @@
       }
     });
 
-    if (adminDeleteBtn && adminDeleteName && adminDeleteStatus) {
-      adminDeleteBtn.addEventListener("click", async () => {
-        const name = adminDeleteName.value.trim();
-        adminDeleteStatus.textContent = "";
+    adminDeleteBtn?.addEventListener("click", async () => {
+      const name = adminDeleteName.value.trim();
+      adminDeleteStatus.textContent = "";
 
-        if (!currentUserName || currentUserName !== "davyd3102") {
-          adminDeleteStatus.textContent = "Only davyd3102 can use this panel.";
-          return;
+      if (!currentUserName || currentUserName !== "davyd3102") {
+        adminDeleteStatus.textContent = "Only davyd3102 can use this panel.";
+        return;
+      }
+
+      if (!name) {
+        adminDeleteStatus.textContent = "Type a username.";
+        return;
+      }
+
+      adminDeleteStatus.textContent = "Searching user...";
+
+      try {
+        const targets = usersCache.filter((u) => u.name === name);
+        let deletedUsers = 0;
+
+        for (const u of targets) {
+          await deleteDoc(doc(db, "users", u.id));
+          deletedUsers++;
         }
 
-        if (!name) {
-          adminDeleteStatus.textContent = "Type a username.";
-          return;
+        const qComm = query(collection(db, "comments"), where("author", "==", name));
+        const commSnap = await getDocs(qComm);
+        let deletedComments = 0;
+
+        for (const cDoc of commSnap.docs) {
+          await deleteDoc(cDoc.ref);
+          deletedComments++;
         }
 
-        adminDeleteStatus.textContent = "Searching user...";
-
-        try {
-          const targets = usersCache.filter((u) => u.name === name);
-
-          let deletedUsers = 0;
-          for (const u of targets) {
-            await deleteDoc(doc(db, "users", u.id));
-            deletedUsers++;
-          }
-
-          const qComm = query(collection(db, "comments"), where("author", "==", name));
-          const commSnap = await getDocs(qComm);
-
-          let deletedComments = 0;
-          for (const cDoc of commSnap.docs) {
-            await deleteDoc(cDoc.ref);
-            deletedComments++;
-          }
-
-          adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleted comments: ${deletedComments}.`;
-          adminDeleteName.value = "";
-        } catch (err) {
-          console.error("Admin delete error:", err);
-          adminDeleteStatus.textContent = "Error: " + (err.message || err);
-        }
-      });
-    }
+        adminDeleteStatus.textContent = `Deleted users: ${deletedUsers}. Deleted comments: ${deletedComments}.`;
+        adminDeleteName.value = "";
+      } catch (err) {
+        console.error("Admin delete error:", err);
+        adminDeleteStatus.textContent = "Error: " + (err.message || err);
+      }
+    });
 
     subscribeServers();
   </script>
