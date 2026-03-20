@@ -382,7 +382,7 @@
 
   <div id="palettePanel" class="glass">
     <h3>Builder / Admin Palette</h3>
-    <div class="hint">B — будування. P — palette. X або правий клік — видалення. V — preview claim. G — перемкнути доступ claim. Q — quick chat.</div>
+    <div class="hint">B — build mode. P — palette. X or right click — remove. V — claim preview. G — change claim access. Q — quick chat. F — area fill. Shift+F — area remove.</div>
 
     <h4>Classic + Terrain + Objects</h4>
     <div id="paletteGrid" class="palette-grid"></div>
@@ -392,7 +392,7 @@
 
     <div id="adminTools" style="display:none; margin-top:12px;">
       <h4>Owner Admin Terrain Tools</h4>
-      <div class="hint">Застосовується до всієї мапи одразу. Це безпечніше ніж створювати десятки тисяч Firestore-документів.</div>
+      <div class="hint">Applies to the whole map at once. This is safer than creating tens of thousands of Firestore documents.</div>
       <div class="row">
         <select id="globalSurfaceSelect" class="select">
           <option value="base">Natural</option>
@@ -729,6 +729,10 @@
     let minimapDirty = true;
     let minimapTimer = 0;
     let quickChatOpen = false;
+    let areaFillMode = false;
+    let areaFillStartTile = null;
+    let areaRemoveMode = false;
+    let areaRemoveStartTile = null;
     let claimPreviewActive = false;
     let paletteOpen = false;
     let lastTeleportAt = 0;
@@ -793,6 +797,7 @@
       { key: "tree_object", layer: "object", type: "tree_object", label: "Tree", info: "spawn" },
       { key: "campfire_object", layer: "object", type: "campfire_object", label: "Campfire", info: "spawn" },
       { key: "teleporter_spawn", layer: "object", type: "teleporter_spawn", label: "Spawn TP", info: "teleport" },
+      { key: "spawn_marker", layer: "object", type: "spawn_marker", label: "Spawn Point", info: "invisible" },
     ];
 
     const COLOR_WALL_ITEMS = [
@@ -1332,6 +1337,13 @@
       return serverMeta?.campfireRemoved === true;
     }
 
+    function getActiveSpawnPoint() {
+      if (serverMeta?.customSpawn && Number.isFinite(serverMeta.customSpawn.x) && Number.isFinite(serverMeta.customSpawn.y)) {
+        return { x: Number(serverMeta.customSpawn.x), y: Number(serverMeta.customSpawn.y) };
+      }
+      return { x: campfire.x + 1.4, y: campfire.y + 1.2 };
+    }
+
     function terrainOverrideColor(type, light) {
       const day = 0.62 + 0.38 * light;
       const map = {
@@ -1579,7 +1591,6 @@
       }
 
       if (type === BUILD.WALL || String(type).startsWith("wall_")) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 10);
         ctx.fillStyle = type === BUILD.WALL ? rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98) : getWallColor(type, light);
         pRect(ctx, x, y, PPU + 1, PPU + 1);
         ctx.fillStyle = "rgba(255,255,255,0.06)";
@@ -1588,7 +1599,6 @@
       }
 
       if (type === BUILD.WINDOW) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 10);
         ctx.fillStyle = rgba((110 * shade) | 0, (75 * shade) | 0, (45 * shade) | 0, 0.98);
         pRect(ctx, x, y, PPU + 1, PPU + 1);
         ctx.fillStyle = rgba((40 * shade) | 0, (55 * shade) | 0, (70 * shade) | 0, 0.90);
@@ -1599,7 +1609,6 @@
       }
 
       if (type === BUILD.DOOR) {
-        drawShadowCircle(ctx, x + PPU / 2, y + PPU * 0.95, 9);
         ctx.fillStyle = rgba((95 * shade) | 0, (65 * shade) | 0, (40 * shade) | 0, 0.98);
         pRect(ctx, x, y, PPU + 1, PPU + 1);
         ctx.fillStyle = rgba((135 * shade) | 0, (92 * shade) | 0, (55 * shade) | 0, 0.92);
@@ -1620,13 +1629,16 @@
         return;
       }
 
+      if (type === "spawn_marker") {
+        return;
+      }
+
       if (type === "campfire_object") {
         drawCampfire(ctx, tileToWorld(tx), tileToWorld(ty), time, light, false);
         return;
       }
 
       if (type === "teleporter_spawn") {
-        drawShadowCircle(ctx, x + 8, y + 12, 12);
         ctx.fillStyle = rgba(130, 70, 230, 0.95);
         pRect(ctx, x + 1, y + 1, PPU - 1, PPU - 1);
         ctx.fillStyle = rgba(255,220,110,0.95);
@@ -1671,15 +1683,53 @@
     }
 
     function drawBuildGhost(ctx) {
-      if (!buildMode) return;
+      if (!buildMode && !areaRemoveMode) return;
       const tgt = getTargetTile();
       if (!tgt) return;
       const pos = worldToScreen(tileToWorld(tgt.tx), tileToWorld(tgt.ty));
-      const ok = canPlaceSelectedAt(tgt.tileId).ok;
       ctx.save();
-      ctx.globalAlpha = 0.45;
-      ctx.fillStyle = ok ? "rgba(110,255,170,0.55)" : "rgba(255,90,90,0.55)";
-      pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
+
+      if (buildMode) {
+        const ok = canPlaceSelectedAt(tgt.tileId).ok;
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = ok ? "rgba(110,255,170,0.55)" : "rgba(255,90,90,0.55)";
+        pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
+      }
+
+      if (areaFillMode && areaFillStartTile) {
+        const x1 = Math.min(areaFillStartTile.tx, tgt.tx);
+        const x2 = Math.max(areaFillStartTile.tx, tgt.tx);
+        const y1 = Math.min(areaFillStartTile.ty, tgt.ty);
+        const y2 = Math.max(areaFillStartTile.ty, tgt.ty);
+        const p1 = worldToScreen(tileToWorld(x1), tileToWorld(y1));
+        const p2 = worldToScreen(tileToWorld(x2) + 1, tileToWorld(y2) + 1);
+        ctx.fillStyle = "rgba(80,180,255,0.16)";
+        ctx.strokeStyle = "rgba(80,180,255,0.85)";
+        ctx.lineWidth = 2;
+        ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+        ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+      }
+
+      if (areaRemoveMode) {
+        ctx.globalAlpha = 0.45;
+        ctx.fillStyle = "rgba(255,90,90,0.55)";
+        pRect(ctx, pos.x, pos.y, PPU + 1, PPU + 1);
+      }
+
+      if (areaRemoveMode && areaRemoveStartTile) {
+        const x1 = Math.min(areaRemoveStartTile.tx, tgt.tx);
+        const x2 = Math.max(areaRemoveStartTile.tx, tgt.tx);
+        const y1 = Math.min(areaRemoveStartTile.ty, tgt.ty);
+        const y2 = Math.max(areaRemoveStartTile.ty, tgt.ty);
+        const p1 = worldToScreen(tileToWorld(x1), tileToWorld(y1));
+        const p2 = worldToScreen(tileToWorld(x2) + 1, tileToWorld(y2) + 1);
+        ctx.fillStyle = "rgba(255,90,90,0.16)";
+        ctx.strokeStyle = "rgba(255,90,90,0.85)";
+        ctx.lineWidth = 2;
+        ctx.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+        ctx.strokeRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+      }
+
       ctx.restore();
     }
 
@@ -2021,6 +2071,10 @@
     }
 
     async function placeSelected(tileId) {
+      const tx = tileId % WORLD_SIZE;
+      const ty = (tileId / WORLD_SIZE) | 0;
+      const wx = tileToWorld(tx);
+      const wy = tileToWorld(ty);
       const check = canPlaceSelectedAt(tileId);
       if (!check.ok) {
         showToast(check.reason, 1.0);
@@ -2046,28 +2100,54 @@
 
       rebuildBuildColliders();
       minimapDirty = true;
-      const tx = tileId % WORLD_SIZE;
-      const ty = (tileId / WORLD_SIZE) | 0;
+      if (selectedBuild.type === "spawn_marker") {
+        const oldSpawnTiles = [];
+        objectLayerMap.forEach((value, key) => {
+          if (value.type === "spawn_marker" && key !== tileId) oldSpawnTiles.push(key);
+        });
+        for (const oldTileId of oldSpawnTiles) {
+          objectLayerMap.delete(oldTileId);
+          await deleteLayerTile("object", oldTileId);
+        }
+        await updateDoc(doc(db, "servers", serverId), {
+          customSpawn: { x: wx, y: wy, tileId },
+          updatedAt: serverTimestamp(),
+        }).catch(console.error);
+        serverMeta = { ...(serverMeta || {}), customSpawn: { x: wx, y: wy, tileId } };
+      }
       spawnParticles("build", tileToWorld(tx), tileToWorld(ty), 10);
       audio.beep(560, 0.05, 0.04);
       await upsertLayerTile(selectedBuild.layer, tileId, selectedBuild.type, selectedBuild.rot || 0).catch(console.error);
       return true;
     }
 
-    async function removeAtTile(tileId) {
+    async function removeAtTile(tileId, options = {}) {
+      const silent = options.silent === true;
       const perm = canModifyTile(tileId, "break");
       if (!perm.ok) {
+        if (!silent) {
         showToast(perm.reason, 1.1);
         audio.beep(180, 0.10, 0.04);
+      }
         return false;
       }
 
       if (getObjectEntry(tileId)) {
+        const removedObject = getObjectEntry(tileId);
         objectLayerMap.delete(tileId);
         rebuildBuildColliders();
         minimapDirty = true;
         await deleteLayerTile("object", tileId);
-        showToast("Object removed", 0.8);
+        if (removedObject?.type === "spawn_marker") {
+          await updateDoc(doc(db, "servers", serverId), {
+            customSpawn: null,
+            updatedAt: serverTimestamp(),
+          }).catch(console.error);
+          serverMeta = { ...(serverMeta || {}), customSpawn: null };
+          if (!silent) showToast("Spawn point removed", 0.8);
+        } else {
+          if (!silent) showToast("Object removed", 0.8);
+        }
         return true;
       }
 
@@ -2078,7 +2158,7 @@
         minimapDirty = true;
         if (!isFreeBuildForMe()) wood += Math.max(1, Math.floor(getBuildCost(entry.type) * 0.5));
         await deleteLayerTile("structure", tileId);
-        showToast(isFreeBuildForMe() ? "Structure removed" : "Removed (+wood)", 0.8);
+        if (!silent) showToast(isFreeBuildForMe() ? "Structure removed" : "Removed (+wood)", 0.8);
         return true;
       }
 
@@ -2086,18 +2166,20 @@
         terrainLayerMap.delete(tileId);
         minimapDirty = true;
         await deleteLayerTile("terrain", tileId);
-        showToast("Terrain removed", 0.8);
+        if (!silent) showToast("Terrain removed", 0.8);
         return true;
       }
 
       const removedNatural = await removeNaturalAt(tileId);
       if (removedNatural) {
-        showToast("Natural object removed", 0.8);
+        if (!silent) showToast("Natural object removed", 0.8);
         return true;
       }
 
-      showToast("Nothing to remove", 0.7);
-      audio.beep(180, 0.10, 0.04);
+      if (!silent) {
+        showToast("Nothing to remove", 0.7);
+        audio.beep(180, 0.10, 0.04);
+      }
       return false;
     }
 
@@ -2117,8 +2199,10 @@
       if (!best) return;
       const perm = canModifyTile(best.tileId, "break");
       if (!perm.ok) {
+        if (!silent) {
         showToast(perm.reason, 1.1);
         audio.beep(180, 0.10, 0.04);
+      }
         return;
       }
       best.hp -= isFreeBuildForMe() ? 99 : 1;
@@ -2147,8 +2231,10 @@
       if (!best) return;
       const perm = canModifyTile(best.tileId, "break");
       if (!perm.ok) {
+        if (!silent) {
         showToast(perm.reason, 1.1);
         audio.beep(180, 0.10, 0.04);
+      }
         return;
       }
       best.hp -= isFreeBuildForMe() ? 99 : 1;
@@ -2234,6 +2320,19 @@
     async function doAction() {
       if (!canPlay || quickChatOpen) return;
       audio.resume();
+      if (areaRemoveMode) {
+        const tgt = getTargetTile();
+        if (!tgt) return;
+        if (!areaRemoveStartTile) {
+          areaRemoveStartTile = { tx: tgt.tx, ty: tgt.ty };
+          showToast("Area remove start selected", 0.8);
+        } else {
+          await areaRemoveTiles(areaRemoveStartTile.tx, areaRemoveStartTile.ty, tgt.tx, tgt.ty);
+          areaRemoveStartTile = null;
+          areaRemoveMode = false;
+        }
+        return;
+      }
       if (claimPreviewActive) {
         await claimTargetChunk();
         claimPreviewActive = false;
@@ -2245,7 +2344,18 @@
       if (buildMode) {
         const tgt = getTargetTile();
         if (!tgt) return;
-        await placeSelected(tgt.tileId);
+        if (areaFillMode) {
+          if (!areaFillStartTile) {
+            areaFillStartTile = { tx: tgt.tx, ty: tgt.ty };
+            showToast("Area fill start selected", 0.8);
+          } else {
+            await areaFillPlace(areaFillStartTile.tx, areaFillStartTile.ty, tgt.tx, tgt.ty);
+            areaFillStartTile = null;
+            areaFillMode = false;
+          }
+        } else {
+          await placeSelected(tgt.tileId);
+        }
         return;
       }
       if (currentTool === TOOL.PICKAXE) await mineNearestBoulder();
@@ -2254,6 +2364,12 @@
 
     async function doRemoveAction() {
       if (!canPlay || quickChatOpen) return;
+      if (areaRemoveMode) {
+        areaRemoveMode = false;
+        areaRemoveStartTile = null;
+        showToast("Area remove cancelled", 0.8);
+        return;
+      }
       if (claimPreviewActive) {
         claimPreviewActive = false;
         showToast("Claim preview cancelled", 0.8);
@@ -2542,8 +2658,9 @@
       setSeed(serverMeta.worldSeed);
       generateWorld();
       lastWorldVisualSignature = `${getAdminSurfaceMode()}|${isNatureCleared()}|${serverMeta.campfireRemoved ? 1 : 0}`;
-      player.x = campfire.x + 1.4;
-      player.y = campfire.y + 1.2;
+      const spawn = getActiveSpawnPoint();
+      player.x = spawn.x;
+      player.y = spawn.y;
       player.dir = 0;
       camera.x = player.x;
       camera.y = player.y;
@@ -2590,12 +2707,13 @@
       const tileId = idxOf(worldToTile(player.x), worldToTile(player.y));
       const obj = getObjectEntry(tileId);
       if (obj?.type === "teleporter_spawn") {
-        player.x = campfire.x + 1.0;
-        player.y = campfire.y + 1.0;
+        const spawn = getActiveSpawnPoint();
+        player.x = spawn.x;
+        player.y = spawn.y;
         camera.x = player.x;
         camera.y = player.y;
         lastTeleportAt = now;
-        showToast("Teleported to spawn", 0.9);
+        showToast("Teleported to spawn point", 0.9);
         audio.beep(760, 0.08, 0.04);
       }
     }
@@ -2606,6 +2724,58 @@
         const sp = 2.5 + Math.random() * 4.5;
         particles.push({ type, x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0.35 + Math.random() * 0.45 });
       }
+    }
+
+    async function areaFillPlace(x1, y1, x2, y2) {
+      if (!hasAdvancedBuilderAccess()) {
+        showToast("Only builder/admin can use area fill", 1.0);
+        return;
+      }
+      const minX = Math.max(0, Math.min(x1, x2));
+      const maxX = Math.min(WORLD_SIZE - 1, Math.max(x1, x2));
+      const minY = Math.max(0, Math.min(y1, y2));
+      const maxY = Math.min(WORLD_SIZE - 1, Math.max(y1, y2));
+      const width = maxX - minX + 1;
+      const height = maxY - minY + 1;
+      if (width * height > 1024) {
+        showToast("Area too large (max 1024 tiles)", 1.2);
+        return;
+      }
+      let placed = 0;
+      for (let ty = minY; ty <= maxY; ty++) {
+        for (let tx = minX; tx <= maxX; tx++) {
+          const tileId = idxOf(tx, ty);
+          const result = await placeSelected(tileId);
+          if (result) placed++;
+        }
+      }
+      showToast(`Area fill placed: ${placed}`, 1.2);
+    }
+
+    async function areaRemoveTiles(x1, y1, x2, y2) {
+      if (!hasAdvancedBuilderAccess()) {
+        showToast("Only builder/admin can use area remove", 1.0);
+        return;
+      }
+      const minX = Math.max(0, Math.min(x1, x2));
+      const maxX = Math.min(WORLD_SIZE - 1, Math.max(x1, x2));
+      const minY = Math.max(0, Math.min(y1, y2));
+      const maxY = Math.min(WORLD_SIZE - 1, Math.max(y1, y2));
+      const width = maxX - minX + 1;
+      const height = maxY - minY + 1;
+      if (width * height > 1024) {
+        showToast("Area too large (max 1024 tiles)", 1.2);
+        return;
+      }
+      let removed = 0;
+      for (let ty = minY; ty <= maxY; ty++) {
+        for (let tx = minX; tx <= maxX; tx++) {
+          const tileId = idxOf(tx, ty);
+          const result = await removeAtTile(tileId, { silent: true });
+          if (result) removed++;
+        }
+      }
+      showToast(`Area removed: ${removed}`, 1.2);
     }
 
     function update(dt, time) {
@@ -2685,7 +2855,7 @@
         `Wood: ${isFreeBuildForMe() ? "∞" : wood} | Stone: ${isFreeBuildForMe() ? "∞" : stone} | Coal: ${isFreeBuildForMe() ? "∞" : coal}` +
         `<div class="small">Mode: ${modeText} | Tool: ${currentTool === TOOL.PICKAXE ? "Pickaxe" : "Axe"} | Build: ${buildMode ? "ON" : "OFF"} | Selected: ${selectedBuild.label}` +
         ` | Claims: ${claimsAreEnabled() ? "ON" : "OFF"} | Break: ${canBreakServerWide() ? "Yes" : "No"}` +
-        ` | Minimap: M | Palette: P | Quick Chat: Q | Claim Preview: V | Claim Access: G` +
+        ` | Minimap: M | Palette: P | Quick Chat: Q | Claim Preview: V | Claim Access: G | Area Fill: F | Area Remove: Shift+F` +
         `</div>`;
     }
 
@@ -2789,8 +2959,42 @@
           audio.beep(180, 0.10, 0.04);
         } else {
           claimPreviewActive = !claimPreviewActive;
-          if (claimPreviewActive) buildMode = false;
+          if (claimPreviewActive) {
+            buildMode = false;
+            areaFillMode = false;
+            areaFillStartTile = null;
+            areaRemoveMode = false;
+            areaRemoveStartTile = null;
+          }
           showToast(claimPreviewActive ? "Claim preview ON" : "Claim preview OFF", 0.9);
+          audio.beep(700, 0.04, 0.04);
+        }
+      }
+      if (e.code === "KeyF" && e.shiftKey && !e.repeat) {
+        if (!hasAdvancedBuilderAccess()) {
+          showToast("Only builder/admin can use area remove", 1.0);
+          audio.beep(180, 0.10, 0.04);
+        } else {
+          areaRemoveMode = !areaRemoveMode;
+          areaRemoveStartTile = null;
+          claimPreviewActive = false;
+          areaFillMode = false;
+          areaFillStartTile = null;
+          buildMode = false;
+          showToast(areaRemoveMode ? "Area remove ON" : "Area remove OFF", 0.9);
+          audio.beep(700, 0.04, 0.04);
+        }
+      } else if (e.code === "KeyF" && !e.repeat) {
+        if (!hasAdvancedBuilderAccess()) {
+          showToast("Only builder/admin can use area fill", 1.0);
+          audio.beep(180, 0.10, 0.04);
+        } else {
+          areaFillMode = !areaFillMode;
+          claimPreviewActive = false;
+          areaRemoveMode = false;
+          areaRemoveStartTile = null;
+          if (!areaFillMode) areaFillStartTile = null;
+          showToast(areaFillMode ? "Area fill ON" : "Area fill OFF", 0.9);
           audio.beep(700, 0.04, 0.04);
         }
       }
@@ -2799,6 +3003,10 @@
       if (e.code === "Escape") {
         closeQuickChat();
         claimPreviewActive = false;
+        areaFillMode = false;
+        areaFillStartTile = null;
+        areaRemoveMode = false;
+        areaRemoveStartTile = null;
         closePalette();
       }
       if (e.code === "Digit3") { applySelectedPalette("floor"); if (buildMode) showToast("Build: Floor", 0.8); }
